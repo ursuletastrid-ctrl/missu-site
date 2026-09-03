@@ -1,0 +1,11 @@
+{
+  "name": "myu-espace-client-api",
+  "private": true,
+  "description": "Fonctions serverless Vercel pour MYU by Miss'U — 'Mon Espace MYU'. Le reste du site (index.html) est statique et n'a besoin d'aucune de ces dépendances ; ce package.json ne sert qu'à installer @supabase/supabase-js pour le dossier /api. create-checkout.js et sumup-webhook.js utilisent le fetch global de Node (aucune dépendance SumUp supplémentaire) — d'où l'exigence Node >= 18 ci-dessous.",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "2.45.4"
+  }
+}
