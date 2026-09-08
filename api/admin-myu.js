@@ -321,10 +321,99 @@ async function listModeleBookings(admin, { typePrestation }) {
   return (rdvs || []).map((r) => ({ ...r, client: byId[r.client_id] || null }));
 }
 
+// ------------------------------------------------------------
+// Agenda central : tous les rendez-vous, quelle que soit leur origine.
+// ------------------------------------------------------------
+async function listAgenda(admin, { dateFrom, dateTo }) {
+  let query = admin
+    .from("rendez_vous")
+    .select("*")
+    .order("date_rdv", { ascending: true })
+    .order("heure_rdv", { ascending: true });
+  if (dateFrom) query = query.gte("date_rdv", dateFrom);
+  if (dateTo) query = query.lte("date_rdv", dateTo);
+  const { data: rdvs, error } = await query;
+  if (error) throw error;
+
+  const clientIds = [...new Set((rdvs || []).map((r) => r.client_id).filter(Boolean))];
+  let profiles = [];
+  if (clientIds.length) {
+    const { data, error: profilesError } = await admin
+      .from("profiles")
+      .select("id, first_name, last_name, phone")
+      .in("id", clientIds);
+    if (profilesError) throw profilesError;
+    profiles = data || [];
+  }
+  const clientsById = Object.fromEntries(profiles.map((p) => [p.id, p]));
+  return (rdvs || []).map((r) => ({ ...r, client: clientsById[r.client_id] || null }));
+}
+
+async function createManualRendezVous(admin, {
+  clientId, typePrestation, dateRdv, heureRdv,
+  statut, paymentStatus, depositAmount, note,
+}) {
+  if (!clientId || !typePrestation || !dateRdv || !heureRdv) {
+    throw Object.assign(new Error("Cliente, prestation, date et heure sont requises."), { status: 400 });
+  }
+  const safeStatut = statut || "confirme";
+  const safePayment = paymentStatus || "non_requis";
+  if (!RDV_STATUTS.includes(safeStatut)) {
+    throw Object.assign(new Error("Statut de rendez-vous invalide."), { status: 400 });
+  }
+  if (!PAYMENT_STATUTS.includes(safePayment)) {
+    throw Object.assign(new Error("Statut de paiement invalide."), { status: 400 });
+  }
+
+  // Contrôle lisible avant la contrainte unique de la base.
+  const { data: conflict, error: conflictError } = await admin
+    .from("rendez_vous")
+    .select("id")
+    .eq("date_rdv", dateRdv)
+    .eq("heure_rdv", heureRdv)
+    .neq("statut", "annule")
+    .limit(1)
+    .maybeSingle();
+  if (conflictError) throw conflictError;
+  if (conflict) {
+    throw Object.assign(new Error("Ce créneau est déjà occupé."), { status: 409 });
+  }
+
+  const { data, error } = await admin
+    .from("rendez_vous")
+    .insert({
+      client_id: clientId,
+      type_prestation: typePrestation,
+      date_rdv: dateRdv,
+      heure_rdv: heureRdv,
+      statut: safeStatut,
+      payment_status: safePayment,
+      deposit_amount: Number(depositAmount) || 0,
+    })
+    .select()
+    .single();
+  if (error) {
+    if (error.code === "23505") {
+      throw Object.assign(new Error("Ce créneau vient d'être réservé."), { status: 409 });
+    }
+    throw error;
+  }
+
+  if (note && note.trim()) {
+    const { error: noteError } = await admin.from("notes_internes").insert({
+      client_id: clientId,
+      note: `Rendez-vous ajouté manuellement le ${dateRdv} à ${heureRdv} — ${note.trim()}`,
+    });
+    if (noteError) console.error("[admin-myu] note du rendez-vous manuel :", noteError.message);
+  }
+  return data;
+}
+
 const ACTIONS = {
   searchClients, getClient, addTampon, resetTampons, validateParrainage, markAvantageUsed,
   listConsignes, upsertConsigne, addNoteInterne, createPrestation, updatePrestationStatus, upsertEtapeParcours, updateRendezVous,
   listPrestationsReservation, upsertPrestationReservation, releaseModeleSlot, listModeleBookings,
+  listAgenda, createManualRendezVous,
 };
 
 module.exports = async function handler(req, res) {
