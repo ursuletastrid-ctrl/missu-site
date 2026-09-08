@@ -13,18 +13,30 @@
 //
 // Corps attendu : { adminToken, action, payload }
 
+const crypto = require("crypto");
 const { getAdminClient } = require("./_supabaseAdmin");
 
 const PRESTATION_STATUTS = ["a_venir", "realisee", "en_cicatrisation", "suivi_necessaire", "retouche_a_prevoir", "terminee"];
 const RDV_STATUTS = ["demande", "en_attente_paiement", "confirme", "modifie", "annule", "terminee"];
 const PAYMENT_STATUTS = ["non_requis", "en_attente", "paye", "echoue", "rembourse"];
 
-function requireAdminToken(body) {
+function safeTokenEqual(received, expected) {
+  if (typeof received !== "string" || typeof expected !== "string") return false;
+  const receivedHash = crypto.createHash("sha256").update(received, "utf8").digest();
+  const expectedHash = crypto.createHash("sha256").update(expected, "utf8").digest();
+  return crypto.timingSafeEqual(receivedHash, expectedHash);
+}
+
+function requireAdminToken(req, body) {
   const expected = process.env.MYU_ADMIN_TOKEN;
   if (!expected) {
     throw Object.assign(new Error("MYU_ADMIN_TOKEN manquant dans les variables d'environnement Vercel."), { status: 500 });
   }
-  if (!body || body.adminToken !== expected) {
+
+  // L'en-tête évite de mélanger le secret d'administration aux données métier.
+  // Le corps reste accepté temporairement pour compatibilité avec d'anciens clients.
+  const received = req.headers["x-myu-admin-token"] || body?.adminToken;
+  if (!safeTokenEqual(received, expected)) {
     throw Object.assign(new Error("Code administrateur invalide."), { status: 401 });
   }
 }
@@ -328,7 +340,7 @@ module.exports = async function handler(req, res) {
   body = body || {};
 
   try {
-    requireAdminToken(body);
+    requireAdminToken(req, body);
   } catch (e) {
     res.status(e.status || 401).json({ error: e.message });
     return;
