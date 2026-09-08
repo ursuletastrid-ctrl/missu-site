@@ -2429,6 +2429,194 @@ const PAYMENT_STATUS_LABELS = {
    ADMIN SPACE — Mon Espace MYU (recherche cliente, fiche cliente,
    fidélité, parrainage, rendez-vous, consignes, notes internes)
    ============================================================ */
+function AdminAgenda({ adminToken }) {
+  const today = new Date();
+  const monday = new Date(today);
+  const day = monday.getDay() || 7;
+  monday.setDate(monday.getDate() - day + 1);
+
+  const toIsoDate = (d) => {
+    const local = new Date(d.getTime() - d.getTimezoneOffset() * 60000);
+    return local.toISOString().slice(0, 10);
+  };
+  const addDays = (date, n) => {
+    const copy = new Date(date);
+    copy.setDate(copy.getDate() + n);
+    return copy;
+  };
+
+  const [weekStart, setWeekStart] = useState(toIsoDate(monday));
+  const [bookings, setBookings] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [showAdd, setShowAdd] = useState(false);
+  const [clientQuery, setClientQuery] = useState("");
+  const [clients, setClients] = useState([]);
+  const [selectedClient, setSelectedClient] = useState(null);
+  const [form, setForm] = useState({
+    typePrestation: "modele_myu", dateRdv: toIsoDate(today), heureRdv: "09:00",
+    paymentStatus: "non_requis", depositAmount: "", note: "",
+  });
+  const [message, setMessage] = useState("");
+
+  const endDate = toIsoDate(addDays(new Date(weekStart + "T12:00:00"), 6));
+  const weekDays = Array.from({ length: 7 }, (_, n) => {
+    const date = addDays(new Date(weekStart + "T12:00:00"), n);
+    return { iso: toIsoDate(date), date };
+  });
+
+  const loadAgenda = useCallback(async () => {
+    setLoading(true); setMessage("");
+    try {
+      setBookings(await callAdminMyu("listAgenda", { dateFrom: weekStart, dateTo: endDate }, adminToken));
+    } catch (e) { setMessage(e.message); }
+    setLoading(false);
+  }, [adminToken, weekStart, endDate]);
+
+  useEffect(() => { loadAgenda(); }, [loadAgenda]);
+
+  const moveWeek = (n) => {
+    setWeekStart(toIsoDate(addDays(new Date(weekStart + "T12:00:00"), n * 7)));
+  };
+
+  const searchClients = async () => {
+    if (!clientQuery.trim()) return;
+    setMessage("");
+    try {
+      setClients(await callAdminMyu("searchClients", { query: clientQuery.trim() }, adminToken));
+    } catch (e) { setMessage(e.message); }
+  };
+
+  const createBooking = async () => {
+    if (!selectedClient) { setMessage("Choisis d'abord une cliente."); return; }
+    setMessage("");
+    try {
+      await callAdminMyu("createManualRendezVous", {
+        clientId: selectedClient.id,
+        ...form,
+        depositAmount: Number(form.depositAmount) || 0,
+        statut: "confirme",
+      }, adminToken);
+      setShowAdd(false); setSelectedClient(null); setClients([]); setClientQuery("");
+      setMessage("Rendez-vous ajouté à l’agenda.");
+      await loadAgenda();
+    } catch (e) { setMessage(e.message); }
+  };
+
+  const changeStatus = async (rdvId, statut) => {
+    try {
+      await callAdminMyu("updateRendezVous", { rdvId, statut }, adminToken);
+      await loadAgenda();
+    } catch (e) { setMessage(e.message); }
+  };
+
+  const labelFor = (key) => SERVICES.find((s) => s.key === key)?.label || key || "Prestation";
+  const paymentLabel = (status) => ({
+    paye: "Acompte payé", en_attente: "Paiement en attente",
+    non_requis: "Paiement sur place", echoue: "Paiement échoué", rembourse: "Remboursé",
+  }[status] || status);
+
+  return (
+    <div className="missu-step">
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 14 }}>
+        <div>
+          <h2 style={{ fontFamily: FONT_DISPLAY, color: C.espresso, margin: 0, fontSize: 24 }}>Agenda MYU</h2>
+          <div style={{ fontFamily: FONT_BODY, color: C.espressoSoft, fontSize: 11.5 }}>Tous les rendez-vous au même endroit</div>
+        </div>
+        <PrimaryButton onClick={() => setShowAdd((v) => !v)}>+ Rendez-vous</PrimaryButton>
+      </div>
+
+      {showAdd && (
+        <SectionCard title="Ajouter un rendez-vous spontané">
+          {!selectedClient ? (
+            <>
+              <FieldLabel required>Rechercher la cliente</FieldLabel>
+              <div style={{ display: "flex", gap: 8 }}>
+                <TextInput value={clientQuery} onChange={(e) => setClientQuery(e.target.value)} placeholder="Nom, téléphone ou email" onKeyDown={(e) => e.key === "Enter" && searchClients()} />
+                <GhostButton onClick={searchClients} icon={Search}>Chercher</GhostButton>
+              </div>
+              <div style={{ marginTop: 8 }}>
+                {clients.map((client) => (
+                  <button key={client.id} type="button" onClick={() => setSelectedClient(client)} style={{
+                    width: "100%", padding: 10, marginBottom: 6, textAlign: "left", borderRadius: 12,
+                    border: `1px solid ${C.blushDeep}`, background: C.white, color: C.espresso, cursor: "pointer",
+                  }}>
+                    {client.first_name} {client.last_name} · {client.phone || "sans téléphone"}
+                  </button>
+                ))}
+              </div>
+            </>
+          ) : (
+            <>
+              <div style={{ padding: 10, borderRadius: 12, background: C.blush, marginBottom: 12, fontFamily: FONT_BODY, color: C.espresso }}>
+                <strong>{selectedClient.first_name} {selectedClient.last_name}</strong>
+                <button onClick={() => setSelectedClient(null)} style={{ float: "right", border: 0, background: "none", color: C.roseGoldDeep, cursor: "pointer" }}>Changer</button>
+              </div>
+              <FieldLabel required>Prestation</FieldLabel>
+              <select value={form.typePrestation} onChange={(e) => setForm({ ...form, typePrestation: e.target.value })} style={inputStyle}>
+                {SERVICES.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
+              </select>
+              <div style={{ height: 10 }} />
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                <div><FieldLabel required>Date</FieldLabel><TextInput type="date" value={form.dateRdv} onChange={(e) => setForm({ ...form, dateRdv: e.target.value })} /></div>
+                <div><FieldLabel required>Heure</FieldLabel><TextInput type="time" value={form.heureRdv} onChange={(e) => setForm({ ...form, heureRdv: e.target.value })} /></div>
+              </div>
+              <div style={{ height: 10 }} />
+              <FieldLabel>Paiement</FieldLabel>
+              <select value={form.paymentStatus} onChange={(e) => setForm({ ...form, paymentStatus: e.target.value })} style={inputStyle}>
+                <option value="non_requis">À régler sur place</option>
+                <option value="en_attente">Acompte à recevoir</option>
+                <option value="paye">Acompte déjà payé</option>
+              </select>
+              <div style={{ height: 10 }} />
+              <FieldLabel>Montant de l’acompte</FieldLabel>
+              <TextInput type="number" value={form.depositAmount} onChange={(e) => setForm({ ...form, depositAmount: e.target.value })} placeholder="0 €" />
+              <div style={{ height: 10 }} />
+              <FieldLabel>Note privée</FieldLabel>
+              <TextInput value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} placeholder="Ex. venue via Instagram" />
+              <div style={{ height: 14 }} />
+              <PrimaryButton onClick={createBooking} icon={CalendarCheck}>Ajouter à l’agenda</PrimaryButton>
+            </>
+          )}
+        </SectionCard>
+      )}
+
+      {message && <div style={{ margin: "10px 0", padding: 10, borderRadius: 12, background: C.creamSoft, fontFamily: FONT_BODY, fontSize: 12.5, color: C.espresso }}>{message}</div>}
+
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", margin: "12px 0" }}>
+        <GhostButton onClick={() => moveWeek(-1)} icon={ChevronLeft}>Avant</GhostButton>
+        <div style={{ fontFamily: FONT_BODY, fontSize: 12, color: C.espresso, textAlign: "center" }}>{weekStart} → {endDate}</div>
+        <GhostButton onClick={() => moveWeek(1)}>Après <ChevronRight size={14} /></GhostButton>
+      </div>
+
+      {loading ? <p style={{ fontFamily: FONT_BODY, color: C.espressoSoft }}>Chargement du planning…</p> : weekDays.map(({ iso, date }) => {
+        const dayBookings = bookings.filter((b) => b.date_rdv === iso && b.statut !== "annule");
+        return (
+          <div key={iso} style={{ marginBottom: 12 }}>
+            <div style={{ fontFamily: FONT_BODY, fontWeight: 600, fontSize: 12, color: C.roseGoldDeep, textTransform: "uppercase", marginBottom: 5 }}>
+              {date.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}
+            </div>
+            {dayBookings.length === 0 ? (
+              <div style={{ padding: "9px 12px", borderRadius: 12, border: `1px dashed ${C.blushDeep}`, fontFamily: FONT_BODY, fontSize: 11.5, color: C.espressoSoft }}>Disponible</div>
+            ) : dayBookings.map((rdv) => (
+              <div key={rdv.id} style={{ padding: 12, borderRadius: 14, background: C.white, borderLeft: `4px solid ${C.roseGoldDeep}`, marginBottom: 7, boxShadow: "0 5px 15px rgba(74,55,47,.06)" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
+                  <strong style={{ fontFamily: FONT_BODY, color: C.espresso }}>{String(rdv.heure_rdv || "").slice(0, 5)} · {rdv.client?.first_name || "Cliente"} {rdv.client?.last_name || ""}</strong>
+                  <span style={{ fontFamily: FONT_BODY, fontSize: 10.5, color: C.roseGoldDeep }}>{rdv.statut}</span>
+                </div>
+                <div style={{ fontFamily: FONT_BODY, fontSize: 12, color: C.espressoSoft, marginTop: 3 }}>{labelFor(rdv.type_prestation)} · {paymentLabel(rdv.payment_status)}</div>
+                <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
+                  {rdv.statut !== "terminee" && <GhostButton onClick={() => changeStatus(rdv.id, "terminee")}>Terminée</GhostButton>}
+                  <GhostButton onClick={() => changeStatus(rdv.id, "annule")}>Annuler</GhostButton>
+                </div>
+              </div>
+            ))}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 function AdminMyuPanel({ adminToken }) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
@@ -4654,8 +4842,11 @@ export default function App() {
             <button onClick={() => setAdminTab("demandes")} className="missu-focusable" style={tabButtonStyle("demandes")}>
               Demandes
             </button>
+            <button onClick={() => setAdminTab("agenda")} className="missu-focusable" style={tabButtonStyle("agenda")}>
+              Agenda
+            </button>
             <button onClick={() => setAdminTab("myu")} className="missu-focusable" style={tabButtonStyle("myu")}>
-              Mon Espace MYU
+              Clientes
             </button>
             <button onClick={handleAdminLogout} className="missu-focusable" title="Se déconnecter" style={{
               background: "none", border: "none", cursor: "pointer", color: C.espressoSoft,
@@ -4672,6 +4863,8 @@ export default function App() {
               onLogout={handleAdminLogout}
               onRefresh={() => loadSubmissions()}
             />
+          ) : adminTab === "agenda" ? (
+            <AdminAgenda adminToken={adminToken} />
           ) : (
             <AdminMyuPanel adminToken={adminToken} />
           )}
