@@ -97,6 +97,29 @@ module.exports = async function handler(req, res) {
 
   const status = checkout?.status;
 
+  // Un identifiant de checkout valide ne suffit pas : les données retournées
+  // par SumUp doivent aussi correspondre exactement au rendez-vous enregistré.
+  // Cela empêche qu'un autre paiement du même compte marchand confirme ce RDV.
+  const expectedMerchant = process.env.SUMUP_MERCHANT_CODE;
+  const amountMatches = Math.abs(Number(checkout?.amount) - Number(rdv.deposit_amount)) < 0.005;
+  const currencyMatches = checkout?.currency === "EUR";
+  const referenceMatches = String(checkout?.checkout_reference || "") === String(rdv.id);
+  const merchantMatches = !expectedMerchant || String(checkout?.merchant_code || "") === String(expectedMerchant);
+
+  if (!amountMatches || !currencyMatches || !referenceMatches || !merchantMatches) {
+    console.error(`[sumup-webhook] checkout incohérent pour rdv ${rdv.id}`, {
+      checkoutId,
+      amountMatches,
+      currencyMatches,
+      referenceMatches,
+      merchantMatches,
+    });
+    // On accuse réception pour ne pas provoquer de boucle de tentatives :
+    // aucune donnée de paiement ni de rendez-vous n'est modifiée.
+    res.status(200).json({ received: true });
+    return;
+  }
+
   if (status === "PAID") {
     let nextStatut = "confirme";
 
