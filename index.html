@@ -1849,8 +1849,11 @@ async function postAdminAction(payload, adminToken) {
 async function callAdminMyu(action, payload, adminToken) {
   const res = await fetch("/api/admin-myu", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ adminToken, action, payload }),
+    headers: {
+      "Content-Type": "application/json",
+      "X-MYU-Admin-Token": adminToken,
+    },
+    body: JSON.stringify({ action, payload }),
   });
   const body = await res.json().catch(() => ({}));
   if (!res.ok || !body.success) throw new Error(body?.error || "L'action a échoué.");
