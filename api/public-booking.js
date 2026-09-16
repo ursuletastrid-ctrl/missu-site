@@ -22,7 +22,10 @@ module.exports = async function handler(req, res) {
 
   if (req.method === "GET") {
     const { data, error } = await admin.from("prestations_reservation").select("type_prestation,deposit_amount,is_limited_offer,available_slots,active").eq("active", true);
-    if (error) return res.status(500).json({ error: "Réservations momentanément indisponibles." });
+        if (error) {
+      console.error("[public-booking] lecture prestations_reservation :", error.message);
+      return res.status(500).json({ error: "Réservations momentanément indisponibles." });
+    }
     return res.status(200).json({ success: true, data: data || [] });
   }
 
