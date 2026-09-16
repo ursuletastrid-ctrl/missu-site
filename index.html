@@ -1197,7 +1197,7 @@ function PrivacyModal({ onClose }) {
         <Section title="Contact">
           Pour toute question ou pour exercer vos droits :{" "}
           <a href="mailto:missustudio.contact@gmail.com" style={{ color: "inherit", overflowWrap: "anywhere" }}>missustudio.contact@gmail.com</a>
-          <br />Téléphone :{" "}<a href="tel:+596696178587" style={{ color: "inherit" }}>+596 696 17 85 87</a>.
+          <br />WhatsApp (messages et vocaux de préférence) :{" "}<a href="https://wa.me/596696178587" target="_blank" rel="noopener noreferrer" style={{ color: "inherit" }}>+596 696 17 85 87</a>.
         </Section>
       </div>
     </div>
@@ -4878,6 +4878,19 @@ export default function App() {
       <GlobalStyle />
       <div style={{ width: "100%", maxWidth: 460, minHeight: "100vh", background: C.blush, padding: "22px 18px 50px" }}>
         {content}
+        <section aria-label="Contacter MYU" style={{ marginTop: 28, paddingTop: 22, borderTop: `1px solid ${C.blushDeep}`, fontFamily: FONT_BODY }}>
+          <h2 style={{ fontFamily: FONT_DISPLAY, fontWeight: 500, fontSize: 24, color: C.espresso, margin: "0 0 8px" }}>Une question ? Parlons-en.</h2>
+          <p style={{ fontSize: 12, lineHeight: 1.6, color: C.espressoSoft, margin: "0 0 14px" }}>Pour échanger avec MYU, privilégiez les messages écrits et vocaux sur WhatsApp.</p>
+          <a href="https://wa.me/596696178587" target="_blank" rel="noopener noreferrer" className="missu-focusable" style={{ display: "block", padding: "14px 16px", borderRadius: 16, background: C.espresso, color: C.white, textDecoration: "none", lineHeight: 1.6 }}>
+            <strong style={{ display: "block", fontSize: 13 }}>WhatsApp · Contact privilégié</strong>
+            <span style={{ display: "block", fontSize: 16 }}>+596 696 17 85 87</span>
+            <span style={{ fontSize: 11 }}>Messages et vocaux de préférence →</span>
+          </a>
+          <a href="mailto:missustudio.contact@gmail.com" className="missu-focusable" style={{ display: "block", padding: "14px 16px", marginTop: 8, borderRadius: 16, border: `1px solid ${C.blushDeep}`, color: C.espresso, textDecoration: "none", overflowWrap: "anywhere", lineHeight: 1.6 }}>
+            <strong style={{ display: "block", fontSize: 12 }}>Écrire par e-mail</strong>
+            <span style={{ fontSize: 14 }}>missustudio.contact@gmail.com</span>
+          </a>
+        </section>
       </div>
       {showPrivacy && <PrivacyModal onClose={() => setShowPrivacy(false)} />}
     </div>
