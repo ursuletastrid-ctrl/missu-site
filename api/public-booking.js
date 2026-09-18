@@ -99,7 +99,7 @@ module.exports = async function handler(req, res) {
         currency: "EUR",
         merchant_code: sumupMerchantCode,
         description: `Acompte réservation — ${typePrestation}`,
-        redirect_url: `${requestOrigin(req)}/book.html?rdv=${encodeURIComponent(rdv.id)}&paid=1`,
+        redirect_url: `${requestOrigin(req)}/book.html?rdv=${encodeURIComponent(rdv.id)}&paid=1&service=${encodeURIComponent(typePrestation)}&fn=${encodeURIComponent(firstName)}`,
         return_url: `${requestOrigin(req)}/api/sumup-webhook`,
         hosted_checkout: { enabled: true },
       }),

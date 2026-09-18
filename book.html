@@ -1,1 +1,170 @@
-<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Réserver — MYU by Miss'U</title><meta name="description" content="Réservez votre prestation MYU sans créer de compte."><style>*{box-sizing:border-box}body{margin:0;background:#fffcf8;color:#4a372f;font-family:Arial,sans-serif}.wrap{max-width:520px;margin:auto;padding:24px 18px 48px}.brand{text-align:center;margin:12px 0 26px}.brand small{letter-spacing:2px;color:#a9775d}.brand h1{font-family:Georgia,serif;font-size:38px;margin:7px 0}.brand p{margin:0;color:#86695d}.card{background:#fff;border:1px solid #efd2c7;border-radius:24px;padding:20px;box-shadow:0 12px 32px rgba(74,55,47,.08)}h2{font-family:Georgia,serif;margin:0 0 5px;font-size:26px}.sub{font-size:14px;color:#86695d;line-height:1.5;margin:0 0 20px}label{font-size:12px;font-weight:700;display:block;margin:13px 0 6px}input,select{width:100%;padding:13px 12px;border:1px solid #efd2c7;border-radius:13px;background:#fffcf8;font-size:16px;color:#4a372f}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.consent{display:flex;gap:9px;align-items:flex-start;margin:17px 0;font-size:12px;line-height:1.45;color:#86695d}.consent input{width:auto;margin-top:2px}button{width:100%;border:0;border-radius:14px;padding:14px;background:linear-gradient(135deg,#c99a82,#a9775d);color:white;font-weight:700;font-size:15px;cursor:pointer}button:disabled{opacity:.55}.trust{text-align:center;font-size:11px;color:#86695d;margin:12px 0 0}.msg{margin:12px 0;padding:11px;border-radius:12px;background:#f7e5df;font-size:13px;display:none}.back{display:block;text-align:center;color:#a9775d;font-size:12px;margin-top:18px;text-decoration:none}.price{font-size:12px;color:#a9775d;margin-top:5px}.success{text-align:center;padding:20px 5px}.success b{font-family:Georgia,serif;font-size:27px}.hidden{display:none}@media(max-width:390px){.grid{grid-template-columns:1fr}.wrap{padding:18px 13px 40px}}.contact-links{display:grid;gap:10px;margin:14px 0 0;font-style:normal}.contact-link{display:flex;flex-direction:column;gap:5px;min-height:64px;padding:14px 16px;background:#f8eee8;border:1px solid #e2c8ba;border-radius:16px;text-decoration:none;color:#59382c;overflow-wrap:anywhere}.contact-link small{font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase}.contact-link span{font-size:15px;line-height:1.4}.contact-link:hover{background:#f0ddd2}.contact-link:focus-visible,.contact-jump:focus-visible{outline:3px solid #80513b;outline-offset:3px}.contact-jump{display:block;text-align:center;margin:14px 0 0;color:inherit;font-size:12px;text-underline-offset:3px}.contact-whatsapp{background:#59382c;border-color:#59382c;color:#fffaf6}.contact-whatsapp:hover{background:#704936}.contact-link .contact-detail{font-size:12px;font-weight:400}</style><script defer src="/myu-tracking.js"></script></head><body><main class="wrap"><div class="brand"><small>MYU BY MISS'U</small><h1>The Art of Glow</h1><p>Votre naturel sublimé en permanence ✨</p></div><section class="card" id="formCard"><h2>Réserver mon rendez-vous</h2><p class="sub">Choisissez votre prestation et le créneau souhaité à Ducos, en Martinique. <strong>Aucun compte à créer.</strong> Si un acompte est prévu, vous serez dirigée vers le paiement sécurisé SumUp. Le rendez-vous reste soumis à confirmation par MYU.</p><form id="booking"><label for="service">Prestation</label><select id="service" required><option value="">Chargement…</option></select><div class="price" id="price"></div><div class="grid"><div><label for="firstName">Prénom</label><input id="firstName" autocomplete="given-name" required></div><div><label for="lastName">Nom <span style="font-weight:normal">(facultatif)</span></label><input id="lastName" autocomplete="family-name"></div></div><label for="phone">Téléphone</label><input id="phone" type="tel" autocomplete="tel" inputmode="tel" required placeholder="Votre numéro"><label for="email">Email <span style="font-weight:normal">(facultatif)</span></label><input id="email" type="email" autocomplete="email" placeholder="Pour faciliter le suivi"><div class="grid"><div><label for="date">Date souhaitée</label><input id="date" type="date" required></div><div><label for="time">Heure souhaitée</label><input id="time" type="time" required></div></div><label class="consent"><input id="consent" type="checkbox" required><span>J'accepte que mes coordonnées soient utilisées uniquement pour traiter cette demande, organiser le rendez-vous et le paiement éventuel. Le pré-diagnostic et les informations de santé nécessaires à la prestation pourront être complétés séparément.</span></label><div class="msg" id="msg" role="alert"></div><button id="submit" type="submit">Continuer vers la réservation</button><p class="trust">🔒 Paiement sécurisé via SumUp · Vos données ne sont pas revendues</p></form></section><section class="card hidden" id="success"><div class="success"><b>Demande enregistrée ✨</b><p>Votre demande de rendez-vous MYU a bien été transmise. Nous revenons vers vous pour la suite.</p></div></section><section class="card" id="contact" aria-labelledby="contact-title" style="margin-top:20px"><h2 id="contact-title">Besoin d’un conseil ?</h2><p class="sub" style="margin-bottom:0">Pour préparer votre rendez-vous à Ducos, privilégiez un message écrit ou vocal sur WhatsApp.</p><address class="contact-links"><a class="contact-link contact-whatsapp" href="https://wa.me/596696178587" target="_blank" rel="noopener noreferrer"><small>WhatsApp · Contact privilégié</small><span>+596 696 17 85 87</span><span class="contact-detail">Messages et vocaux de préférence →</span></a><a class="contact-link" href="mailto:missustudio.contact@gmail.com"><small>Écrire à MYU</small><span>missustudio.contact@gmail.com</span></a></address></section><a class="back" href="/">← Retour au site MYU</a></main><script>const labels={candy_lips:'Candy Lips',powder_brows:'Powder Brows',velvet_lips:'Velvet Lips',aqualips_blush:'AquaLips Blush',neutralisation:'Neutralisation lèvres foncées',eyeliner_classique:'Eyeliner classique',eyeliner_poudre:'Eyeliner poudré',modele_myu:'MODÈLE MYU',taches_brunes_visage:'Taches brunes · visage',taches_brunes_corps:'Taches brunes · corps',vergetures:'Vergetures',conseil:'Conseil personnalisé',microneedling:'Microneedling',bb_glow:'BB Glow',soins_corps_infrarouge:'Soin corps infrarouge'};let catalog=[];const $=id=>document.getElementById(id);const qs=new URLSearchParams(location.search);const localToday=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'America/Martinique',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());$('date').min=localToday();async function load(){try{const r=await fetch('/api/public-booking');const j=await r.json();if(!r.ok)throw Error(j.error);catalog=j.data||[];$('service').replaceChildren(new Option('Choisir une prestation',''));catalog.forEach(x=>{const label=labels[x.type_prestation]||x.type_prestation.replace(/_/g,' ');const option=new Option(label+(x.is_limited_offer&&x.available_slots!=null?' · '+x.available_slots+' place(s)':''),x.type_prestation);option.disabled=!!(x.is_limited_offer&&Number(x.available_slots)<=0);$('service').add(option)});const wanted=qs.get('service');if(wanted&&catalog.some(x=>x.type_prestation===wanted&&!(x.is_limited_offer&&Number(x.available_slots)<=0))){$('service').value=wanted;showPrice()}}catch(e){$('service').innerHTML='<option value="">Réservation indisponible</option>';show(e.message)}}function showPrice(){const x=catalog.find(v=>v.type_prestation===$('service').value);$('price').textContent=x?(Number(x.deposit_amount)>0?`Acompte à régler : ${Number(x.deposit_amount).toFixed(0)} €`:'Aucun acompte requis en ligne'):''}function show(t){$('msg').textContent=t;$('msg').style.display='block'}$('service').addEventListener('change',showPrice);$('booking').addEventListener('submit',async e=>{e.preventDefault();$('date').min=localToday();if($('date').value<localToday()){show('Choisissez une date à partir d’aujourd’hui, heure de Martinique.');return}if(!$('booking').reportValidity())return;$('msg').style.display='none';$('submit').disabled=true;$('submit').textContent='Préparation…';try{const r=await fetch('/api/public-booking',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({typePrestation:$('service').value,firstName:$('firstName').value,lastName:$('lastName').value,phone:$('phone').value,email:$('email').value,dateRdv:$('date').value,heureRdv:$('time').value,consent:$('consent').checked})});const j=await r.json();if(!r.ok||!j.success)throw Error(j.error||'Impossible de réserver.');const tracked=window.MYUTracking?.bookingCreated(j.data.rdvId,!!j.data.checkoutUrl);if(j.data.checkoutUrl){if(tracked)await new Promise(resolve=>setTimeout(resolve,300));location.href=j.data.checkoutUrl;return}$('formCard').classList.add('hidden');$('success').classList.remove('hidden')}catch(err){show(err.message);$('submit').disabled=false;$('submit').textContent='Continuer vers la réservation'}});if(qs.get('paid')==='1'){$('formCard').classList.add('hidden');$('success').classList.remove('hidden');$('success').querySelector('p').textContent='Merci. Votre paiement est en cours de confirmation sécurisée par SumUp. MYU vérifiera votre paiement et confirmera votre créneau. Un retour sur cette page ne confirme pas à lui seul le paiement.'}else load();</script></body></html>
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Réserver — MYU by Miss'U</title><meta name="description" content="Réservez votre prestation MYU sans créer de compte."><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Jost:wght@300;400;500;600;700&display=swap" rel="stylesheet"><style>
+:root{--blush:#F7E5DF;--blush-deep:#EFD2C7;--cream:#FFFCF8;--cream-soft:#FBF4ED;--rose-gold:#C99A82;--rose-gold-deep:#A9775D;--espresso:#4A372F;--espresso-soft:#86695D}
+*{box-sizing:border-box}
+body{margin:0;background:var(--cream-soft);color:var(--espresso);font-family:'Jost',Arial,sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{max-width:520px;margin:auto;padding:26px 18px 50px}
+.brand{text-align:center;margin:8px 0 26px}
+.brand small{letter-spacing:3px;color:var(--rose-gold-deep);font-weight:600;font-size:11px}
+.brand h1{font-family:'Cormorant Garamond',Georgia,serif;font-size:40px;margin:6px 0;font-weight:500}
+.brand p{margin:0;color:var(--espresso-soft);font-size:13.5px}
+.card{background:var(--cream);border:1px solid var(--blush-deep);border-radius:26px;padding:22px;box-shadow:0 14px 34px rgba(74,55,47,.09)}
+h2{font-family:'Cormorant Garamond',Georgia,serif;margin:0 0 6px;font-size:27px;font-weight:500}
+.sub{font-size:14px;color:var(--espresso-soft);line-height:1.55;margin:0 0 20px}
+label{font-size:12px;font-weight:600;display:block;margin:14px 0 6px;color:var(--espresso)}
+input,select{width:100%;padding:13px 12px;border:1px solid var(--blush-deep);border-radius:13px;background:var(--cream-soft);font-size:16px;color:var(--espresso);font-family:'Jost',sans-serif}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.consent{display:flex;gap:9px;align-items:flex-start;margin:18px 0;font-size:12px;line-height:1.45;color:var(--espresso-soft)}
+.consent input{width:auto;margin-top:2px}
+button{width:100%;border:0;border-radius:14px;padding:15px;background:linear-gradient(135deg,var(--rose-gold),var(--rose-gold-deep));color:#fff;font-weight:600;font-size:15px;cursor:pointer;font-family:'Jost',sans-serif;letter-spacing:.3px;box-shadow:0 10px 24px -8px rgba(169,119,93,.5)}
+button:disabled{opacity:.5;box-shadow:none}
+.trust{text-align:center;font-size:11px;color:var(--espresso-soft);margin:12px 0 0}
+.msg{margin:12px 0;padding:11px;border-radius:12px;background:var(--blush);font-size:13px;display:none;color:var(--espresso)}
+.back{display:block;text-align:center;color:var(--rose-gold-deep);font-size:12px;margin-top:18px;text-decoration:none}
+.price-box{display:flex;justify-content:space-between;align-items:baseline;margin-top:8px;padding:10px 12px;border-radius:12px;background:var(--blush);display:none}
+.price-box.show{display:flex}
+.price-box .full{font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--espresso);font-weight:600}
+.price-box .deposit{font-size:11px;color:var(--rose-gold-deep);font-weight:600;text-align:right}
+.success{text-align:center;padding:22px 5px}
+.success b{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:600}
+.hidden{display:none}
+@media(max-width:390px){.grid{grid-template-columns:1fr}.wrap{padding:18px 13px 40px}}
+.contact-links{display:grid;gap:10px;margin:14px 0 0;font-style:normal}
+.contact-link{display:flex;flex-direction:column;gap:5px;min-height:64px;padding:14px 16px;background:var(--cream-soft);border:1px solid var(--blush-deep);border-radius:16px;text-decoration:none;color:var(--espresso);overflow-wrap:anywhere}
+.contact-link small{font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--rose-gold-deep)}
+.contact-link span{font-size:15px;line-height:1.4}
+.contact-link:hover{background:var(--blush)}
+.contact-link:focus-visible,.contact-jump:focus-visible{outline:3px solid var(--rose-gold-deep);outline-offset:3px}
+.contact-whatsapp{background:var(--espresso);border-color:var(--espresso);color:#fffaf6}
+.contact-whatsapp small{color:var(--rose-gold)}
+.contact-whatsapp:hover{background:#5c483d}
+.contact-link .contact-detail{font-size:12px;font-weight:400;opacity:.85}
+.prediag-cta{display:block;text-align:center;text-decoration:none;background:linear-gradient(135deg,var(--rose-gold),var(--rose-gold-deep));color:#fff;padding:15px 17px;border-radius:999px;font-weight:600;font-size:14px;margin-top:16px}
+</style><script defer src="/myu-tracking.js"></script><script defer src="/myu-catalog.js"></script></head>
+<body><main class="wrap">
+<div class="brand"><small>MYU BY MISS'U</small><h1>The Art of Glow</h1><p>Votre naturel sublimé en permanence ✨</p></div>
+
+<section class="card" id="formCard">
+<h2>Réserver mon rendez-vous</h2>
+<p class="sub">Choisissez votre prestation et le créneau souhaité à Ducos, en Martinique. <strong>Aucun compte à créer.</strong> Si un acompte est prévu, vous serez dirigée vers le paiement sécurisé SumUp. Le rendez-vous reste soumis à confirmation par MYU.</p>
+<form id="booking">
+<label for="service">Prestation</label>
+<select id="service" required><option value="">Chargement…</option></select>
+<div class="price-box" id="priceBox"><span class="full" id="priceFull"></span><span class="deposit" id="priceDeposit"></span></div>
+<div class="grid"><div><label for="firstName">Prénom</label><input id="firstName" autocomplete="given-name" required></div><div><label for="lastName">Nom <span style="font-weight:normal">(facultatif)</span></label><input id="lastName" autocomplete="family-name"></div></div>
+<label for="phone">Téléphone</label><input id="phone" type="tel" autocomplete="tel" inputmode="tel" required placeholder="Votre numéro">
+<label for="email">Email <span style="font-weight:normal">(facultatif)</span></label><input id="email" type="email" autocomplete="email" placeholder="Pour faciliter le suivi">
+<div class="grid"><div><label for="date">Date souhaitée</label><input id="date" type="date" required></div><div><label for="time">Heure souhaitée</label><input id="time" type="time" required></div></div>
+<label class="consent"><input id="consent" type="checkbox" required><span>J'accepte que mes coordonnées soient utilisées uniquement pour traiter cette demande, organiser le rendez-vous et le paiement éventuel. Le pré-diagnostic et les informations de santé nécessaires à la prestation pourront être complétés séparément.</span></label>
+<div class="msg" id="msg" role="alert"></div>
+<button id="submit" type="submit">Continuer vers la réservation</button>
+<p class="trust">🔒 Paiement sécurisé via SumUp · Vos données ne sont pas revendues</p>
+</form>
+</section>
+
+<section class="card hidden" id="success">
+<div class="success"><b>Demande enregistrée ✨</b><p id="successText">Votre demande de rendez-vous MYU a bien été transmise. Nous revenons vers vous pour la suite.</p></div>
+<a class="prediag-cta hidden" id="prediagLink" href="#">Compléter mon pré-diagnostic (2 min) →</a>
+</section>
+
+<section class="card" id="contact" aria-labelledby="contact-title" style="margin-top:20px">
+<h2 id="contact-title">Besoin d'un conseil ?</h2>
+<p class="sub" style="margin-bottom:0">Pour préparer votre rendez-vous à Ducos, privilégiez un message écrit ou vocal sur WhatsApp.</p>
+<address class="contact-links">
+<a class="contact-link contact-whatsapp" href="https://wa.me/596696178587" target="_blank" rel="noopener noreferrer"><small>WhatsApp · Contact privilégié</small><span>+596 696 17 85 87</span><span class="contact-detail">Messages et vocaux de préférence →</span></a>
+<a class="contact-link" href="mailto:missustudio.contact@gmail.com"><small>Écrire à MYU</small><span>missustudio.contact@gmail.com</span></a>
+</address>
+</section>
+<a class="back" href="/">← Retour au site MYU</a>
+</main>
+<script>
+const labels={candy_lips:'Candy Lips',powder_brows:'Powder Brows',velvet_lips:'Velvet Lips',aqualips_blush:'AquaLips Blush',neutralisation:'Neutralisation lèvres foncées',eyeliner_classique:'Eyeliner classique',eyeliner_poudre:'Eyeliner poudré',modele_myu:'MODÈLE MYU',taches_brunes_visage:'Taches brunes · visage',taches_brunes_corps:'Taches brunes · corps',vergetures:'Vergetures',conseil:'Conseil personnalisé',microneedling:'Microneedling',bb_glow:'BB Glow',soins_corps_infrarouge:'Soin corps infrarouge'};
+let catalog=[];
+const $=id=>document.getElementById(id);
+const qs=new URLSearchParams(location.search);
+const localToday=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'America/Martinique',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+$('date').min=localToday();
+
+async function load(){
+  try{
+    const r=await fetch('/api/public-booking');
+    const j=await r.json();
+    if(!r.ok)throw Error(j.error);
+    catalog=j.data||[];
+    $('service').replaceChildren(new Option('Choisir une prestation',''));
+    catalog.forEach(x=>{
+      const label=labels[x.type_prestation]||x.type_prestation.replace(/_/g,' ');
+      const option=new Option(label+(x.is_limited_offer&&x.available_slots!=null?' · '+x.available_slots+' place(s)':''),x.type_prestation);
+      option.disabled=!!(x.is_limited_offer&&Number(x.available_slots)<=0);
+      $('service').add(option);
+    });
+    const wanted=qs.get('service');
+    if(wanted&&catalog.some(x=>x.type_prestation===wanted&&!(x.is_limited_offer&&Number(x.available_slots)<=0))){
+      $('service').value=wanted;
+      showPrice();
+    }
+  }catch(e){
+    $('service').innerHTML='<option value="">Réservation indisponible</option>';
+    show(e.message);
+  }
+}
+
+function showPrice(){
+  const x=catalog.find(v=>v.type_prestation===$('service').value);
+  const box=$('priceBox');
+  if(!x){ box.classList.remove('show'); return; }
+  const full = window.myuFindService ? window.myuFindService(x.type_prestation) : null;
+  $('priceFull').textContent = full ? (window.myuFormatPrice(full)) : '';
+  $('priceDeposit').textContent = Number(x.deposit_amount)>0 ? `Acompte en ligne : ${Number(x.deposit_amount).toFixed(0)} €` : 'Aucun acompte requis en ligne';
+  box.classList.add('show');
+}
+
+function show(t){$('msg').textContent=t;$('msg').style.display='block'}
+
+$('service').addEventListener('change',showPrice);
+
+$('booking').addEventListener('submit',async e=>{
+  e.preventDefault();
+  $('date').min=localToday();
+  if($('date').value<localToday()){show('Choisissez une date à partir d’aujourd’hui, heure de Martinique.');return}
+  if(!$('booking').reportValidity())return;
+  $('msg').style.display='none';
+  $('submit').disabled=true;
+  $('submit').textContent='Préparation…';
+  try{
+    const r=await fetch('/api/public-booking',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({typePrestation:$('service').value,firstName:$('firstName').value,lastName:$('lastName').value,phone:$('phone').value,email:$('email').value,dateRdv:$('date').value,heureRdv:$('time').value,consent:$('consent').checked})});
+    const j=await r.json();
+    if(!r.ok||!j.success)throw Error(j.error||'Impossible de réserver.');
+    const tracked=window.MYUTracking?.bookingCreated(j.data.rdvId,!!j.data.checkoutUrl);
+    if(j.data.checkoutUrl){
+      if(tracked)await new Promise(resolve=>setTimeout(resolve,300));
+      location.href=j.data.checkoutUrl;
+      return;
+    }
+    $('formCard').classList.add('hidden');
+    $('success').classList.remove('hidden');
+    showPrediagLink(j.data.rdvId, $('service').value, $('firstName').value);
+  }catch(err){
+    show(err.message);
+    $('submit').disabled=false;
+    $('submit').textContent='Continuer vers la réservation';
+  }
+});
+
+function showPrediagLink(rdvId, service, firstName){
+  if(!rdvId) return;
+  const a=$('prediagLink');
+  const params=new URLSearchParams({rdv:rdvId, service: service||'', fn: firstName||''});
+  a.href='/prediag.html?'+params.toString();
+  a.classList.remove('hidden');
+}
+
+if(qs.get('paid')==='1'){
+  $('formCard').classList.add('hidden');
+  $('success').classList.remove('hidden');
+  $('successText').textContent='Merci. Votre paiement est en cours de confirmation sécurisée par SumUp. MYU vérifiera votre paiement et confirmera votre créneau. Un retour sur cette page ne confirme pas à lui seul le paiement.';
+  showPrediagLink(qs.get('rdv'), qs.get('service'), qs.get('fn'));
+}else{
+  load();
+}
+</script>
+</body></html>

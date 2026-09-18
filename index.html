@@ -433,9 +433,13 @@ const CONSENT_GROUPS = [
 
 const CONSENTS = CONSENT_GROUPS.flatMap((g) => g.items);
 
+// Photos facultatives (priorité produit, sept. 2026) : aucune zone n'est plus
+// obligatoire pour continuer. Elles restent recommandées lorsqu'elles aident
+// réellement (neutralisation, correction, ancienne pigmentation) mais ne
+// bloquent jamais la validation du pré-diagnostic — voir PhotosStep ci-dessous.
 const PHOTO_ZONES = [
-  { key: "face", label: "Visage de face", required: true },
-  { key: "zone", label: "Rapprochée de la zone", required: true },
+  { key: "face", label: "Visage de face", required: false },
+  { key: "zone", label: "Rapprochée de la zone", required: false },
   { key: "profilDroit", label: "Profil droit", required: false },
   { key: "profilGauche", label: "Profil gauche", required: false },
   { key: "inspiration", label: "Photo d'inspiration", required: false },
@@ -1540,11 +1544,13 @@ function PhotosStep({ photos, onUpload, onRemove, onNext, onBack }) {
 
   return (
     <div className="missu-step">
-      <StepHeader onBack={onBack} title="Ajoutez vos photos" />
+      <StepHeader onBack={onBack} title="Photos — facultatif" />
       <ProgressDots step={3} total={6} />
       <p style={{ fontFamily: FONT_BODY, fontSize: 13.5, color: C.espressoSoft, lineHeight: 1.6, marginTop: 0 }}>
-        Merci d'importer des photos nettes, sans filtre, prises en lumière naturelle. Ces photos servent
-        uniquement à évaluer votre demande et ne seront jamais publiées sans votre accord.
+        Vous pouvez ajouter des photos si elles peuvent nous aider à préparer votre rendez-vous. Aucune
+        photo n'est obligatoire pour continuer. Si vous en ajoutez, préférez des photos nettes, sans
+        filtre, prises en lumière naturelle — elles servent uniquement à évaluer votre demande et ne
+        seront jamais publiées sans votre accord.
       </p>
 
       {errorMsg && (
@@ -1583,6 +1589,9 @@ function PhotosStep({ photos, onUpload, onRemove, onNext, onBack }) {
       </div>
 
       <PrimaryButton onClick={onNext} disabled={!valid} icon={ChevronRight}>Continuer</PrimaryButton>
+      <div style={{ textAlign: "center", marginTop: 4 }}>
+        <GhostButton onClick={onNext}>Passer cette étape</GhostButton>
+      </div>
     </div>
   );
 }
