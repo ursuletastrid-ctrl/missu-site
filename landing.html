@@ -5,6 +5,10 @@ body{margin:0;background:var(--cream-soft);color:var(--espresso);font-family:'Jo
 .wrap{max-width:640px;margin:auto;padding:16px 16px 110px}
 h1,h2,.serif{font-family:'Cormorant Garamond',Georgia,serif}
 .hero{position:relative;overflow:hidden;padding:38px 24px 30px;background-image:radial-gradient(circle at 82% -6%,var(--rose-gold) 0,transparent 42%),linear-gradient(150deg,rgba(43,23,17,.94) 0%,rgba(92,51,39,.9) 58%,rgba(169,119,93,.88) 100%),url(/assets/myu/brand/myu-fond-ecran.webp);background-size:cover,cover,cover;background-position:center,center,center 30%;color:#fff;border-radius:32px;box-shadow:0 20px 50px rgba(43,23,17,.25)}
+#glowCanvas{position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:none;z-index:0;opacity:0;transition:opacity 1.2s ease}
+#glowCanvas.ready{opacity:1}
+.hero-content{position:relative;z-index:1}
+@media(prefers-reduced-motion:reduce){#glowCanvas{display:none}}
 .crown{font-size:24px;opacity:.9}
 .eyebrow{font-size:10.5px;letter-spacing:3.5px;color:var(--blush-deep);font-weight:600;text-transform:uppercase}
 .logo{font-family:'Cormorant Garamond',serif;font-size:37px;letter-spacing:6px;margin:4px 0 0;font-weight:500}
@@ -75,6 +79,8 @@ h1,h2,.serif{font-family:'Cormorant Garamond',Georgia,serif}
 <body><main class="wrap">
 
 <section class="hero">
+<canvas id="glowCanvas" aria-hidden="true"></canvas>
+<div class="hero-content">
 <div class="crown">♕</div>
 <div class="eyebrow">MYU BY MISS'U · DUCOS, MARTINIQUE</div>
 <div class="logo">MYU</div>
@@ -84,6 +90,7 @@ h1,h2,.serif{font-family:'Cormorant Garamond',Georgia,serif}
 <a class="cta" href="/book.html">RÉSERVER MON RENDEZ-VOUS →</a>
 <p class="micro">Choix de la prestation · Acompte sécurisé via SumUp · Pré-diagnostic après réservation</p>
 <a class="jump" href="#contact">Une question ? Contactez MYU</a>
+</div>
 </section>
 
 <section class="section">
@@ -184,4 +191,114 @@ h1,h2,.serif{font-family:'Cormorant Garamond',Georgia,serif}
 })();
 </script>
 
+<script>
+(function(){
+  // Scène 3D décorative "glow" dans le hero — purement ambiance, jamais bloquante :
+  // - chargée après le "load" de la page (ne retarde jamais le CTA de réservation) ;
+  // - désactivée si "prefers-reduced-motion" ou si le canvas/WebGL n'est pas dispo ;
+  // - mise en pause dès que le hero sort de l'écran ou que l'onglet passe en arrière-plan.
+  var canvas = document.getElementById('glowCanvas');
+  if (!canvas) return;
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+  function start(){
+    import('https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js').then(function(THREE){
+      try{
+        var hero = canvas.closest('.hero');
+        var renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: false, powerPreference: 'low-power' });
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+
+        var scene = new THREE.Scene();
+        var camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
+        camera.position.z = 12;
+
+        // Sprite circulaire douce générée localement (aucune image à charger).
+        var spriteCanvas = document.createElement('canvas');
+        spriteCanvas.width = spriteCanvas.height = 64;
+        var sctx = spriteCanvas.getContext('2d');
+        var grad = sctx.createRadialGradient(32,32,0,32,32,32);
+        grad.addColorStop(0, 'rgba(255,245,235,1)');
+        grad.addColorStop(0.4, 'rgba(217,180,147,.65)');
+        grad.addColorStop(1, 'rgba(217,180,147,0)');
+        sctx.fillStyle = grad;
+        sctx.fillRect(0,0,64,64);
+        var sprite = new THREE.CanvasTexture(spriteCanvas);
+
+        var COUNT = window.innerWidth < 640 ? 90 : 160;
+        var positions = new Float32Array(COUNT * 3);
+        var speeds = new Float32Array(COUNT);
+        for (var i = 0; i < COUNT; i++){
+          positions[i*3] = (Math.random()-0.5) * 16;
+          positions[i*3+1] = (Math.random()-0.5) * 10;
+          positions[i*3+2] = (Math.random()-0.5) * 8;
+          speeds[i] = 0.15 + Math.random() * 0.35;
+        }
+        var geometry = new THREE.BufferGeometry();
+        geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        var material = new THREE.PointsMaterial({
+          size: 0.55, map: sprite, transparent: true, opacity: 0.85,
+          depthWrite: false, blending: THREE.AdditiveBlending, color: new THREE.Color('#D9B493')
+        });
+        var points = new THREE.Points(geometry, material);
+        scene.add(points);
+
+        var running = true;
+        var pointerX = 0, pointerY = 0;
+        window.addEventListener('pointermove', function(e){
+          pointerX = (e.clientX / window.innerWidth - 0.5);
+          pointerY = (e.clientY / window.innerHeight - 0.5);
+        }, { passive: true });
+
+        function resize(){
+          var w = hero.clientWidth, h = hero.clientHeight;
+          if (!w || !h) return;
+          renderer.setSize(w, h, false);
+          camera.aspect = w / h;
+          camera.updateProjectionMatrix();
+        }
+        resize();
+        window.addEventListener('resize', resize, { passive: true });
+
+        var clock = new THREE.Clock();
+        function animate(){
+          if (!running) return;
+          requestAnimationFrame(animate);
+          var dt = clock.getDelta();
+          var pos = geometry.attributes.position.array;
+          for (var i = 0; i < COUNT; i++){
+            pos[i*3+1] += speeds[i] * dt * 0.6;
+            if (pos[i*3+1] > 5) pos[i*3+1] = -5;
+          }
+          geometry.attributes.position.needsUpdate = true;
+          points.rotation.y += dt * 0.05;
+          camera.position.x += (pointerX * 2 - camera.position.x) * 0.02;
+          camera.position.y += (-pointerY * 1.2 - camera.position.y) * 0.02;
+          camera.lookAt(0,0,0);
+          renderer.render(scene, camera);
+        }
+        animate();
+        canvas.classList.add('ready');
+
+        // Pause si le hero sort de l'écran (scroll) ou si l'onglet est masqué.
+        if ('IntersectionObserver' in window){
+          new IntersectionObserver(function(entries){
+            running = entries[0].isIntersecting && !document.hidden;
+            if (running) animate();
+          }, { threshold: 0.01 }).observe(hero);
+        }
+        document.addEventListener('visibilitychange', function(){
+          running = !document.hidden;
+          if (running) animate();
+        });
+      }catch(e){ /* dégradation silencieuse : le fond dégradé existant suffit */ }
+    }).catch(function(){ /* CDN indisponible : pas grave, purement décoratif */ });
+  }
+
+  if ('requestIdleCallback' in window){
+    window.addEventListener('load', function(){ requestIdleCallback(start, { timeout: 2000 }); });
+  } else {
+    window.addEventListener('load', function(){ setTimeout(start, 600); });
+  }
+})();
+</script>
 </body></html>
