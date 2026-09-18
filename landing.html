@@ -179,7 +179,7 @@ h1,h2,.serif{font-family:'Cormorant Garamond',Georgia,serif}
   function render(){
     var list = document.getElementById('servicesList');
     var catalog = window.MYU_CATALOG || [];
-    var featured = ['powder_brows','neutralisation','candy_lips','eyeliner_poudre'];
+    var featured = ['modele_myu','powder_brows','neutralisation','candy_lips','eyeliner_poudre'];
     var rows = featured.map(function(k){ return catalog.find(function(s){ return s.key === k; }); }).filter(Boolean);
     if (!rows.length) { return; }
     list.innerHTML = rows.map(function(s){
