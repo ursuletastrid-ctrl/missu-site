@@ -13,7 +13,7 @@ const { createClient } = require("@supabase/supabase-js");
 
 // L'URL du projet n'est pas un secret (elle est déjà visible dans index.html
 // côté navigateur) : elle peut rester en dur ici pour simplifier la configuration.
-const SUPABASE_URL = "https://blfsbzwwsqixlzxobavh.supabase.co";
+const SUPABASE_URL = process.env.SUPABASE_URL || "https://blfsbzwwsqixlzxobavh.supabase.co";
 
 function getAdminClient() {
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;

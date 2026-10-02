@@ -1,17 +1,20 @@
+// /api/public-booking — réservation sans compte (book.html).
+//
+// GET  : catalogue des prestations réservables (acompte, places, durée, lieux).
+// POST : { typePrestation, lieu, dateRdv, heureRdv, firstName, lastName, phone, email, consent }
+//        1. vérifie TOUT côté serveur (prestation active, lieu proposé, créneau
+//           réellement libre : horaires, plages bloquées, agenda d'Astrid) ;
+//        2. enregistre la cliente (profil) et la réservation avec ses
+//           coordonnées, le créneau étant maintenu (bloqué) pendant le paiement ;
+//        3. seulement ensuite, ouvre le paiement SumUp de l'acompte
+//           (checkout valable jusqu'à l'expiration du maintien).
+// Aucun paiement ne peut être lancé sans prestation + lieu + jour + horaire valides.
+
 const { getAdminClient } = require("./_supabaseAdmin");
-
-function requestOrigin(req) {
-  const proto = req.headers["x-forwarded-proto"] || "https";
-  const host = req.headers["x-forwarded-host"] || req.headers.host;
-  return `${proto}://${host}`;
-}
-
-function clean(v, max = 120) {
-  return String(v || "").trim().slice(0, max);
-}
+const B = require("./_booking");
 
 function referralCode(firstName) {
-  const base = clean(firstName, 10).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().replace(/[^A-Z]/g, "") || "MYU";
+  const base = B.clean(firstName, 10).normalize("NFD").replace(/[̀-ͯ]/g, "").toUpperCase().replace(/[^A-Z]/g, "") || "MYU";
   return `MYU-${base}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
 }
 
@@ -21,43 +24,46 @@ module.exports = async function handler(req, res) {
   catch (e) { return res.status(500).json({ error: e.message }); }
 
   if (req.method === "GET") {
-    const { data, error } = await admin.from("prestations_reservation").select("type_prestation,deposit_amount,is_limited_offer,available_slots,active").eq("active", true);
-        if (error) {
-      console.error("[public-booking] lecture prestations_reservation :", error.message);
+    try {
+      const settings = await B.loadSettings(admin);
+      const { data, error } = await admin.from("prestations_reservation")
+        .select("type_prestation,deposit_amount,is_limited_offer,available_slots,active,duree_minutes").eq("active", true);
+      if (error) throw error;
+      return res.status(200).json({ success: true, data: data || [], lieux: settings.lieux });
+    } catch (e) {
+      console.error("[public-booking] lecture catalogue :", e.message);
       return res.status(500).json({ error: "Réservations momentanément indisponibles." });
     }
-    return res.status(200).json({ success: true, data: data || [] });
   }
 
   if (req.method !== "POST") return res.status(405).json({ error: "Méthode non autorisée." });
 
-  let body = req.body;
-  if (typeof body === "string") { try { body = JSON.parse(body || "{}"); } catch { body = {}; } }
-  body = body || {};
+  const body = B.requestBody(req);
+  const firstName = B.clean(body.firstName, 60);
+  const lastName = B.clean(body.lastName, 60);
+  const phone = B.clean(body.phone, 30);
+  const contactEmail = B.clean(body.email, 160).toLowerCase();
+  const input = {
+    typePrestation: B.clean(body.typePrestation, 80),
+    lieu: B.clean(body.lieu, 80),
+    dateRdv: B.clean(body.dateRdv, 10),
+    heureRdv: B.clean(body.heureRdv, 5),
+  };
 
-  const firstName = clean(body.firstName, 60);
-  const lastName = clean(body.lastName, 60);
-  const phone = clean(body.phone, 30);
-  const contactEmail = clean(body.email, 160).toLowerCase();
-  const typePrestation = clean(body.typePrestation, 80);
-  const dateRdv = clean(body.dateRdv, 10) || null;
-  const heureRdv = clean(body.heureRdv, 5) || null;
-  const consent = body.consent === true;
+  if (!firstName || !phone) return res.status(400).json({ error: "Prénom et téléphone sont requis." });
+  if (!/^[+\d][\d\s.-]{5,}$/.test(phone)) return res.status(400).json({ error: "Numéro de téléphone invalide." });
+  if (contactEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail)) return res.status(400).json({ error: "Email invalide." });
+  if (body.consent !== true) return res.status(400).json({ error: "Votre accord est requis pour transmettre la demande et organiser le rendez-vous." });
 
-  if (!firstName || !phone || !typePrestation || !dateRdv || !heureRdv) return res.status(400).json({ error: "Prénom, téléphone, prestation, date et heure sont requis." });
-  if (!consent) return res.status(400).json({ error: "Votre accord est requis pour transmettre la demande et organiser le rendez-vous." });
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateRdv) || !/^\d{2}:\d{2}$/.test(heureRdv)) return res.status(400).json({ error: "Créneau invalide." });
-
-  const { data: reservation, error: resaErr } = await admin.from("prestations_reservation").select("*").eq("type_prestation", typePrestation).maybeSingle();
-  if (resaErr || !reservation || !reservation.active) return res.status(400).json({ error: "Cette prestation n'est pas disponible à la réservation en ligne." });
-  if (reservation.is_limited_offer && (reservation.available_slots ?? 0) <= 0) return res.status(409).json({ error: "Cette offre est complète." });
-
-  const depositAmount = Number(reservation.deposit_amount) || 0;
-  const guestEmail = `booking-${Date.now()}-${Math.random().toString(36).slice(2, 9)}@guest.myu.local`;
-  const password = `${Math.random().toString(36).slice(2)}A!9${Date.now()}`;
   let guestId = null;
-
+  let rdv = null;
   try {
+    // 1. Vérification complète du créneau AVANT toute création.
+    const { settings, prestation } = await B.assertSlotBookable(admin, input);
+
+    // 2. Cliente + réservation (créneau maintenu) avec ses coordonnées.
+    const guestEmail = `booking-${Date.now()}-${Math.random().toString(36).slice(2, 9)}@guest.myu.local`;
+    const password = `${Math.random().toString(36).slice(2)}A!9${Date.now()}`;
     const { data: authData, error: authErr } = await admin.auth.admin.createUser({
       email: guestEmail, password, email_confirm: true,
       user_metadata: { first_name: firstName, last_name: lastName, phone, contact_email: contactEmail, source: "public_booking" },
@@ -70,52 +76,27 @@ module.exports = async function handler(req, res) {
     }, { onConflict: "id" });
     if (profileErr) throw profileErr;
 
-    const { data: rdv, error: insertErr } = await admin.from("rendez_vous").insert({
-      client_id: guestId,
-      type_prestation: typePrestation,
-      date_rdv: dateRdv,
-      heure_rdv: heureRdv,
-      statut: depositAmount > 0 ? "en_attente_paiement" : "demande",
-      deposit_amount: depositAmount,
-      payment_status: depositAmount > 0 ? "en_attente" : "non_requis",
-    }).select().single();
-    if (insertErr) {
-      if (insertErr.code === "23505") return res.status(409).json({ error: "Ce créneau vient d'être réservé. Choisissez-en un autre." });
-      throw insertErr;
+    rdv = await B.createHold(admin, { clientId: guestId, input, contactEmail, settings, prestation });
+
+    // 3. Paiement (ou confirmation directe si aucun acompte n'est prévu).
+    if (prestation.deposit_amount <= 0) {
+      await B.syncBookingExternal(admin, rdv.id).catch((e) => console.error("[public-booking] synchro :", e.message));
+      return res.status(200).json({ success: true, data: { rdvId: rdv.id, checkoutUrl: null } });
     }
-
-    if (depositAmount <= 0) return res.status(200).json({ success: true, data: { rdvId: rdv.id, checkoutUrl: null } });
-
-    const sumupApiKey = process.env.SUMUP_API_KEY;
-    const sumupMerchantCode = process.env.SUMUP_MERCHANT_CODE;
-    if (!sumupApiKey || !sumupMerchantCode) throw new Error("Paiement en ligne momentanément indisponible.");
-
-    const sumupRes = await fetch("https://api.sumup.com/v0.1/checkouts", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${sumupApiKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        checkout_reference: rdv.id,
-        amount: depositAmount,
-        currency: "EUR",
-        merchant_code: sumupMerchantCode,
-        description: `Acompte réservation — ${typePrestation}`,
-        redirect_url: `${requestOrigin(req)}/book.html?rdv=${encodeURIComponent(rdv.id)}&paid=1&service=${encodeURIComponent(typePrestation)}&fn=${encodeURIComponent(firstName)}`,
-        return_url: `${requestOrigin(req)}/api/sumup-webhook`,
-        hosted_checkout: { enabled: true },
-      }),
+    const checkoutUrl = await B.startPayment(admin, rdv, {
+      redirectUrl: `${B.SITE_ORIGIN}/book.html?rdv=${encodeURIComponent(rdv.id)}&paid=1`,
     });
-    const checkout = await sumupRes.json().catch(() => ({}));
-    if (!sumupRes.ok || !checkout?.id) throw new Error(checkout?.message || "Le paiement n'a pas pu être initié.");
-
-    await admin.from("rendez_vous").update({ payment_reference: checkout.id }).eq("id", rdv.id);
-    return res.status(200).json({ success: true, data: { rdvId: rdv.id, checkoutUrl: checkout.hosted_checkout_url || null } });
+    return res.status(200).json({ success: true, data: { rdvId: rdv.id, checkoutUrl, maintienExpireLe: rdv.maintien_expire_le } });
   } catch (e) {
-    console.error("[public-booking]", e?.message || e);
-    if (guestId) {
-      // Ne supprime le profil invité que si aucun rendez-vous n'a survécu ; la suppression Auth cascade selon le schéma.
-      const { data: rows } = await admin.from("rendez_vous").select("id").eq("client_id", guestId).limit(1);
-      if (!rows?.length) await admin.auth.admin.deleteUser(guestId).catch(() => {});
+    if (guestId && !rdv) {
+      // Aucune réservation créée : on ne garde pas de fiche cliente orpheline.
+      await admin.auth.admin.deleteUser(guestId).catch(() => {});
     }
-    return res.status(500).json({ error: "La réservation n'a pas pu être finalisée. Réessayez ou contactez MYU." });
+    const status = e.status || 500;
+    if (status >= 500) console.error("[public-booking]", e?.message || e);
+    const message = status === 503
+      ? "Les disponibilités ne peuvent pas être vérifiées pour le moment. Merci de réessayer dans quelques minutes."
+      : status < 500 || status === 502 ? e.message : "La réservation n'a pas pu être finalisée. Réessayez ou contactez MYU.";
+    return res.status(status).json({ error: message });
   }
 };

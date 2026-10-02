@@ -15,6 +15,7 @@
 
 const crypto = require("crypto");
 const { getAdminClient } = require("./_supabaseAdmin");
+const B = require("./_booking");
 
 const PRESTATION_STATUTS = ["a_venir", "realisee", "en_cicatrisation", "suivi_necessaire", "retouche_a_prevoir", "terminee"];
 const RDV_STATUTS = ["demande", "en_attente_paiement", "confirme", "modifie", "annule", "terminee"];
@@ -237,19 +238,54 @@ async function upsertEtapeParcours(admin, { etapeId, prestationId, etape, ordre,
 // libération de la place dans le même geste — sinon la place reste bloquée
 // même après annulation. Jamais automatique : c'est un choix de l'équipe MYU
 // (ex. annulation tardive où la place n'est pas remise en vente).
-async function updateRendezVous(admin, { rdvId, statut, dateRdv, heureRdv, paymentStatus, releaseSlot }) {
+async function updateRendezVous(admin, { rdvId, statut, dateRdv, heureRdv, lieu, paymentStatus, releaseSlot }) {
   if (!rdvId) throw Object.assign(new Error("rdvId requis."), { status: 400 });
   if (statut && !RDV_STATUTS.includes(statut)) throw Object.assign(new Error("Statut de rendez-vous invalide."), { status: 400 });
   if (paymentStatus && !PAYMENT_STATUTS.includes(paymentStatus)) throw Object.assign(new Error("Statut de paiement invalide."), { status: 400 });
 
+  const current = await B.getRdv(admin, rdvId);
+  if (!current) throw Object.assign(new Error("Rendez-vous introuvable."), { status: 404 });
+
   const patch = {};
   if (statut !== undefined) patch.statut = statut;
-  if (dateRdv !== undefined) patch.date_rdv = dateRdv || null;
-  if (heureRdv !== undefined) patch.heure_rdv = heureRdv || null;
   if (paymentStatus !== undefined) patch.payment_status = paymentStatus;
+  if (lieu !== undefined && lieu) patch.lieu = lieu;
+
+  // Changement de jour/horaire : la plage complète est recalculée (durée de la
+  // prestation) et la base refuse tout chevauchement avec un autre créneau bloqué.
+  const newDate = dateRdv !== undefined ? dateRdv : current.date_rdv;
+  const newHeure = heureRdv !== undefined ? (heureRdv || "").slice(0, 5) : (current.heure_rdv ? String(current.heure_rdv).slice(0, 5) : null);
+  if ((dateRdv !== undefined || heureRdv !== undefined) && newDate && newHeure) {
+    if (!B.DATE_RE.test(newDate) || !B.TIME_RE.test(newHeure)) throw Object.assign(new Error("Jour ou horaire invalide."), { status: 400 });
+    let duree = current.duree_minutes;
+    if (!duree && current.type_prestation) duree = (await B.loadPrestation(admin, current.type_prestation).catch(() => null))?.duree_minutes;
+    duree = duree || 180;
+    const debut = B.localToDate(newDate, newHeure);
+    patch.date_rdv = newDate;
+    patch.heure_rdv = newHeure;
+    patch.debut = debut.toISOString();
+    patch.fin = new Date(debut.getTime() + duree * 60000).toISOString();
+    patch.duree_minutes = duree;
+  }
+
+  const finalStatut = patch.statut || current.statut;
+  if (finalStatut === "annule" || finalStatut === "terminee") {
+    patch.bloque = false;
+    patch.maintien_expire_le = null;
+  } else if ((patch.debut || current.debut) && ["confirme", "modifie", "demande"].includes(finalStatut)) {
+    patch.bloque = true;
+  }
+  // Toute modification d'un rendez-vous confirmé est répercutée sur l'agenda et la feuille.
+  if (patch.bloque === false && current.agenda_evenement_id) patch.agenda_statut = "a_retirer";
+  else if (patch.bloque === true && (patch.debut || !current.bloque || current.agenda_statut !== "ok")) patch.agenda_statut = "a_synchroniser";
+  else if (patch.bloque === true && patch.lieu) patch.agenda_statut = "a_synchroniser";
+  if (current.feuille_statut !== "non_requis" || patch.bloque) patch.feuille_statut = "a_synchroniser";
 
   const { data, error } = await admin.from("rendez_vous").update(patch).eq("id", rdvId).select().single();
-  if (error) throw error;
+  if (error) {
+    if (error.code === "23P01" || error.code === "23505") throw Object.assign(new Error("Ce créneau chevauche un autre rendez-vous déjà bloqué."), { status: 409 });
+    throw error;
+  }
 
   if (releaseSlot && statut === "annule" && data?.type_prestation) {
     const { data: reservation } = await admin
@@ -262,7 +298,10 @@ async function updateRendezVous(admin, { rdvId, statut, dateRdv, heureRdv, payme
     }
   }
 
-  return data;
+  if (data.agenda_statut === "a_synchroniser" || data.agenda_statut === "a_retirer" || data.feuille_statut === "a_synchroniser") {
+    await B.syncBookingExternal(admin, rdvId).catch((e) => console.error("[admin-myu] synchro :", e.message));
+  }
+  return await B.getRdv(admin, rdvId);
 }
 
 // ------------------------------------------------------------
@@ -278,13 +317,18 @@ async function listPrestationsReservation(admin) {
   return data || [];
 }
 
-async function upsertPrestationReservation(admin, { typePrestation, depositAmount, active, totalSlots, availableSlots }) {
+async function upsertPrestationReservation(admin, { typePrestation, depositAmount, active, totalSlots, availableSlots, dureeMinutes }) {
   if (!typePrestation) throw Object.assign(new Error("typePrestation requis."), { status: 400 });
   const patch = { type_prestation: typePrestation, updated_at: new Date().toISOString() };
   if (depositAmount !== undefined) patch.deposit_amount = depositAmount;
   if (active !== undefined) patch.active = active;
   if (totalSlots !== undefined) patch.total_slots = totalSlots;
   if (availableSlots !== undefined) patch.available_slots = availableSlots;
+  if (dureeMinutes !== undefined) {
+    const d = Number(dureeMinutes);
+    if (!Number.isInteger(d) || d < 15 || d > 600) throw Object.assign(new Error("Durée invalide (15 à 600 minutes)."), { status: 400 });
+    patch.duree_minutes = d;
+  }
   const { data, error } = await admin.from("prestations_reservation").upsert(patch).select().single();
   if (error) throw error;
   return data;
@@ -335,7 +379,20 @@ async function listAgenda(admin, { dateFrom, dateTo }) {
   const { data: rdvs, error } = await query;
   if (error) throw error;
 
-  const clientIds = [...new Set((rdvs || []).map((r) => r.client_id).filter(Boolean))];
+  // Rattrapage des synchronisations en attente à chaque ouverture du suivi.
+  await B.retryPendingSyncs(admin, { limit: 3, minDelayMs: 30000 }).catch(() => {});
+
+  const ids = (rdvs || []).map((r) => r.id);
+  let fresh = rdvs || [];
+  if (ids.length) {
+    const { data: again } = await admin.from("rendez_vous").select("*").in("id", ids);
+    if (again) {
+      const byId = Object.fromEntries(again.map((r) => [r.id, r]));
+      fresh = fresh.map((r) => byId[r.id] || r);
+    }
+  }
+
+  const clientIds = [...new Set(fresh.map((r) => r.client_id).filter(Boolean))];
   let profiles = [];
   if (clientIds.length) {
     const { data, error: profilesError } = await admin
@@ -346,11 +403,38 @@ async function listAgenda(admin, { dateFrom, dateTo }) {
     profiles = data || [];
   }
   const clientsById = Object.fromEntries(profiles.map((p) => [p.id, p]));
-  return (rdvs || []).map((r) => ({ ...r, client: clientsById[r.client_id] || null }));
+
+  // Conflits avec l'agenda Google (événements occupés qui ne sont pas des rendez-vous MYU).
+  let busy = null;
+  let agendaErreur = null;
+  const blocked = fresh.filter((r) => r.bloque && r.debut && r.fin);
+  if (blocked.length) {
+    try {
+      const settings = await B.loadSettings(admin);
+      const from = new Date(Math.min(...blocked.map((r) => new Date(r.debut).getTime())));
+      const to = new Date(Math.max(...blocked.map((r) => new Date(r.fin).getTime())));
+      busy = await B.fetchCalendarBusy(from, to, settings.agenda_mots_ignores);
+    } catch (e) {
+      agendaErreur = e.message;
+    }
+  }
+
+  return fresh.map((r) => {
+    const client = clientsById[r.client_id] || null;
+    const affichage = B.bookingView(r, { profile: client, scope: "admin" });
+    if (busy && r.bloque && r.debut) {
+      const s = new Date(r.debut); const e = new Date(r.fin);
+      affichage.conflitsAgenda = busy
+        .filter((b) => b.myuRdv !== r.id && B.overlaps(s, e, b.start, b.end))
+        .map((b) => ({ titre: b.title || "Événement occupé", debut: B.zoned(b.start).time, fin: B.zoned(b.end).time }));
+    }
+    if (agendaErreur) affichage.agendaLectureErreur = agendaErreur;
+    return { ...r, client, affichage };
+  });
 }
 
 async function createManualRendezVous(admin, {
-  clientId, typePrestation, dateRdv, heureRdv,
+  clientId, typePrestation, dateRdv, heureRdv, lieu,
   statut, paymentStatus, depositAmount, note,
 }) {
   if (!clientId || !typePrestation || !dateRdv || !heureRdv) {
@@ -364,20 +448,15 @@ async function createManualRendezVous(admin, {
   if (!PAYMENT_STATUTS.includes(safePayment)) {
     throw Object.assign(new Error("Statut de paiement invalide."), { status: 400 });
   }
-
-  // Contrôle lisible avant la contrainte unique de la base.
-  const { data: conflict, error: conflictError } = await admin
-    .from("rendez_vous")
-    .select("id")
-    .eq("date_rdv", dateRdv)
-    .eq("heure_rdv", heureRdv)
-    .neq("statut", "annule")
-    .limit(1)
-    .maybeSingle();
-  if (conflictError) throw conflictError;
-  if (conflict) {
-    throw Object.assign(new Error("Ce créneau est déjà occupé."), { status: 409 });
-  }
+  const heure = String(heureRdv).slice(0, 5);
+  if (!B.DATE_RE.test(dateRdv) || !B.TIME_RE.test(heure)) throw Object.assign(new Error("Jour ou horaire invalide."), { status: 400 });
+  const settings = await B.loadSettings(admin);
+  const lieuFinal = lieu || settings.lieux[0];
+  const { data: presta } = await admin.from("prestations_reservation").select("duree_minutes").eq("type_prestation", typePrestation).maybeSingle();
+  const duree = Number(presta?.duree_minutes) || 180;
+  const debut = B.localToDate(dateRdv, heure);
+  const fin = new Date(debut.getTime() + duree * 60000);
+  const bloque = safeStatut !== "annule" && safeStatut !== "terminee";
 
   const { data, error } = await admin
     .from("rendez_vous")
@@ -385,16 +464,24 @@ async function createManualRendezVous(admin, {
       client_id: clientId,
       type_prestation: typePrestation,
       date_rdv: dateRdv,
-      heure_rdv: heureRdv,
+      heure_rdv: heure,
+      lieu: lieuFinal,
+      debut: debut.toISOString(),
+      fin: fin.toISOString(),
+      duree_minutes: duree,
+      bloque,
       statut: safeStatut,
       payment_status: safePayment,
       deposit_amount: Number(depositAmount) || 0,
+      confirme_le: new Date().toISOString(),
+      agenda_statut: bloque ? "a_synchroniser" : "non_requis",
+      feuille_statut: "a_synchroniser",
     })
     .select()
     .single();
   if (error) {
-    if (error.code === "23505") {
-      throw Object.assign(new Error("Ce créneau vient d'être réservé."), { status: 409 });
+    if (error.code === "23P01" || error.code === "23505") {
+      throw Object.assign(new Error("Ce créneau chevauche un rendez-vous déjà bloqué."), { status: 409 });
     }
     throw error;
   }
@@ -402,18 +489,67 @@ async function createManualRendezVous(admin, {
   if (note && note.trim()) {
     const { error: noteError } = await admin.from("notes_internes").insert({
       client_id: clientId,
-      note: `Rendez-vous ajouté manuellement le ${dateRdv} à ${heureRdv} — ${note.trim()}`,
+      note: `Rendez-vous ajouté manuellement le ${dateRdv} à ${heure} — ${note.trim()}`,
     });
     if (noteError) console.error("[admin-myu] note du rendez-vous manuel :", noteError.message);
   }
-  return data;
+  await B.syncBookingExternal(admin, data.id).catch((e) => console.error("[admin-myu] synchro :", e.message));
+  return await B.getRdv(admin, data.id);
+}
+
+// Relance manuelle de la synchronisation agenda + feuille d'un rendez-vous.
+async function retryBookingSync(admin, { rdvId }) {
+  if (!rdvId) throw Object.assign(new Error("rdvId requis."), { status: 400 });
+  const r = await B.syncBookingExternal(admin, rdvId);
+  const fresh = await B.getRdv(admin, rdvId);
+  const profile = await B.loadProfile(admin, fresh.client_id);
+  return { resultat: r, affichage: B.bookingView(fresh, { profile, scope: "admin" }) };
+}
+
+async function getBookingSettings(admin) {
+  const settings = await B.loadSettings(admin);
+  const { data, error } = await admin.from("prestations_reservation").select("type_prestation,duree_minutes,deposit_amount,active").order("type_prestation");
+  if (error) throw error;
+  return { reglages: settings, prestations: (data || []).map((p) => ({ ...p, libelle: B.serviceLabel(p.type_prestation) })) };
+}
+
+async function updateBookingSettings(admin, { lieux, horaires, pasMinutes, delaiMinMinutes, maintienMinutes, horizonJours, agendaMotsIgnores }) {
+  const patch = { updated_at: new Date().toISOString() };
+  if (lieux !== undefined) {
+    const l = (Array.isArray(lieux) ? lieux : String(lieux).split(",")).map((x) => String(x).trim()).filter(Boolean);
+    if (!l.length) throw Object.assign(new Error("Au moins un lieu est requis."), { status: 400 });
+    patch.lieux = l;
+  }
+  if (horaires !== undefined) {
+    const clean = {};
+    for (const [day, ranges] of Object.entries(horaires || {})) {
+      if (!/^[1-7]$/.test(day) || !Array.isArray(ranges)) throw Object.assign(new Error("Horaires invalides."), { status: 400 });
+      clean[day] = ranges.filter((r) => Array.isArray(r) && B.TIME_RE.test(r[0]) && B.TIME_RE.test(r[1]) && r[0] < r[1]);
+    }
+    patch.horaires = clean;
+  }
+  const num = (v, min, max, label) => {
+    const n = Number(v);
+    if (!Number.isInteger(n) || n < min || n > max) throw Object.assign(new Error(`${label} invalide.`), { status: 400 });
+    return n;
+  };
+  if (pasMinutes !== undefined) patch.pas_minutes = num(pasMinutes, 5, 240, "Pas");
+  if (delaiMinMinutes !== undefined) patch.delai_min_minutes = num(delaiMinMinutes, 0, 10080, "Délai minimum");
+  if (maintienMinutes !== undefined) patch.maintien_minutes = num(maintienMinutes, 5, 60, "Durée de maintien");
+  if (horizonJours !== undefined) patch.horizon_jours = num(horizonJours, 1, 365, "Horizon");
+  if (agendaMotsIgnores !== undefined) {
+    patch.agenda_mots_ignores = (Array.isArray(agendaMotsIgnores) ? agendaMotsIgnores : String(agendaMotsIgnores).split(",")).map((x) => String(x).trim()).filter(Boolean);
+  }
+  const { error } = await admin.from("myu_reglages_reservation").update(patch).eq("id", 1);
+  if (error) throw error;
+  return getBookingSettings(admin);
 }
 
 const ACTIONS = {
   searchClients, getClient, addTampon, resetTampons, validateParrainage, markAvantageUsed,
   listConsignes, upsertConsigne, addNoteInterne, createPrestation, updatePrestationStatus, upsertEtapeParcours, updateRendezVous,
   listPrestationsReservation, upsertPrestationReservation, releaseModeleSlot, listModeleBookings,
-  listAgenda, createManualRendezVous,
+  listAgenda, createManualRendezVous, retryBookingSync, getBookingSettings, updateBookingSettings,
 };
 
 module.exports = async function handler(req, res) {
