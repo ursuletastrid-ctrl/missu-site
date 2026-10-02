@@ -1,5 +1,8 @@
 {
   "redirects": [
     { "source": "/", "destination": "/landing.html", "permanent": false }
+  ],
+  "crons": [
+    { "path": "/api/booking", "schedule": "17 12 * * *" }
   ]
 }

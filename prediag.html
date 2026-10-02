@@ -282,6 +282,7 @@ $('prediagForm').addEventListener('submit', async (e)=>{
     await postToSheet({
       action:'create',
       id: rdvId || ('prediag-'+Date.now()),
+      rdvId: rdvId, // rattache le pré-diagnostic à la ligne de la réservation (même dossier, aucun doublon)
       firstName: firstName,
       lastName: '',
       phone: '',

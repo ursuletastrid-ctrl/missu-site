@@ -2062,7 +2062,7 @@ async function fetchPrestationsReservation(typesList) {
 // côté navigateur). Renvoie { rendezVous, checkoutUrl }. Si l'offre est à
 // stock limité et qu'il n'y a plus de place, le serveur répond une erreur
 // claire ("COMPLET") plutôt que de créer un paiement pour rien.
-async function createBookingCheckout({ typePrestation, dateRdv, heureRdv }) {
+async function createBookingCheckout({ typePrestation, lieu, dateRdv, heureRdv }) {
   const { data: sessionData, error: sessErr } = await supabase.auth.getSession();
   if (sessErr) throw sessErr;
   const token = sessionData.session?.access_token;
@@ -2070,11 +2070,170 @@ async function createBookingCheckout({ typePrestation, dateRdv, heureRdv }) {
   const res = await fetch("/api/create-checkout", {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-    body: JSON.stringify({ typePrestation, dateRdv: dateRdv || null, heureRdv: heureRdv || null }),
+    body: JSON.stringify({ typePrestation, lieu, dateRdv, heureRdv }),
   });
   const body = await res.json().catch(() => ({}));
-  if (!res.ok || !body.success) throw new Error(body?.error || "Impossible de créer le paiement.");
+  if (!res.ok || !body.success) {
+    const err = new Error(body?.error || "Impossible de créer le paiement.");
+    err.status = res.status;
+    throw err;
+  }
   return body.data;
+}
+
+/* ------------------------------------------------------------
+   Créneaux réels (serveur) et affichage unique d'un rendez-vous.
+   Jour, horaire, lieu et paiement sont TOUJOURS dérivés des mêmes
+   champs (debut, fin, lieu, payment_status), en heure de Martinique,
+   pour que la confirmation, l'espace cliente, le suivi admin et la
+   feuille "Demandes (secours)" affichent exactement la même chose.
+   ------------------------------------------------------------ */
+const MYU_TZ = "America/Martinique";
+
+async function fetchAvailability({ typePrestation, lieu, from, days = 21 }) {
+  const params = new URLSearchParams({ action: "availability", service: typePrestation, days: String(days) });
+  if (lieu) params.set("lieu", lieu);
+  if (from) params.set("from", from);
+  const res = await fetch(`/api/booking?${params}`);
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok || !body.success) throw new Error(body?.error || "Créneaux momentanément indisponibles.");
+  return body.data;
+}
+
+async function fetchBookingStatus(id) {
+  const res = await fetch(`/api/booking?${new URLSearchParams({ action: "status", id })}`);
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok || !body.success) throw new Error(body?.error || "Réservation introuvable.");
+  return body.data;
+}
+
+async function releaseBookingHold(id) {
+  const res = await fetch("/api/booking?action=release", {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }),
+  });
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok || !body.success) throw new Error(body?.error || "Action impossible.");
+  return body.data;
+}
+
+const BOOKING_STATUT_LABELS = {
+  demande: "Demande reçue", en_attente_paiement: "En attente du paiement", confirme: "Confirmé",
+  modifie: "Modifié", annule: "Annulé — créneau libéré", terminee: "Terminé",
+};
+const BOOKING_PAYMENT_LABELS = {
+  non_requis: "Aucun acompte en ligne", en_attente: "Acompte en attente", paye: "Acompte payé",
+  echoue: "Paiement non abouti", rembourse: "Acompte remboursé",
+};
+
+function formatRdvDisplay(r) {
+  if (!r) return null;
+  const tzDate = new Intl.DateTimeFormat("fr-FR", { timeZone: MYU_TZ, weekday: "long", day: "numeric", month: "long", year: "numeric" });
+  const tzTime = new Intl.DateTimeFormat("fr-FR", { timeZone: MYU_TZ, hour: "2-digit", minute: "2-digit" });
+  const debut = r.debut ? new Date(r.debut) : null;
+  const fin = r.fin ? new Date(r.fin) : null;
+  const deposit = Number(r.deposit_amount) || 0;
+  const paiement = r.payment_status === "paye" && deposit
+    ? `Acompte payé (${deposit.toFixed(0)} €)`
+    : (BOOKING_PAYMENT_LABELS[r.payment_status] || r.payment_status || "") + (deposit && r.payment_status !== "non_requis" ? ` (${deposit.toFixed(0)} €)` : "");
+  return {
+    jour: debut ? tzDate.format(debut) : (r.date_rdv ? new Date(r.date_rdv + "T12:00:00").toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric" }) : "Date à confirmer"),
+    horaire: debut ? `${tzTime.format(debut)}${fin ? " – " + tzTime.format(fin) : ""}` : (r.heure_rdv ? String(r.heure_rdv).slice(0, 5) : "Horaire à confirmer"),
+    lieu: r.lieu || "Lieu à confirmer",
+    paiement,
+    statut: BOOKING_STATUT_LABELS[r.statut] || r.statut,
+  };
+}
+
+// Sélecteur de créneau : lieu + jour + horaire réellement disponibles (obligatoires).
+function SlotPicker({ typePrestation, value, onChange }) {
+  const [lieu, setLieu] = useState(value?.lieu || "");
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [day, setDay] = useState(value?.dateRdv || "");
+  const [reloadKey, setReloadKey] = useState(0);
+
+  useEffect(() => {
+    if (!typePrestation) return;
+    let cancelled = false;
+    setLoading(true); setError("");
+    fetchAvailability({ typePrestation, lieu })
+      .then((d) => {
+        if (cancelled) return;
+        setData(d);
+        if (!lieu) setLieu(d.lieu);
+        const first = d.jours.find((j) => j.creneaux.length);
+        setDay((prev) => (prev && d.jours.some((j) => j.date === prev && j.creneaux.length) ? prev : first?.date || ""));
+      })
+      .catch((e) => { if (!cancelled) { setError(e.message); setData(null); } })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [typePrestation, lieu, reloadKey]);
+
+  useEffect(() => {
+    if (value && value.reload) { onChange(null); setReloadKey((k) => k + 1); }
+  }, [value, onChange]);
+
+  const current = data?.jours.find((j) => j.date === day);
+  const pill = (active) => ({
+    flex: "0 0 auto", minWidth: 70, padding: "8px 10px", borderRadius: 14, cursor: "pointer",
+    fontFamily: FONT_BODY, fontSize: 12, lineHeight: 1.25,
+    border: active ? `1.6px solid ${C.espresso}` : `1.2px solid ${C.blushDeep}`,
+    background: active ? C.espresso : C.white, color: active ? C.white : C.espresso,
+  });
+  const fmtDay = (iso) => new Date(iso + "T12:00:00Z").toLocaleDateString("fr-FR", { timeZone: "UTC", weekday: "short", day: "numeric", month: "short" });
+  const addMin = (hhmm, m) => { const [h, mi] = hhmm.split(":").map(Number); const t = h * 60 + mi + m; return `${String(Math.floor(t / 60)).padStart(2, "0")}:${String(t % 60).padStart(2, "0")}`; };
+
+  return (
+    <div>
+      <FieldLabel required>Lieu</FieldLabel>
+      <select value={lieu} onChange={(e) => { setLieu(e.target.value); onChange(null); }} className="missu-focusable" style={{ ...inputStyle }}>
+        {(data?.lieux || (lieu ? [lieu] : [])).map((l) => <option key={l} value={l}>{l}</option>)}
+      </select>
+      <div style={{ height: 12 }} />
+      <FieldLabel required>Jour et horaire</FieldLabel>
+      {loading && <p style={{ fontFamily: FONT_BODY, fontSize: 12, color: C.espressoSoft }}>Recherche des créneaux disponibles…</p>}
+      <ErrorNote>{error}</ErrorNote>
+      {!loading && data && !data.jours.some((j) => j.creneaux.length) && (
+        <p style={{ fontFamily: FONT_BODY, fontSize: 12, color: C.espressoSoft }}>Aucun créneau disponible sur les prochaines semaines. Écrivez-nous sur WhatsApp.</p>
+      )}
+      {!loading && data && (
+        <>
+          <p style={{ fontFamily: FONT_BODY, fontSize: 11, color: C.espressoSoft, margin: "0 0 8px" }}>
+            Durée : {data.dureeMinutes >= 60 ? `${Math.floor(data.dureeMinutes / 60)} h${data.dureeMinutes % 60 ? " " + (data.dureeMinutes % 60) : ""}` : `${data.dureeMinutes} min`} · heure de Martinique
+          </p>
+          <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 8 }}>
+            {data.jours.map((j) => (
+              <button key={j.date} type="button" disabled={!j.creneaux.length} aria-label={j.libelle}
+                onClick={() => { setDay(j.date); onChange(null); }}
+                style={{ ...pill(day === j.date), opacity: j.creneaux.length ? 1 : 0.4 }}>
+                {fmtDay(j.date)}
+              </button>
+            ))}
+          </div>
+          {current && (
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(76px, 1fr))", gap: 8, marginTop: 6 }}>
+              {current.creneaux.map((h) => {
+                const active = value && value.dateRdv === day && value.heureRdv === h;
+                return (
+                  <button key={h} type="button" aria-label={`${current.libelle} à ${h}`}
+                    onClick={() => onChange({ lieu: lieu || data.lieu, dateRdv: day, heureRdv: h, libelle: current.libelle, heureFin: addMin(h, data.dureeMinutes) })}
+                    style={{
+                      padding: "10px 4px", borderRadius: 12, cursor: "pointer", fontFamily: FONT_BODY, fontSize: 14, fontWeight: 600,
+                      border: active ? "1px solid transparent" : `1.2px solid ${C.blushDeep}`,
+                      background: active ? `linear-gradient(135deg, ${C.roseGold}, ${C.roseGoldDeep})` : C.white,
+                      color: active ? C.white : C.espresso,
+                    }}>
+                    {h}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
 }
 
 // Après retour de la page de paiement SumUp : redemande l'état réel du
@@ -2470,6 +2629,79 @@ const PAYMENT_STATUS_LABELS = {
    ADMIN SPACE — Mon Espace MYU (recherche cliente, fiche cliente,
    fidélité, parrainage, rendez-vous, consignes, notes internes)
    ============================================================ */
+// Réglages des créneaux en ligne : horaires par jour, lieux, durées, mots ignorés de l'agenda.
+const WEEKDAYS_FR = ["", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"];
+function AdminBookingSettings({ adminToken, onSaved }) {
+  const [data, setData] = useState(null);
+  const [hours, setHours] = useState({});
+  const [lieux, setLieux] = useState("");
+  const [ignores, setIgnores] = useState("");
+  const [durees, setDurees] = useState({});
+  const [msg, setMsg] = useState("");
+
+  useEffect(() => {
+    callAdminMyu("getBookingSettings", {}, adminToken).then((d) => {
+      setData(d);
+      const h = {};
+      for (let i = 1; i <= 7; i++) {
+        const r = (d.reglages.horaires[String(i)] || [])[0];
+        h[i] = r ? { open: true, start: r[0], end: r[1] } : { open: false, start: "09:00", end: "17:00" };
+      }
+      setHours(h);
+      setLieux(d.reglages.lieux.join(", "));
+      setIgnores((d.reglages.agenda_mots_ignores || []).join(", "));
+      setDurees(Object.fromEntries(d.prestations.map((p) => [p.type_prestation, p.duree_minutes])));
+    }).catch((e) => setMsg(e.message));
+  }, [adminToken]);
+
+  const save = async () => {
+    setMsg("");
+    try {
+      const horaires = {};
+      for (let i = 1; i <= 7; i++) if (hours[i]?.open) horaires[String(i)] = [[hours[i].start, hours[i].end]];
+      await callAdminMyu("updateBookingSettings", { horaires, lieux, agendaMotsIgnores: ignores }, adminToken);
+      for (const p of data.prestations) {
+        if (Number(durees[p.type_prestation]) !== Number(p.duree_minutes)) {
+          await callAdminMyu("upsertPrestationReservation", { typePrestation: p.type_prestation, dureeMinutes: Number(durees[p.type_prestation]) }, adminToken);
+        }
+      }
+      setMsg("Enregistré ✓");
+      onSaved && onSaved();
+    } catch (e) { setMsg(e.message); }
+  };
+
+  if (!data) return <SectionCard title="Créneaux en ligne"><p style={{ fontFamily: FONT_BODY, fontSize: 12 }}>{msg || "Chargement…"}</p></SectionCard>;
+  return (
+    <SectionCard title="Créneaux en ligne">
+      {[1, 2, 3, 4, 5, 6, 7].map((i) => (
+        <div key={i} style={{ display: "grid", gridTemplateColumns: "92px 1fr 1fr", gap: 6, alignItems: "center", marginBottom: 6 }}>
+          <label style={{ fontFamily: FONT_BODY, fontSize: 12, color: C.espresso }}>
+            <input type="checkbox" checked={!!hours[i]?.open} onChange={(e) => setHours({ ...hours, [i]: { ...hours[i], open: e.target.checked } })} /> {WEEKDAYS_FR[i]}
+          </label>
+          <TextInput type="time" value={hours[i]?.start || ""} disabled={!hours[i]?.open} onChange={(e) => setHours({ ...hours, [i]: { ...hours[i], start: e.target.value } })} />
+          <TextInput type="time" value={hours[i]?.end || ""} disabled={!hours[i]?.open} onChange={(e) => setHours({ ...hours, [i]: { ...hours[i], end: e.target.value } })} />
+        </div>
+      ))}
+      <FieldLabel>Lieux proposés (séparés par des virgules)</FieldLabel>
+      <TextInput value={lieux} onChange={(e) => setLieux(e.target.value)} />
+      <div style={{ height: 8 }} />
+      <FieldLabel>Événements d'agenda à ignorer (mots du titre ou du lieu)</FieldLabel>
+      <TextInput value={ignores} onChange={(e) => setIgnores(e.target.value)} />
+      <div style={{ height: 8 }} />
+      <FieldLabel>Durée de chaque prestation (minutes)</FieldLabel>
+      {data.prestations.map((p) => (
+        <div key={p.type_prestation} style={{ display: "grid", gridTemplateColumns: "1fr 90px", gap: 6, alignItems: "center", marginBottom: 4 }}>
+          <span style={{ fontFamily: FONT_BODY, fontSize: 12, color: C.espresso }}>{p.libelle}</span>
+          <TextInput type="number" value={durees[p.type_prestation] ?? ""} onChange={(e) => setDurees({ ...durees, [p.type_prestation]: e.target.value })} />
+        </div>
+      ))}
+      <div style={{ height: 10 }} />
+      <PrimaryButton onClick={save}>Enregistrer</PrimaryButton>
+      {msg && <p style={{ fontFamily: FONT_BODY, fontSize: 12, color: C.espresso }}>{msg}</p>}
+    </SectionCard>
+  );
+}
+
 function AdminAgenda({ adminToken }) {
   const today = new Date();
   const monday = new Date(today);
@@ -2494,9 +2726,10 @@ function AdminAgenda({ adminToken }) {
   const [clients, setClients] = useState([]);
   const [selectedClient, setSelectedClient] = useState(null);
   const [form, setForm] = useState({
-    typePrestation: "modele_myu", dateRdv: toIsoDate(today), heureRdv: "09:00",
+    typePrestation: "modele_myu", dateRdv: toIsoDate(today), heureRdv: "09:00", lieu: "Ducos",
     paymentStatus: "non_requis", depositAmount: "", note: "",
   });
+  const [showSettings, setShowSettings] = useState(false);
   const [message, setMessage] = useState("");
 
   const endDate = toIsoDate(addDays(new Date(weekStart + "T12:00:00"), 6));
@@ -2543,6 +2776,16 @@ function AdminAgenda({ adminToken }) {
     } catch (e) { setMessage(e.message); }
   };
 
+  const retrySync = async (rdvId) => {
+    setMessage("Synchronisation en cours…");
+    try {
+      const r = await callAdminMyu("retryBookingSync", { rdvId }, adminToken);
+      const a = r.affichage;
+      setMessage(a.agenda.statut === "ok" && a.feuille.statut === "ok" ? "Agenda et feuille synchronisés." : `Synchro incomplète — agenda : ${a.agenda.statut}${a.agenda.erreur ? " (" + a.agenda.erreur + ")" : ""} · feuille : ${a.feuille.statut}${a.feuille.erreur ? " (" + a.feuille.erreur + ")" : ""}`);
+      await loadAgenda();
+    } catch (e) { setMessage(e.message); }
+  };
+
   const changeStatus = async (rdvId, statut) => {
     try {
       await callAdminMyu("updateRendezVous", { rdvId, statut }, adminToken);
@@ -2563,8 +2806,13 @@ function AdminAgenda({ adminToken }) {
           <h2 style={{ fontFamily: FONT_DISPLAY, color: C.espresso, margin: 0, fontSize: 24 }}>Agenda MYU</h2>
           <div style={{ fontFamily: FONT_BODY, color: C.espressoSoft, fontSize: 11.5 }}>Tous les rendez-vous au même endroit</div>
         </div>
-        <PrimaryButton onClick={() => setShowAdd((v) => !v)}>+ Rendez-vous</PrimaryButton>
+        <div style={{ display: "flex", gap: 6 }}>
+          <GhostButton onClick={() => setShowSettings((v) => !v)} icon={Clock}>Créneaux</GhostButton>
+          <PrimaryButton onClick={() => setShowAdd((v) => !v)}>+ Rendez-vous</PrimaryButton>
+        </div>
       </div>
+
+      {showSettings && <AdminBookingSettings adminToken={adminToken} onSaved={() => setMessage("Réglages des créneaux enregistrés.")} />}
 
       {showAdd && (
         <SectionCard title="Ajouter un rendez-vous spontané">
@@ -2602,6 +2850,9 @@ function AdminAgenda({ adminToken }) {
                 <div><FieldLabel required>Heure</FieldLabel><TextInput type="time" value={form.heureRdv} onChange={(e) => setForm({ ...form, heureRdv: e.target.value })} /></div>
               </div>
               <div style={{ height: 10 }} />
+              <FieldLabel required>Lieu</FieldLabel>
+              <TextInput value={form.lieu} onChange={(e) => setForm({ ...form, lieu: e.target.value })} placeholder="Ducos" />
+              <div style={{ height: 10 }} />
               <FieldLabel>Paiement</FieldLabel>
               <select value={form.paymentStatus} onChange={(e) => setForm({ ...form, paymentStatus: e.target.value })} style={inputStyle}>
                 <option value="non_requis">À régler sur place</option>
@@ -2638,19 +2889,43 @@ function AdminAgenda({ adminToken }) {
             </div>
             {dayBookings.length === 0 ? (
               <div style={{ padding: "9px 12px", borderRadius: 12, border: `1px dashed ${C.blushDeep}`, fontFamily: FONT_BODY, fontSize: 11.5, color: C.espressoSoft }}>Disponible</div>
-            ) : dayBookings.map((rdv) => (
-              <div key={rdv.id} style={{ padding: 12, borderRadius: 14, background: C.white, borderLeft: `4px solid ${C.roseGoldDeep}`, marginBottom: 7, boxShadow: "0 5px 15px rgba(74,55,47,.06)" }}>
+            ) : dayBookings.map((rdv) => {
+              const v = rdv.affichage || {};
+              const syncOk = (st) => st === "ok" || st === "non_requis" || st === "retire";
+              const syncProblem = v.agenda && v.feuille && (!syncOk(v.agenda.statut) || !syncOk(v.feuille.statut));
+              const syncLabel = (st) => ({ ok: "OK", non_requis: "—", a_synchroniser: "en attente", erreur: "ERREUR", a_retirer: "à retirer", retire: "retiré" }[st] || st);
+              return (
+              <div key={rdv.id} style={{ padding: 12, borderRadius: 14, background: C.white, borderLeft: `4px solid ${syncProblem || v.alerte || (v.conflitsAgenda && v.conflitsAgenda.length) ? C.danger : C.roseGoldDeep}`, marginBottom: 7, boxShadow: "0 5px 15px rgba(74,55,47,.06)" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
-                  <strong style={{ fontFamily: FONT_BODY, color: C.espresso }}>{String(rdv.heure_rdv || "").slice(0, 5)} · {rdv.client?.first_name || "Cliente"} {rdv.client?.last_name || ""}</strong>
-                  <span style={{ fontFamily: FONT_BODY, fontSize: 10.5, color: C.roseGoldDeep }}>{rdv.statut}</span>
+                  <strong style={{ fontFamily: FONT_BODY, color: C.espresso }}>{v.heureDebut || String(rdv.heure_rdv || "").slice(0, 5)}{v.heureFin ? `–${v.heureFin}` : ""} · {rdv.client?.first_name || "Cliente"} {rdv.client?.last_name || ""}</strong>
+                  <span style={{ fontFamily: FONT_BODY, fontSize: 10.5, color: C.roseGoldDeep, textAlign: "right" }}>{v.statutLibelle || rdv.statut}</span>
                 </div>
-                <div style={{ fontFamily: FONT_BODY, fontSize: 12, color: C.espressoSoft, marginTop: 3 }}>{labelFor(rdv.type_prestation)} · {paymentLabel(rdv.payment_status)}</div>
-                <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
+                <div style={{ fontFamily: FONT_BODY, fontSize: 12, color: C.espressoSoft, marginTop: 3 }}>
+                  {v.prestation || labelFor(rdv.type_prestation)} · {v.lieu || "Lieu non renseigné"} · {v.paiement?.libelle || paymentLabel(rdv.payment_status)}
+                  {v.dossierId ? ` · ${v.dossierId}` : ""}{rdv.client?.phone ? ` · ${rdv.client.phone}` : ""}
+                </div>
+                {v.agenda && (
+                  <div style={{ fontFamily: FONT_BODY, fontSize: 11, marginTop: 4, color: syncProblem ? C.danger : C.espressoSoft }}>
+                    Agenda Google : {syncLabel(v.agenda.statut)} · Feuille : {syncLabel(v.feuille.statut)}
+                    {v.agenda.erreur ? <div>⚠️ Agenda : {v.agenda.erreur}</div> : null}
+                    {v.feuille.erreur ? <div>⚠️ Feuille : {v.feuille.erreur}</div> : null}
+                    {syncProblem ? <div>Le créneau reste bloqué dans l’application ; nouvelle tentative automatique.</div> : null}
+                  </div>
+                )}
+                {v.alerte && <div style={{ fontFamily: FONT_BODY, fontSize: 11, marginTop: 4, color: C.danger }}>⚠️ {v.alerte}</div>}
+                {v.conflitsAgenda && v.conflitsAgenda.length > 0 && (
+                  <div style={{ fontFamily: FONT_BODY, fontSize: 11, marginTop: 4, color: C.danger }}>
+                    ⚠️ Chevauche dans ton agenda : {v.conflitsAgenda.map((c) => `${c.debut}–${c.fin}`).join(", ")}
+                  </div>
+                )}
+                <div style={{ display: "flex", gap: 6, marginTop: 8, flexWrap: "wrap" }}>
+                  {syncProblem && <GhostButton onClick={() => retrySync(rdv.id)} icon={RefreshCw}>Resynchroniser</GhostButton>}
                   {rdv.statut !== "terminee" && <GhostButton onClick={() => changeStatus(rdv.id, "terminee")}>Terminée</GhostButton>}
                   <GhostButton onClick={() => changeStatus(rdv.id, "annule")}>Annuler</GhostButton>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         );
       })}
@@ -2927,13 +3202,15 @@ function AdminClientDetail({ clientId, adminToken, onBack }) {
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
                 <span style={{ fontFamily: FONT_BODY, fontSize: 13, color: C.espresso }}>{rdvLabel}</span>
                 <span style={{ fontFamily: FONT_BODY, fontSize: 10.5, color: C.espressoSoft, textTransform: "uppercase" }}>
-                  {r.date_rdv ? new Date(r.date_rdv).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric" }) : "Date à confirmer"}
-                  {r.heure_rdv ? ` à ${r.heure_rdv.slice(0, 5)}` : ""}
+                  {formatRdvDisplay(r).statut}
                 </span>
               </div>
-              {r.deposit_amount > 0 && (
+              <div style={{ fontFamily: FONT_BODY, fontSize: 11.5, color: C.espresso, marginBottom: 4 }}>
+                {formatRdvDisplay(r).jour} · {formatRdvDisplay(r).horaire} · {formatRdvDisplay(r).lieu}
+              </div>
+              {(r.deposit_amount > 0 || r.payment_status !== "non_requis") && (
                 <div style={{ fontFamily: FONT_BODY, fontSize: 11, color: C.roseGoldDeep, marginBottom: 6 }}>
-                  Acompte {r.deposit_amount}€ · {PAYMENT_STATUS_LABELS[r.payment_status] || r.payment_status}
+                  {formatRdvDisplay(r).paiement}
                   {r.payment_reference && (
                     <span style={{ color: C.espressoSoft }}> · réf. {r.payment_reference.slice(0, 10)}…</span>
                   )}
@@ -3778,87 +4055,76 @@ function CopyField({ value }) {
 // ou que le délai d'attente soit dépassé (le webhook peut prendre quelques
 // secondes de plus, notamment en cas de nouvelle tentative de SumUp).
 function PaymentReturnStatus({ rdvId, onClose }) {
-  const [rdv, setRdv] = useState(null);
+  const [view, setView] = useState(null);
   const [attempts, setAttempts] = useState(0);
   const [error, setError] = useState("");
+  const [releasing, setReleasing] = useState(false);
   const MAX_ATTEMPTS = 10;
 
+  // L'état vient du serveur, qui le rapproche lui-même de SumUp : jamais du seul retour de navigation.
   const check = useCallback(async () => {
-    try {
-      const data = await fetchRendezVousById(rdvId);
-      setRdv(data);
-    } catch (e) {
-      setError(e.message);
-    }
+    try { setView(await fetchBookingStatus(rdvId)); }
+    catch (e) { setError(e.message); }
   }, [rdvId]);
 
   useEffect(() => { check(); }, [check]);
 
+  const pending = view && view.statut === "en_attente_paiement";
   useEffect(() => {
-    if (!rdv) return;
-    if (rdv.payment_status === "paye" || rdv.payment_status === "echoue" || rdv.statut === "annule") return;
-    if (attempts >= MAX_ATTEMPTS) return;
-    const t = setTimeout(() => { setAttempts((a) => a + 1); check(); }, 2000);
+    if (!pending || attempts >= MAX_ATTEMPTS) return;
+    const t = setTimeout(() => { setAttempts((a) => a + 1); check(); }, 3000);
     return () => clearTimeout(t);
-  }, [rdv, attempts, check]);
+  }, [pending, attempts, check]);
 
-  const stillWaiting = !rdv || (rdv.payment_status !== "paye" && rdv.payment_status !== "echoue" && rdv.statut !== "annule" && attempts < MAX_ATTEMPTS);
-  const confirmed = rdv && rdv.payment_status === "paye" && rdv.statut === "confirme";
-  const failed = rdv && (rdv.payment_status === "echoue" || rdv.statut === "annule");
+  const confirmed = view && (view.statut === "confirme" || view.statut === "modifie");
+  const failed = view && view.statut === "annule";
+
+  const release = async () => {
+    setReleasing(true); setError("");
+    try { const r = await releaseBookingHold(rdvId); setView(r.reservation); }
+    catch (e) { setError(e.message); }
+    setReleasing(false);
+  };
 
   return (
-    <div style={{
-      background: C.cream, borderRadius: 22, border: `1.4px solid ${C.goldLine}`,
-      padding: "24px 20px", marginBottom: 18, textAlign: "center",
-    }}>
-      {stillWaiting && (
-        <>
-          <div style={{
-            width: 30, height: 30, margin: "0 auto 14px", borderRadius: "50%",
-            border: `3px solid ${C.blushDeep}`, borderTopColor: C.roseGoldDeep,
-            animation: "missuSpin 0.8s linear infinite",
-          }} />
-          <p style={{ fontFamily: FONT_BODY, fontSize: 13.5, color: C.espresso, margin: 0 }}>
-            Vérification du paiement en cours...
-          </p>
-        </>
+    <div style={{ background: C.cream, borderRadius: 22, border: `1.4px solid ${C.goldLine}`, padding: "24px 20px", marginBottom: 18, textAlign: "center" }}>
+      {!view && !error && (
+        <div style={{ width: 30, height: 30, margin: "0 auto 14px", borderRadius: "50%", border: `3px solid ${C.blushDeep}`, borderTopColor: C.roseGoldDeep, animation: "missuSpin 0.8s linear infinite" }} />
       )}
-      {!stillWaiting && confirmed && (
+      {confirmed && (
         <>
-          <div style={{
-            width: 52, height: 52, margin: "0 auto 14px", borderRadius: "50%",
-            background: `linear-gradient(135deg, ${C.roseGold}, ${C.roseGoldDeep})`,
-            display: "flex", alignItems: "center", justifyContent: "center",
-          }}>
+          <div style={{ width: 52, height: 52, margin: "0 auto 14px", borderRadius: "50%", background: `linear-gradient(135deg, ${C.roseGold}, ${C.roseGoldDeep})`, display: "flex", alignItems: "center", justifyContent: "center" }}>
             <Check size={24} color="white" />
           </div>
-          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 600, fontSize: 18, color: C.espresso, margin: "0 0 6px" }}>
-            Rendez-vous confirmé !
-          </p>
-          <p style={{ fontFamily: FONT_BODY, fontSize: 12.5, color: C.espressoSoft, margin: 0 }}>
-            Votre acompte a bien été reçu. Retrouvez ce rendez-vous ci-dessous, dans "Mes rendez-vous".
-          </p>
+          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 600, fontSize: 18, color: C.espresso, margin: "0 0 6px" }}>Rendez-vous confirmé !</p>
         </>
       )}
-      {!stillWaiting && failed && (
+      {failed && (
         <>
           <AlertCircle size={28} color={C.danger} style={{ marginBottom: 10 }} />
-          <p style={{ fontFamily: FONT_BODY, fontSize: 13.5, color: C.espresso, margin: "0 0 6px" }}>
-            Le paiement n'a pas abouti.
-          </p>
-          <p style={{ fontFamily: FONT_BODY, fontSize: 12, color: C.espressoSoft, margin: 0 }}>
-            Aucune somme n'a été retenue si la transaction a échoué. Vous pouvez retenter la réservation.
-          </p>
+          <p style={{ fontFamily: FONT_BODY, fontSize: 13.5, color: C.espresso, margin: "0 0 6px" }}>Paiement non abouti : aucun acompte encaissé, le créneau a été libéré.</p>
         </>
       )}
-      {!stillWaiting && !confirmed && !failed && (
-        <p style={{ fontFamily: FONT_BODY, fontSize: 12.5, color: C.espressoSoft, margin: 0 }}>
-          La confirmation prend un peu plus de temps que prévu. Actualisez cette page dans une minute pour voir
-          l'état à jour de votre réservation.
+      {pending && (
+        <p style={{ fontFamily: FONT_BODY, fontSize: 13, color: C.espresso, margin: "0 0 6px" }}>
+          Paiement en cours de vérification. Votre créneau reste réservé pendant ce temps ; la confirmation s'enregistre automatiquement, même si vous fermez cette page.
         </p>
       )}
+      {view && (
+        <div style={{ textAlign: "left", background: C.creamSoft, border: `1px solid ${C.blushDeep}`, borderRadius: 16, padding: "12px 14px", marginTop: 10 }}>
+          <DetailRow label="Prestation" value={view.prestation} />
+          <DetailRow label="Jour" value={view.dateLongue || view.date} />
+          <DetailRow label="Horaire" value={view.heureDebut ? `${view.heureDebut}${view.heureFin ? " – " + view.heureFin : ""}` : "—"} />
+          <DetailRow label="Lieu" value={view.lieu || "—"} />
+          <DetailRow label="Paiement" value={view.paiement?.libelle} />
+          <DetailRow label="Statut" value={view.statutLibelle} />
+          {view.dossierId && <DetailRow label="Dossier" value={view.dossierId} />}
+        </div>
+      )}
       <ErrorNote>{error}</ErrorNote>
-      <div style={{ marginTop: 14 }}>
+      <div style={{ marginTop: 14, display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap" }}>
+        {pending && <GhostButton onClick={() => { setAttempts(0); check(); }} icon={RefreshCw}>Vérifier à nouveau</GhostButton>}
+        {pending && <GhostButton onClick={release}>{releasing ? "Vérification…" : "Je n'ai pas payé — libérer"}</GhostButton>}
         <GhostButton onClick={onClose}>Fermer</GhostButton>
       </div>
     </div>
@@ -3872,12 +4138,12 @@ function PaymentReturnStatus({ rdvId, onClose }) {
 function BookingFlow({ onError }) {
   const [step, setStep] = useState(0);
   const [typePrestation, setTypePrestation] = useState("");
-  const [date, setDate] = useState("");
-  const [heure, setHeure] = useState("");
+  const [slot, setSlot] = useState(null);
   const [reservation, setReservation] = useState(null);
   const [loadingReservation, setLoadingReservation] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [doneId, setDoneId] = useState(null);
 
   const bookableServices = SERVICES.filter((s) => s.key !== "conseil");
   const selectedService = SERVICES.find((s) => s.key === typePrestation);
@@ -3895,36 +4161,28 @@ function BookingFlow({ onError }) {
 
   const depositAmount = reservation?.deposit_amount ?? null;
   const complet = !!(reservation?.is_limited_offer && (reservation.available_slots ?? 0) <= 0);
+  const onSlot = useCallback((v) => setSlot(v), []);
 
   const handleConfirm = async () => {
+    if (!slot) { setError("Choisissez un jour et un horaire."); setStep(1); return; }
     setSubmitting(true); setError("");
     try {
-      const result = await createBookingCheckout({ typePrestation, dateRdv: date || null, heureRdv: heure || null });
+      const result = await createBookingCheckout({ typePrestation, lieu: slot.lieu, dateRdv: slot.dateRdv, heureRdv: slot.heureRdv });
       if (result.checkoutUrl) {
         window.location.href = result.checkoutUrl;
       } else {
+        setDoneId(result.rdvId);
         setStep(3);
       }
     } catch (e) {
       setError(e.message);
       setSubmitting(false);
+      if (e.status === 409) { setSlot({ reload: true }); setStep(1); }
     }
   };
 
   if (step === 3) {
-    return (
-      <div style={{ textAlign: "center", padding: "10px 0" }}>
-        <Check size={22} color={C.roseGoldDeep} style={{ marginBottom: 8 }} />
-        <p style={{ fontFamily: FONT_BODY, fontSize: 13, color: C.espresso, margin: 0 }}>
-          Demande enregistrée, aucun acompte requis pour cette prestation.
-        </p>
-        <div style={{ marginTop: 12 }}>
-          <GhostButton onClick={() => { setStep(0); setTypePrestation(""); setDate(""); setHeure(""); }}>
-            Faire une nouvelle demande
-          </GhostButton>
-        </div>
-      </div>
-    );
+    return <PaymentReturnStatus rdvId={doneId} onClose={() => { setStep(0); setTypePrestation(""); setSlot(null); setDoneId(null); }} />;
   }
 
   return (
@@ -3933,12 +4191,7 @@ function BookingFlow({ onError }) {
       {step === 0 && (
         <div>
           <FieldLabel required>Prestation souhaitée</FieldLabel>
-          <select
-            value={typePrestation}
-            onChange={(e) => setTypePrestation(e.target.value)}
-            className="missu-focusable"
-            style={{ ...inputStyle }}
-          >
+          <select value={typePrestation} onChange={(e) => { setTypePrestation(e.target.value); setSlot(null); }} className="missu-focusable" style={{ ...inputStyle }}>
             <option value="">Choisir une prestation</option>
             {bookableServices.map((s) => (
               <option key={s.key} value={s.key}>{s.label}{s.price ? ` — ${s.price}€` : ""}</option>
@@ -3953,49 +4206,42 @@ function BookingFlow({ onError }) {
             </p>
           )}
           <div style={{ height: 14 }} />
-          <PrimaryButton onClick={() => setStep(1)} disabled={!typePrestation || loadingReservation || complet}>
-            Continuer
-          </PrimaryButton>
+          <PrimaryButton onClick={() => setStep(1)} disabled={!typePrestation || loadingReservation || complet}>Continuer</PrimaryButton>
         </div>
       )}
       {step === 1 && (
         <div>
-          <FieldLabel>Date souhaitée</FieldLabel>
-          <TextInput type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-          <div style={{ height: 10 }} />
-          <FieldLabel>Heure souhaitée</FieldLabel>
-          <TextInput type="time" value={heure} onChange={(e) => setHeure(e.target.value)} />
-          <p style={{ fontFamily: FONT_BODY, fontSize: 11, color: C.espressoSoft, margin: "8px 0 0", lineHeight: 1.5 }}>
-            Créneau indicatif — l'équipe MYU peut vous recontacter pour l'ajuster.
-          </p>
+          <SlotPicker typePrestation={typePrestation} value={slot} onChange={onSlot} />
+          <ErrorNote>{error}</ErrorNote>
           <div style={{ height: 14 }} />
           <div style={{ display: "flex", gap: 10 }}>
             <GhostButton onClick={() => setStep(0)} icon={ChevronLeft}>Retour</GhostButton>
             <div style={{ flex: 1 }}>
-              <PrimaryButton onClick={() => setStep(2)}>Continuer</PrimaryButton>
+              <PrimaryButton onClick={() => { setError(""); setStep(2); }} disabled={!slot || !slot.heureRdv}>Continuer</PrimaryButton>
             </div>
           </div>
         </div>
       )}
-      {step === 2 && (
+      {step === 2 && slot && (
         <div>
           <div style={{ background: C.creamSoft, border: `1px solid ${C.blushDeep}`, borderRadius: 16, padding: "14px 16px", marginBottom: 14 }}>
             <DetailRow label="Prestation" value={selectedService?.label} />
-            <DetailRow label="Date" value={date || "À confirmer"} />
-            <DetailRow label="Heure" value={heure || "À confirmer"} />
+            <DetailRow label="Jour" value={slot.libelle} />
+            <DetailRow label="Horaire" value={`${slot.heureRdv} – ${slot.heureFin}`} />
+            <DetailRow label="Lieu" value={slot.lieu} />
             <DetailRow label="Acompte à régler maintenant" value={depositAmount ? `${depositAmount}€` : "Aucun"} />
           </div>
           <ErrorNote>{error}</ErrorNote>
           <p style={{ fontFamily: FONT_BODY, fontSize: 11.5, color: C.espressoSoft, marginBottom: 14, lineHeight: 1.5 }}>
             {depositAmount
-              ? "Le paiement de l'acompte se fait sur la page sécurisée SumUp. Votre rendez-vous n'est définitivement réservé qu'une fois le paiement confirmé."
-              : "Cette prestation ne nécessite pas d'acompte."}
+              ? "Ce créneau vous est réservé pendant le paiement sécurisé SumUp. Il est confirmé et bloqué dès que l'acompte est reçu."
+              : "Cette prestation ne nécessite pas d'acompte : le créneau est réservé immédiatement."}
           </p>
           <div style={{ display: "flex", gap: 10 }}>
             <GhostButton onClick={() => setStep(1)} icon={ChevronLeft}>Retour</GhostButton>
             <div style={{ flex: 1 }}>
               <PrimaryButton onClick={handleConfirm} disabled={submitting} icon={ShieldCheck}>
-                {submitting ? "Redirection..." : depositAmount ? `Payer l'acompte (${depositAmount}€)` : "Confirmer la demande"}
+                {submitting ? "Réservation du créneau…" : depositAmount ? `Payer l'acompte (${depositAmount}€)` : "Réserver ce créneau"}
               </PrimaryButton>
             </div>
           </div>
@@ -4407,13 +4653,7 @@ function AccountDashboard({ user, profile, onLogout }) {
       <SectionCard title="Mes rendez-vous">
         {rendezVous.map((r) => {
           const rdvLabel = r.type_prestation ? prestationLabel(r.type_prestation) : r.prestation;
-          const statutLabel =
-            r.statut === "en_attente_paiement" ? "Acompte en attente"
-            : r.statut === "demande" ? "Demandé"
-            : r.statut === "confirme" ? "Confirmé"
-            : r.statut === "modifie" ? "Modifié"
-            : r.statut === "terminee" ? "Terminé"
-            : "Annulé";
+          const statutLabel = formatRdvDisplay(r).statut;
           const statutColor =
             r.statut === "confirme" || r.statut === "terminee" ? C.success
             : r.statut === "annule" ? C.danger
@@ -4427,12 +4667,14 @@ function AccountDashboard({ user, profile, onLogout }) {
               <div>
                 <div style={{ fontFamily: FONT_BODY, fontSize: 13, color: C.espresso }}>{rdvLabel}</div>
                 <div style={{ fontFamily: FONT_BODY, fontSize: 11, color: C.espressoSoft }}>
-                  {r.date_rdv ? new Date(r.date_rdv).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric" }) : "Date à confirmer"}
-                  {r.heure_rdv ? ` à ${r.heure_rdv.slice(0, 5)}` : ""}
+                  {formatRdvDisplay(r).jour} · {formatRdvDisplay(r).horaire}
                 </div>
-                {r.deposit_amount > 0 && (
+                <div style={{ fontFamily: FONT_BODY, fontSize: 11, color: C.espressoSoft }}>
+                  <MapPin size={10} style={{ verticalAlign: "-1px" }} /> {formatRdvDisplay(r).lieu}
+                </div>
+                {(r.deposit_amount > 0 || r.payment_status !== "non_requis") && (
                   <div style={{ fontFamily: FONT_BODY, fontSize: 10.5, color: C.roseGoldDeep, marginTop: 1 }}>
-                    Acompte {r.deposit_amount}€ · {r.payment_status === "paye" ? "réglé" : r.payment_status === "echoue" ? "échoué" : "en attente"}
+                    {formatRdvDisplay(r).paiement}
                   </div>
                 )}
               </div>

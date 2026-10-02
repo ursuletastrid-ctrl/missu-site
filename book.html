@@ -27,6 +27,21 @@ button:disabled{opacity:.5;box-shadow:none}
 .success{text-align:center;padding:22px 5px}
 .success b{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:600}
 .hidden{display:none}
+.slot-days{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 8px;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch}
+.slot-day{flex:0 0 auto;width:auto;min-width:74px;padding:9px 10px;border-radius:14px;border:1px solid var(--blush-deep);background:var(--cream-soft);color:var(--espresso);font-size:12px;font-weight:500;box-shadow:none;scroll-snap-align:start;line-height:1.25}
+.slot-day b{display:block;font-size:17px;font-family:'Cormorant Garamond',serif}
+.slot-day.full{opacity:.45}
+.slot-day.sel{background:var(--espresso);border-color:var(--espresso);color:#fff}
+.slot-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:8px;margin-top:6px}
+.slot{width:100%;padding:11px 4px;border-radius:12px;border:1px solid var(--blush-deep);background:#fff;color:var(--espresso);font-size:14px;font-weight:600;box-shadow:none}
+.slot.sel{background:linear-gradient(135deg,var(--rose-gold),var(--rose-gold-deep));color:#fff;border-color:transparent}
+.slot-note{font-size:12px;color:var(--espresso-soft);margin:8px 0 0;line-height:1.45}
+.slot-summary{margin:14px 0 0;padding:12px 14px;border-radius:14px;background:var(--blush);font-size:13.5px;line-height:1.5;display:none}
+.slot-summary.show{display:block}
+.recap{text-align:left;margin:16px 0 0;padding:14px 16px;border-radius:16px;background:var(--cream-soft);border:1px solid var(--blush-deep);font-size:14px;line-height:1.7}
+.recap span{color:var(--espresso-soft);display:inline-block;min-width:92px}
+.btn-ghost{background:transparent;color:var(--rose-gold-deep);border:1px solid var(--blush-deep);box-shadow:none;margin-top:10px}
+
 @media(max-width:390px){.grid{grid-template-columns:1fr}.wrap{padding:18px 13px 40px}}
 .contact-links{display:grid;gap:10px;margin:14px 0 0;font-style:normal}
 .contact-link{display:flex;flex-direction:column;gap:5px;min-height:64px;padding:14px 16px;background:var(--cream-soft);border:1px solid var(--blush-deep);border-radius:16px;text-decoration:none;color:var(--espresso);overflow-wrap:anywhere}
@@ -45,7 +60,7 @@ button:disabled{opacity:.5;box-shadow:none}
 
 <section class="card" id="formCard">
 <h2>Réserver mon rendez-vous</h2>
-<p class="sub">Choisissez votre prestation et le créneau souhaité à Ducos, en Martinique. <strong>Aucun compte à créer.</strong> Si un acompte est prévu, vous serez dirigée vers le paiement sécurisé SumUp. Le rendez-vous reste soumis à confirmation par MYU.</p>
+<p class="sub">Choisissez votre prestation, le lieu et un créneau disponible. <strong>Aucun compte à créer.</strong> Si un acompte est prévu, le créneau vous est réservé le temps du paiement sécurisé SumUp, puis confirmé dès que l'acompte est reçu.</p>
 <form id="booking">
 <label for="service">Prestation</label>
 <select id="service" required><option value="">Chargement…</option></select>
@@ -53,16 +68,22 @@ button:disabled{opacity:.5;box-shadow:none}
 <div class="grid"><div><label for="firstName">Prénom</label><input id="firstName" autocomplete="given-name" required></div><div><label for="lastName">Nom <span style="font-weight:normal">(facultatif)</span></label><input id="lastName" autocomplete="family-name"></div></div>
 <label for="phone">Téléphone</label><input id="phone" type="tel" autocomplete="tel" inputmode="tel" required placeholder="Votre numéro">
 <label for="email">Email <span style="font-weight:normal">(facultatif)</span></label><input id="email" type="email" autocomplete="email" placeholder="Pour faciliter le suivi">
-<div class="grid"><div><label for="date">Date souhaitée</label><input id="date" type="date" required></div><div><label for="time">Heure souhaitée</label><input id="time" type="time" required></div></div>
+<label for="lieu">Lieu</label>
+<select id="lieu" required></select>
+<label id="slotsLabel">Jour et horaire</label>
+<div id="slotPicker"><p class="slot-note" id="slotNote">Choisissez d'abord une prestation pour voir les créneaux disponibles.</p><div class="slot-days" id="slotDays" role="listbox" aria-label="Jours disponibles"></div><div class="slot-grid" id="slotGrid" role="listbox" aria-label="Horaires disponibles"></div></div>
+<div class="slot-summary" id="slotSummary" aria-live="polite"></div>
 <label class="consent"><input id="consent" type="checkbox" required><span>J'accepte que mes coordonnées soient utilisées uniquement pour traiter cette demande, organiser le rendez-vous et le paiement éventuel. Le pré-diagnostic et les informations de santé nécessaires à la prestation pourront être complétés séparément.</span></label>
 <div class="msg" id="msg" role="alert"></div>
-<button id="submit" type="submit">Continuer vers la réservation</button>
+<button id="submit" type="submit" disabled>Choisissez un créneau</button>
 <p class="trust">🔒 Paiement sécurisé via SumUp · Vos données ne sont pas revendues</p>
 </form>
 </section>
 
 <section class="card hidden" id="success">
-<div class="success"><b>Demande enregistrée ✨</b><p id="successText">Votre demande de rendez-vous MYU a bien été transmise. Nous revenons vers vous pour la suite.</p></div>
+<div class="success"><b id="successTitle">Réservation</b><p id="successText"></p></div>
+<div class="recap hidden" id="recap"></div>
+<div id="successActions"></div>
 <a class="prediag-cta hidden" id="prediagLink" href="#">Compléter mon pré-diagnostic (2 min) →</a>
 </section>
 
@@ -79,10 +100,18 @@ button:disabled{opacity:.5;box-shadow:none}
 <script>
 const labels={candy_lips:'Candy Lips',powder_brows:'Powder Brows',velvet_lips:'Velvet Lips',aqualips_blush:'AquaLips Blush',neutralisation:'Neutralisation lèvres foncées',eyeliner_classique:'Eyeliner classique',eyeliner_poudre:'Eyeliner poudré',modele_myu:'MODÈLE MYU',taches_brunes_visage:'Taches brunes · visage',taches_brunes_corps:'Taches brunes · corps',vergetures:'Vergetures',conseil:'Conseil personnalisé',microneedling:'Microneedling',bb_glow:'BB Glow',soins_corps_infrarouge:'Soin corps infrarouge'};
 let catalog=[];
+let lieux=[];
+let slotData=null;
+const sel={date:null,heure:null};
 const $=id=>document.getElementById(id);
 const qs=new URLSearchParams(location.search);
-const localToday=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'America/Martinique',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
-$('date').min=localToday();
+const esc=t=>String(t==null?'':t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const dayFmt=new Intl.DateTimeFormat('fr-FR',{timeZone:'UTC',weekday:'short',day:'numeric',month:'short'});
+const fmtDur=m=>m>=60?(Math.floor(m/60)+' h'+(m%60?(' '+String(m%60).padStart(2,'0')):'')):m+' min';
+const addMin=(hhmm,m)=>{const [h,mi]=hhmm.split(':').map(Number);const t=h*60+mi+m;return String(Math.floor(t/60)).padStart(2,'0')+':'+String(t%60).padStart(2,'0');};
+
+function show(t){$('msg').textContent=t;$('msg').style.display='block'}
+function hideMsg(){$('msg').style.display='none'}
 
 async function load(){
   try{
@@ -90,6 +119,8 @@ async function load(){
     const j=await r.json();
     if(!r.ok)throw Error(j.error);
     catalog=j.data||[];
+    lieux=j.lieux&&j.lieux.length?j.lieux:['Ducos'];
+    $('lieu').replaceChildren(...lieux.map(l=>new Option(l,l)));
     $('service').replaceChildren(new Option('Choisir une prestation',''));
     catalog.forEach(x=>{
       const label=labels[x.type_prestation]||x.type_prestation.replace(/_/g,' ');
@@ -100,7 +131,7 @@ async function load(){
     const wanted=qs.get('service');
     if(wanted&&catalog.some(x=>x.type_prestation===wanted&&!(x.is_limited_offer&&Number(x.available_slots)<=0))){
       $('service').value=wanted;
-      showPrice();
+      onServiceChange();
     }
   }catch(e){
     $('service').innerHTML='<option value="">Réservation indisponible</option>';
@@ -118,51 +149,173 @@ function showPrice(){
   box.classList.add('show');
 }
 
-function show(t){$('msg').textContent=t;$('msg').style.display='block'}
+function resetSelection(){
+  sel.date=null; sel.heure=null;
+  $('slotSummary').classList.remove('show');
+  updateSubmit();
+}
 
-$('service').addEventListener('change',showPrice);
+function updateSubmit(){
+  const ok=!!($('service').value&&$('lieu').value&&sel.date&&sel.heure);
+  $('submit').disabled=!ok;
+  const x=catalog.find(v=>v.type_prestation===$('service').value);
+  $('submit').textContent=!ok?'Choisissez un créneau':(x&&Number(x.deposit_amount)>0?`Réserver et payer l'acompte (${Number(x.deposit_amount).toFixed(0)} €)`:'Réserver ce créneau');
+}
+
+async function loadSlots(){
+  resetSelection();
+  $('slotDays').replaceChildren(); $('slotGrid').replaceChildren();
+  const service=$('service').value, lieu=$('lieu').value;
+  if(!service){ $('slotNote').textContent="Choisissez d'abord une prestation pour voir les créneaux disponibles."; return; }
+  $('slotNote').textContent='Recherche des créneaux disponibles…';
+  try{
+    const r=await fetch('/api/booking?'+new URLSearchParams({action:'availability',service,lieu,days:'21'}));
+    const j=await r.json();
+    if(!r.ok||!j.success)throw Error(j.error||'Créneaux indisponibles.');
+    slotData=j.data;
+    const daysWith=slotData.jours.filter(d=>d.creneaux.length);
+    if(!daysWith.length){ $('slotNote').textContent='Aucun créneau disponible sur les 3 prochaines semaines. Écrivez-nous sur WhatsApp, nous trouverons une solution.'; return; }
+    $('slotNote').textContent=`Durée : ${fmtDur(slotData.dureeMinutes)} · heure de Martinique. Choisissez un jour puis un horaire.`;
+    slotData.jours.forEach(d=>{
+      const b=document.createElement('button');
+      b.type='button'; b.className='slot-day'+(d.creneaux.length?'':' full'); b.disabled=!d.creneaux.length;
+      const parts=dayFmt.format(new Date(d.date+'T12:00:00Z')).replace('.','').split(' ');
+      b.innerHTML=`${esc(parts[0])}<b>${esc(parts[1]||'')}</b>${esc(parts.slice(2).join(' '))}`;
+      b.setAttribute('aria-label',d.libelle+(d.creneaux.length?'':' — complet'));
+      b.addEventListener('click',()=>pickDay(d.date));
+      b.dataset.date=d.date;
+      $('slotDays').appendChild(b);
+    });
+    pickDay(daysWith[0].date);
+  }catch(e){
+    $('slotNote').textContent=e.message||'Créneaux momentanément indisponibles. Merci de réessayer.';
+  }
+}
+
+function pickDay(date){
+  sel.date=date; sel.heure=null; $('slotSummary').classList.remove('show'); updateSubmit();
+  document.querySelectorAll('.slot-day').forEach(b=>b.classList.toggle('sel',b.dataset.date===date));
+  const d=slotData.jours.find(x=>x.date===date);
+  $('slotGrid').replaceChildren(...d.creneaux.map(h=>{
+    const b=document.createElement('button');
+    b.type='button'; b.className='slot'; b.textContent=h; b.dataset.h=h;
+    b.setAttribute('aria-label',`${d.libelle} à ${h}`);
+    b.addEventListener('click',()=>pickSlot(h));
+    return b;
+  }));
+}
+
+function pickSlot(h){
+  sel.heure=h;
+  document.querySelectorAll('.slot').forEach(b=>b.classList.toggle('sel',b.dataset.h===h));
+  const d=slotData.jours.find(x=>x.date===sel.date);
+  $('slotSummary').innerHTML=`<b>${esc(d.libelle)}</b><br>${esc(h)} – ${esc(addMin(h,slotData.dureeMinutes))} · ${esc($('lieu').value)}`;
+  $('slotSummary').classList.add('show');
+  hideMsg(); updateSubmit();
+}
+
+function onServiceChange(){ showPrice(); loadSlots(); }
+$('service').addEventListener('change',onServiceChange);
+$('lieu').addEventListener('change',loadSlots);
 
 $('booking').addEventListener('submit',async e=>{
   e.preventDefault();
-  $('date').min=localToday();
-  if($('date').value<localToday()){show('Choisissez une date à partir d’aujourd’hui, heure de Martinique.');return}
+  if(!sel.date||!sel.heure){show('Choisissez un jour et un horaire.');return}
   if(!$('booking').reportValidity())return;
-  $('msg').style.display='none';
+  hideMsg();
   $('submit').disabled=true;
-  $('submit').textContent='Préparation…';
+  $('submit').textContent='Réservation du créneau…';
   try{
-    const r=await fetch('/api/public-booking',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({typePrestation:$('service').value,firstName:$('firstName').value,lastName:$('lastName').value,phone:$('phone').value,email:$('email').value,dateRdv:$('date').value,heureRdv:$('time').value,consent:$('consent').checked})});
+    const r=await fetch('/api/public-booking',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({typePrestation:$('service').value,lieu:$('lieu').value,dateRdv:sel.date,heureRdv:sel.heure,firstName:$('firstName').value,lastName:$('lastName').value,phone:$('phone').value,email:$('email').value,consent:$('consent').checked})});
     const j=await r.json();
-    if(!r.ok||!j.success)throw Error(j.error||'Impossible de réserver.');
+    if(!r.ok||!j.success){ const err=Error(j.error||'Impossible de réserver.'); err.status=r.status; throw err; }
     const tracked=window.MYUTracking?.bookingCreated(j.data.rdvId,!!j.data.checkoutUrl);
     if(j.data.checkoutUrl){
       if(tracked)await new Promise(resolve=>setTimeout(resolve,300));
       location.href=j.data.checkoutUrl;
       return;
     }
-    $('formCard').classList.add('hidden');
-    $('success').classList.remove('hidden');
-    showPrediagLink(j.data.rdvId, $('service').value, $('firstName').value);
+    history.replaceState(null,'','/book.html?rdv='+encodeURIComponent(j.data.rdvId));
+    showReturn(j.data.rdvId);
   }catch(err){
     show(err.message);
-    $('submit').disabled=false;
-    $('submit').textContent='Continuer vers la réservation';
+    if(err.status===409) loadSlots();
+    updateSubmit();
   }
 });
 
-function showPrediagLink(rdvId, service, firstName){
-  if(!rdvId) return;
-  const a=$('prediagLink');
-  const params=new URLSearchParams({rdv:rdvId, service: service||'', fn: firstName||''});
-  a.href='/prediag.html?'+params.toString();
-  a.classList.remove('hidden');
+// ---- Retour de paiement / confirmation : l'état affiché vient TOUJOURS du serveur ----
+function recapHtml(v){
+  return `<div><span>Prestation</span>${esc(v.prestation)}</div>`+
+    `<div><span>Jour</span>${esc(v.dateLongue||v.date||'—')}</div>`+
+    `<div><span>Horaire</span>${esc(v.heureDebut||'—')}${v.heureFin?' – '+esc(v.heureFin):''}</div>`+
+    `<div><span>Lieu</span>${esc(v.lieu||'—')}</div>`+
+    `<div><span>Paiement</span>${esc(v.paiement.libelle)}</div>`+
+    `<div><span>Statut</span>${esc(v.statutLibelle)}</div>`+
+    (v.dossierId?`<div><span>Dossier</span>${esc(v.dossierId)}</div>`:'');
 }
 
-if(qs.get('paid')==='1'){
+function actionButton(label,cls,fn){const b=document.createElement('button');b.type='button';b.textContent=label;if(cls)b.className=cls;b.addEventListener('click',fn);return b;}
+
+async function fetchStatus(id){
+  const r=await fetch('/api/booking?'+new URLSearchParams({action:'status',id}));
+  const j=await r.json();
+  if(!r.ok||!j.success)throw Error(j.error||'Réservation introuvable.');
+  return j.data;
+}
+
+function renderStatus(v){
+  $('recap').innerHTML=recapHtml(v); $('recap').classList.remove('hidden');
+  const actions=$('successActions'); actions.replaceChildren();
+  $('prediagLink').classList.add('hidden');
+  if(v.statut==='confirme'||v.statut==='modifie'){
+    $('successTitle').textContent='Rendez-vous confirmé ✨';
+    $('successText').textContent=v.paiement.statut==='paye'?'Votre acompte est bien reçu : ce créneau vous est réservé.':'Votre créneau est réservé.';
+    const params=new URLSearchParams({rdv:v.id, service:v.typePrestation||'', fn:v.prenom||''});
+    $('prediagLink').href='/prediag.html?'+params.toString();
+    $('prediagLink').classList.remove('hidden');
+    return 'final';
+  }
+  if(v.statut==='annule'){
+    $('successTitle').textContent='Paiement non abouti';
+    $('successText').textContent="Aucun acompte n'a été encaissé et le créneau a été libéré. Vous pouvez en choisir un autre.";
+    actions.appendChild(actionButton('Choisir un autre créneau','',()=>{location.href='/book.html'+(v.typePrestation?'?service='+encodeURIComponent(v.typePrestation):'')}));
+    return 'final';
+  }
+  $('successTitle').textContent='Paiement en cours de vérification';
+  const exp=v.maintienExpireLe?new Date(v.maintienExpireLe):null;
+  $('successText').textContent='Votre créneau est réservé pendant la vérification sécurisée de votre paiement par SumUp'+(exp?` (jusqu'à ${exp.toLocaleTimeString('fr-FR',{timeZone:'America/Martinique',hour:'2-digit',minute:'2-digit'})}, heure de Martinique)`:'')+'. Vous pouvez fermer cette page : la confirmation est enregistrée automatiquement dès réception de l\'acompte.';
+  actions.appendChild(actionButton('Vérifier à nouveau','',()=>pollStatus(v.id,1)));
+  actions.appendChild(actionButton("Je n'ai pas payé — libérer ce créneau",'btn-ghost',async()=>{
+    try{
+      const r=await fetch('/api/booking?action=release',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:v.id})});
+      const j=await r.json(); if(!r.ok||!j.success)throw Error(j.error||'Action impossible.');
+      renderStatus(j.data.reservation);
+    }catch(e){show(e.message)}
+  }));
+  return 'pending';
+}
+
+async function pollStatus(id,tries){
+  for(let i=0;i<tries;i++){
+    try{
+      const v=await fetchStatus(id);
+      if(renderStatus(v)==='final')return;
+    }catch(e){ $('successTitle').textContent='Réservation'; $('successText').textContent=e.message; return; }
+    if(i<tries-1) await new Promise(r=>setTimeout(r,3000));
+  }
+}
+
+function showReturn(id){
   $('formCard').classList.add('hidden');
   $('success').classList.remove('hidden');
-  $('successText').textContent='Merci. Votre paiement est en cours de confirmation sécurisée par SumUp. MYU vérifiera votre paiement et confirmera votre créneau. Un retour sur cette page ne confirme pas à lui seul le paiement.';
-  showPrediagLink(qs.get('rdv'), qs.get('service'), qs.get('fn'));
+  $('successTitle').textContent='Vérification…';
+  $('successText').textContent='Nous vérifions votre réservation.';
+  pollStatus(id,10);
+}
+
+if(qs.get('rdv')){
+  showReturn(qs.get('rdv'));
 }else{
   load();
 }
