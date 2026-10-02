@@ -471,7 +471,7 @@ function genId() {
 
 function compressImage(file, maxWidth = 360, quality = 0.62) {
   return new Promise((resolve, reject) => {
-    const timeout = setTimeout(() => reject(new Error("Délai dépassé lors du traitement de la photo")), 12000);
+    const timeout = setTimeout(() => reject(new Error("Délai dépassé lors du traitement de la photo")), 30000);
     const reader = new FileReader();
     reader.onload = (e) => {
       const img = new Image();
@@ -1544,7 +1544,7 @@ function PhotosStep({ photos, onUpload, onRemove, onNext, onBack }) {
     try {
       await onUpload(zoneKey, file);
     } catch (e) {
-      setErrorMsg("Impossible d'ajouter cette photo. Merci de réessayer avec une autre image.");
+      setErrorMsg("Impossible d'ajouter cette photo (format non lu par ce navigateur). Réessayez avec une capture d'écran de la photo, ou envoyez-la par WhatsApp.");
     } finally {
       setLoadingZones((prev) => {
         const next = { ...prev };
@@ -1564,6 +1564,26 @@ function PhotosStep({ photos, onUpload, onRemove, onNext, onBack }) {
         filtre, prises en lumière naturelle — elles servent uniquement à évaluer votre demande et ne
         seront jamais publiées sans votre accord.
       </p>
+
+      {(() => {
+        const ua = (typeof navigator !== "undefined" && navigator.userAgent) || "";
+        const inApp = /Instagram|FBAN|FBAV|FB_IAB|musical_ly|TikTok|Bytedance/i.test(ua);
+        if (!inApp && !errorMsg) return null;
+        return (
+          <div style={{ background: C.blush, borderRadius: 14, padding: "10px 12px", marginBottom: 8 }}>
+            <span style={{ fontFamily: FONT_BODY, fontSize: 12, color: C.espresso, lineHeight: 1.5, display: "block" }}>
+              {inApp
+                ? "Vous êtes dans le navigateur d'Instagram, Facebook ou TikTok : l'ajout de photos peut y être bloqué. Ouvrez cette page dans Safari ou Chrome (menu ••• puis « Ouvrir dans le navigateur »), ou envoyez simplement vos photos par WhatsApp."
+                : "La photo ne passe pas ? Envoyez-la simplement par WhatsApp, nous l'ajoutons à votre dossier."}
+            </span>
+            <a href="https://wa.me/596696178587?text=Bonjour%20MYU%2C%20voici%20mes%20photos%20pour%20mon%20pr%C3%A9-diagnostic."
+               target="_blank" rel="noopener noreferrer"
+               style={{ fontFamily: FONT_BODY, fontSize: 12.5, color: C.roseGoldDeep, fontWeight: 600, display: "inline-block", marginTop: 6 }}>
+              Envoyer mes photos par WhatsApp →
+            </a>
+          </div>
+        );
+      })()}
 
       {errorMsg && (
         <div style={{
