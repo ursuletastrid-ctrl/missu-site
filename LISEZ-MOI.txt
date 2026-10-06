@@ -1,0 +1,12 @@
+MYU — Réservation par créneaux (mise en ligne du 02/10/2026)
+
+Ces fichiers sont DÉJÀ en ligne sur missu-two.vercel.app (publiés directement sur Vercel).
+À faire une seule fois, quand tu as 5 minutes : les envoyer aussi sur GitHub
+(ursuletastrid-ctrl/missu-site → Add file → Upload files) pour que GitHub et le site
+restent identiques :
+  - le contenu du dossier "racine du site" → à la racine du dépôt (remplace les fichiers)
+  - le contenu du dossier "api" → dans le dossier api/ du dépôt
+  - les dossiers "supabase" et "apps-script" → archives de référence (facultatif)
+
+IMPORTANT : tant que ce n'est pas fait, n'envoie PAS d'anciennes versions de index.html,
+book.html, prediag.html, vercel.json ou des fichiers api/ sur GitHub : cela annulerait la correction.
