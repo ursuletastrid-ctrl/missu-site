@@ -306,6 +306,14 @@ const SERVICES = [
     key: "neutralisation", label: "Neutralisation lèvres foncées", icon: Droplet, category: "levres", price: 250,
     desc: "Rééquilibre les tons foncés ou violacés pour une couleur lèvres homogène et naturelle.",
     longDesc: "Cette technique rééquilibre en douceur les tons foncés ou violacés, pour révéler une couleur de lèvres homogène et lumineuse. Un travail minutieux, adapté à votre carnation, pour un résultat naturel qui vous ressemble. Réalisé avec le pigment premium Malina Ice.",
+    preNotice: {
+      title: "À savoir avant votre neutralisation",
+      paragraphs: [
+        "La neutralisation vise à atténuer la teinte foncée des lèvres. Le résultat varie selon votre couleur de départ, votre peau et votre cicatrisation, et il peut être progressif.",
+        "Juste après la séance, l'aspect des lèvres n'est pas le résultat final : il évolue pendant la cicatrisation. Le rendu se juge une fois la peau cicatrisée.",
+        "Les photos présentées sont des exemples, pas une promesse de résultat. Vos soins après la séance comptent : vous recevrez les consignes à la suite de votre rendez-vous.",
+      ],
+    },
   },
   {
     key: "eyeliner_classique", label: "Eyeliner classique", icon: Eye, category: "regard", price: 200,
@@ -1096,6 +1104,21 @@ function ServiceDetailModal({ service, selected, onToggle, onClose }) {
         <p style={{ fontFamily: FONT_BODY, fontSize: 14, color: C.espresso, lineHeight: 1.7, margin: "0 0 18px" }}>
           {service.longDesc}
         </p>
+
+        {service.preNotice && (
+          <div style={{
+            background: C.creamSoft, border: `1px solid ${C.goldLine}`, borderRadius: 16,
+            padding: "14px 16px", margin: "0 0 18px",
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 8 }}>
+              <AlertCircle size={15} color={C.roseGoldDeep} style={{ flexShrink: 0 }} />
+              <span style={{ fontFamily: FONT_DISPLAY, fontWeight: 600, fontSize: 15.5, color: C.espresso }}>{service.preNotice.title}</span>
+            </div>
+            {service.preNotice.paragraphs.map((t, i) => (
+              <p key={i} style={{ fontFamily: FONT_BODY, fontSize: 12.5, color: C.espresso, lineHeight: 1.6, margin: i === service.preNotice.paragraphs.length - 1 ? 0 : "0 0 8px" }}>{t}</p>
+            ))}
+          </div>
+        )}
 
         <div style={{
           display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8,
@@ -2062,7 +2085,17 @@ async function fetchPrestationsReservation(typesList) {
 // côté navigateur). Renvoie { rendezVous, checkoutUrl }. Si l'offre est à
 // stock limité et qu'il n'y a plus de place, le serveur répond une erreur
 // claire ("COMPLET") plutôt que de créer un paiement pour rien.
-async function createBookingCheckout({ typePrestation, lieu, dateRdv, heureRdv }) {
+// Consentement "Résultat et cicatrisation" demandé avant le paiement de
+// l'acompte. Les mêmes clés sont revérifiées côté serveur (api/create-checkout).
+// Si le texte change, incrémenter la version (côté serveur aussi).
+const RESULTAT_CICATRISATION_CONSENT = [
+  { key: "resultat_varie", label: "Je comprends que le résultat varie selon ma peau et ma cicatrisation, et qu'il peut différer des photos d'exemple." },
+  { key: "apres_immediat", label: "Je comprends que l'aspect juste après la séance n'est pas le résultat final : il évolue pendant la cicatrisation." },
+  { key: "seances_possibles", label: "Je comprends qu'une ou plusieurs séances peuvent être nécessaires, et qu'aucun résultat précis ne m'est garanti." },
+  { key: "consignes_soin", label: "Je m'engage à suivre les consignes de soin transmises par Miss'U après ma séance." },
+];
+
+async function createBookingCheckout({ typePrestation, lieu, dateRdv, heureRdv, consentementResultat }) {
   const { data: sessionData, error: sessErr } = await supabase.auth.getSession();
   if (sessErr) throw sessErr;
   const token = sessionData.session?.access_token;
@@ -2070,7 +2103,7 @@ async function createBookingCheckout({ typePrestation, lieu, dateRdv, heureRdv }
   const res = await fetch("/api/create-checkout", {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-    body: JSON.stringify({ typePrestation, lieu, dateRdv, heureRdv }),
+    body: JSON.stringify({ typePrestation, lieu, dateRdv, heureRdv, consentementResultat }),
   });
   const body = await res.json().catch(() => ({}));
   if (!res.ok || !body.success) {
@@ -4144,6 +4177,8 @@ function BookingFlow({ onError }) {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [doneId, setDoneId] = useState(null);
+  const [consent, setConsent] = useState({});
+  const allConsented = RESULTAT_CICATRISATION_CONSENT.every((c) => consent[c.key] === true);
 
   const bookableServices = SERVICES.filter((s) => s.key !== "conseil");
   const selectedService = SERVICES.find((s) => s.key === typePrestation);
@@ -4165,9 +4200,10 @@ function BookingFlow({ onError }) {
 
   const handleConfirm = async () => {
     if (!slot) { setError("Choisissez un jour et un horaire."); setStep(1); return; }
+    if (!allConsented) { setError("Merci de cocher les 4 cases ci-dessus pour continuer."); return; }
     setSubmitting(true); setError("");
     try {
-      const result = await createBookingCheckout({ typePrestation, lieu: slot.lieu, dateRdv: slot.dateRdv, heureRdv: slot.heureRdv });
+      const result = await createBookingCheckout({ typePrestation, lieu: slot.lieu, dateRdv: slot.dateRdv, heureRdv: slot.heureRdv, consentementResultat: consent });
       if (result.checkoutUrl) {
         window.location.href = result.checkoutUrl;
       } else {
@@ -4182,7 +4218,7 @@ function BookingFlow({ onError }) {
   };
 
   if (step === 3) {
-    return <PaymentReturnStatus rdvId={doneId} onClose={() => { setStep(0); setTypePrestation(""); setSlot(null); setDoneId(null); }} />;
+    return <PaymentReturnStatus rdvId={doneId} onClose={() => { setStep(0); setTypePrestation(""); setSlot(null); setDoneId(null); setConsent({}); }} />;
   }
 
   return (
@@ -4231,6 +4267,20 @@ function BookingFlow({ onError }) {
             <DetailRow label="Lieu" value={slot.lieu} />
             <DetailRow label="Acompte à régler maintenant" value={depositAmount ? `${depositAmount}€` : "Aucun"} />
           </div>
+          <div style={{ border: `1px solid ${C.goldLine}`, borderRadius: 16, padding: "12px 14px", marginBottom: 14, background: C.cream }}>
+            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 600, fontSize: 14.5, color: C.espresso, margin: "0 0 8px" }}>Résultat et cicatrisation</p>
+            {RESULTAT_CICATRISATION_CONSENT.map((c) => (
+              <label key={c.key} style={{ display: "flex", gap: 9, alignItems: "flex-start", marginBottom: 9, cursor: "pointer" }}>
+                <input
+                  type="checkbox"
+                  checked={consent[c.key] === true}
+                  onChange={(e) => setConsent((prev) => ({ ...prev, [c.key]: e.target.checked }))}
+                  style={{ marginTop: 3, width: 16, height: 16, flexShrink: 0, accentColor: C.roseGoldDeep }}
+                />
+                <span style={{ fontFamily: FONT_BODY, fontSize: 12, color: C.espresso, lineHeight: 1.5 }}>{c.label}</span>
+              </label>
+            ))}
+          </div>
           <ErrorNote>{error}</ErrorNote>
           <p style={{ fontFamily: FONT_BODY, fontSize: 11.5, color: C.espressoSoft, marginBottom: 14, lineHeight: 1.5 }}>
             {depositAmount
@@ -4240,7 +4290,7 @@ function BookingFlow({ onError }) {
           <div style={{ display: "flex", gap: 10 }}>
             <GhostButton onClick={() => setStep(1)} icon={ChevronLeft}>Retour</GhostButton>
             <div style={{ flex: 1 }}>
-              <PrimaryButton onClick={handleConfirm} disabled={submitting} icon={ShieldCheck}>
+              <PrimaryButton onClick={handleConfirm} disabled={submitting || !allConsented} icon={ShieldCheck}>
                 {submitting ? "Réservation du créneau…" : depositAmount ? `Payer l'acompte (${depositAmount}€)` : "Réserver ce créneau"}
               </PrimaryButton>
             </div>
