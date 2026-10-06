@@ -1,0 +1,595 @@
+// POST /api/admin-myu
+// Dispatcher unique pour toutes les actions d'administration de "Mon Espace MYU"
+// (recherche cliente, fiche cliente, validation tampon/parrainage, consignes,
+// notes internes, prestations, parcours, rendez-vous).
+//
+// Autorisation : vérifie que `adminToken` correspond à la variable d'environnement
+// Vercel MYU_ADMIN_TOKEN — le même principe que le code déjà utilisé pour "Espace
+// Miss'U (admin)" côté Google Sheets, pour ne pas ajouter un second système de
+// connexion. Une fois vérifié, la fonction utilise la clé service_role pour agir
+// sur Supabase : c'est la SEULE façon d'accéder à la table notes_internes (aucune
+// policy RLS ne l'autorise, même pour un compte admin authentifié) et la façon la
+// plus simple d'appliquer les autres écritures réservées à l'équipe MYU.
+//
+// Corps attendu : { adminToken, action, payload }
+
+const crypto = require("crypto");
+const { getAdminClient } = require("./_supabaseAdmin");
+const B = require("./_booking");
+
+const PRESTATION_STATUTS = ["a_venir", "realisee", "en_cicatrisation", "suivi_necessaire", "retouche_a_prevoir", "terminee"];
+const RDV_STATUTS = ["demande", "en_attente_paiement", "confirme", "modifie", "annule", "terminee"];
+const PAYMENT_STATUTS = ["non_requis", "en_attente", "paye", "echoue", "rembourse"];
+
+function safeTokenEqual(received, expected) {
+  if (typeof received !== "string" || typeof expected !== "string") return false;
+  const receivedHash = crypto.createHash("sha256").update(received, "utf8").digest();
+  const expectedHash = crypto.createHash("sha256").update(expected, "utf8").digest();
+  return crypto.timingSafeEqual(receivedHash, expectedHash);
+}
+
+function requireAdminToken(req, body) {
+  const expected = process.env.MYU_ADMIN_TOKEN;
+  if (!expected) {
+    throw Object.assign(new Error("MYU_ADMIN_TOKEN manquant dans les variables d'environnement Vercel."), { status: 500 });
+  }
+
+  // L'en-tête évite de mélanger le secret d'administration aux données métier.
+  // Le corps reste accepté temporairement pour compatibilité avec d'anciens clients.
+  const received = req.headers["x-myu-admin-token"] || body?.adminToken;
+  if (!safeTokenEqual(received, expected)) {
+    throw Object.assign(new Error("Code administrateur invalide."), { status: 401 });
+  }
+}
+
+async function searchClients(admin, { query }) {
+  const q = (query || "").trim();
+  if (!q) return [];
+  const { data: profiles, error } = await admin
+    .from("profiles")
+    .select("id, first_name, last_name, phone, city, referral_code")
+    .or(`first_name.ilike.%${q}%,last_name.ilike.%${q}%,phone.ilike.%${q}%,city.ilike.%${q}%`)
+    .limit(25);
+  if (error) throw error;
+
+  let results = profiles || [];
+
+  // Recherche complémentaire par email si la requête y ressemble et qu'aucun
+  // profil n'a déjà été trouvé par nom/téléphone/ville.
+  if (results.length === 0 && q.includes("@")) {
+    const { data: page, error: listErr } = await admin.auth.admin.listUsers({ page: 1, perPage: 200 });
+    if (!listErr && page?.users) {
+      const matches = page.users.filter((u) => (u.email || "").toLowerCase().includes(q.toLowerCase()));
+      if (matches.length) {
+        const ids = matches.map((u) => u.id);
+        const { data: matchedProfiles } = await admin.from("profiles").select("id, first_name, last_name, phone, city, referral_code").in("id", ids);
+        results = (matchedProfiles || []).map((p) => ({ ...p, email: matches.find((u) => u.id === p.id)?.email || "" }));
+      }
+    }
+  }
+  return results;
+}
+
+async function getClient(admin, { clientId }) {
+  if (!clientId) throw Object.assign(new Error("clientId requis."), { status: 400 });
+  const [{ data: profile }, { data: authUser }, { data: prestations }, { data: fidelite }, { data: parrainages }, { data: avantages }, { data: rendezVous }, { data: documents }, { data: notes }] = await Promise.all([
+    admin.from("profiles").select("*").eq("id", clientId).maybeSingle(),
+    admin.auth.admin.getUserById(clientId),
+    admin.from("prestations_client").select("*").eq("client_id", clientId).order("date_prestation", { ascending: false }),
+    admin.from("fidelite").select("*").eq("client_id", clientId).maybeSingle(),
+    admin.from("parrainages").select("*").eq("parrain_id", clientId).order("created_at", { ascending: false }),
+    admin.from("avantages").select("*").eq("client_id", clientId).order("date_deblocage", { ascending: false }),
+    admin.from("rendez_vous").select("*").eq("client_id", clientId).order("date_rdv", { ascending: false }),
+    admin.from("documents_consentements").select("*").eq("client_id", clientId).order("accepte_le", { ascending: false }),
+    admin.from("notes_internes").select("*").eq("client_id", clientId).order("created_at", { ascending: false }),
+  ]);
+
+  const prestationIds = (prestations || []).map((p) => p.id);
+  let etapes = [];
+  if (prestationIds.length) {
+    const { data } = await admin.from("etapes_parcours").select("*").in("prestation_id", prestationIds).order("ordre", { ascending: true });
+    etapes = data || [];
+  }
+
+  return {
+    profile: profile || null,
+    email: authUser?.user?.email || null,
+    prestations: prestations || [],
+    etapes,
+    fidelite: fidelite || { client_id: clientId, tampons: 0 },
+    parrainages: parrainages || [],
+    avantages: avantages || [],
+    rendezVous: rendezVous || [],
+    documents: documents || [],
+    notes: notes || [],
+  };
+}
+
+async function addTampon(admin, { clientId }) {
+  if (!clientId) throw Object.assign(new Error("clientId requis."), { status: 400 });
+  const { data: current } = await admin.from("fidelite").select("tampons").eq("client_id", clientId).maybeSingle();
+  const next = Math.min(3, (current?.tampons || 0) + 1);
+  const { data, error } = await admin
+    .from("fidelite")
+    .upsert({ client_id: clientId, tampons: next, updated_at: new Date().toISOString() })
+    .select().single();
+  if (error) throw error;
+  return data;
+}
+
+async function resetTampons(admin, { clientId }) {
+  if (!clientId) throw Object.assign(new Error("clientId requis."), { status: 400 });
+  const { data, error } = await admin
+    .from("fidelite")
+    .upsert({ client_id: clientId, tampons: 0, updated_at: new Date().toISOString() })
+    .select().single();
+  if (error) throw error;
+  return data;
+}
+
+async function validateParrainage(admin, { parrainageId }) {
+  if (!parrainageId) throw Object.assign(new Error("parrainageId requis."), { status: 400 });
+  const { data: parrainage, error: getErr } = await admin.from("parrainages").select("*").eq("id", parrainageId).maybeSingle();
+  if (getErr) throw getErr;
+  if (!parrainage) throw Object.assign(new Error("Recommandation introuvable."), { status: 404 });
+  if (parrainage.statut === "validee") return parrainage;
+
+  const { data: updated, error: updErr } = await admin
+    .from("parrainages")
+    .update({ statut: "validee", date_validation: new Date().toISOString() })
+    .eq("id", parrainageId)
+    .select().single();
+  if (updErr) throw updErr;
+
+  const { error: avErr } = await admin.from("avantages").insert({
+    client_id: parrainage.parrain_id,
+    type_avantage: "Recommandation validée",
+    description: "-100€ sur une prestation Lèvres éligible",
+    statut: "disponible",
+  });
+  if (avErr) throw avErr;
+
+  return updated;
+}
+
+async function markAvantageUsed(admin, { avantageId }) {
+  if (!avantageId) throw Object.assign(new Error("avantageId requis."), { status: 400 });
+  const { data, error } = await admin
+    .from("avantages")
+    .update({ statut: "utilise", date_utilisation: new Date().toISOString() })
+    .eq("id", avantageId)
+    .select().single();
+  if (error) throw error;
+  return data;
+}
+
+async function listConsignes(admin) {
+  const { data, error } = await admin.from("consignes_prestations").select("*");
+  if (error) throw error;
+  return data || [];
+}
+
+async function upsertConsigne(admin, { typePrestation, titre, contenu }) {
+  if (!typePrestation) throw Object.assign(new Error("typePrestation requis."), { status: 400 });
+  const { data, error } = await admin
+    .from("consignes_prestations")
+    .upsert({ type_prestation: typePrestation, titre: titre || null, contenu: contenu || null, updated_at: new Date().toISOString() })
+    .select().single();
+  if (error) throw error;
+  return data;
+}
+
+async function addNoteInterne(admin, { clientId, note }) {
+  if (!clientId || !note || !note.trim()) throw Object.assign(new Error("clientId et note requis."), { status: 400 });
+  const { data, error } = await admin
+    .from("notes_internes")
+    .insert({ client_id: clientId, note: note.trim() })
+    .select().single();
+  if (error) throw error;
+  return data;
+}
+
+async function createPrestation(admin, { clientId, typePrestation, datePrestation, numeroSeance }) {
+  if (!clientId || !typePrestation) throw Object.assign(new Error("clientId et typePrestation requis."), { status: 400 });
+  const { data, error } = await admin
+    .from("prestations_client")
+    .insert({
+      client_id: clientId, type_prestation: typePrestation,
+      date_prestation: datePrestation || null, numero_seance: numeroSeance || 1,
+    })
+    .select().single();
+  if (error) throw error;
+  return data;
+}
+
+async function updatePrestationStatus(admin, { prestationId, statut, prochaineEtape, retouchePrevueLe }) {
+  if (!prestationId || !statut) throw Object.assign(new Error("prestationId et statut requis."), { status: 400 });
+  if (!PRESTATION_STATUTS.includes(statut)) throw Object.assign(new Error("Statut de prestation invalide."), { status: 400 });
+  const patch = { statut, updated_at: new Date().toISOString() };
+  if (prochaineEtape !== undefined) patch.prochaine_etape = prochaineEtape || null;
+  if (retouchePrevueLe !== undefined) patch.retouche_prevue_le = retouchePrevueLe || null;
+  const { data, error } = await admin.from("prestations_client").update(patch).eq("id", prestationId).select().single();
+  if (error) throw error;
+  return data;
+}
+
+async function upsertEtapeParcours(admin, { etapeId, prestationId, etape, ordre, franchie, dateFranchie }) {
+  if (etapeId) {
+    const patch = {};
+    if (etape !== undefined) patch.etape = etape;
+    if (ordre !== undefined) patch.ordre = ordre;
+    if (franchie !== undefined) patch.franchie = franchie;
+    if (dateFranchie !== undefined) patch.date_franchie = dateFranchie || null;
+    const { data, error } = await admin.from("etapes_parcours").update(patch).eq("id", etapeId).select().single();
+    if (error) throw error;
+    return data;
+  }
+  if (!prestationId || !etape) throw Object.assign(new Error("prestationId et etape requis."), { status: 400 });
+  const { data, error } = await admin
+    .from("etapes_parcours")
+    .insert({ prestation_id: prestationId, etape, ordre: ordre || 0, franchie: !!franchie, date_franchie: dateFranchie || null })
+    .select().single();
+  if (error) throw error;
+  return data;
+}
+
+// releaseSlot : quand on passe explicitement statut="annule" sur un rendez-vous
+// dont l'acompte était payé (place déjà décomptée), l'admin peut cocher la
+// libération de la place dans le même geste — sinon la place reste bloquée
+// même après annulation. Jamais automatique : c'est un choix de l'équipe MYU
+// (ex. annulation tardive où la place n'est pas remise en vente).
+async function updateRendezVous(admin, { rdvId, statut, dateRdv, heureRdv, lieu, paymentStatus, releaseSlot }) {
+  if (!rdvId) throw Object.assign(new Error("rdvId requis."), { status: 400 });
+  if (statut && !RDV_STATUTS.includes(statut)) throw Object.assign(new Error("Statut de rendez-vous invalide."), { status: 400 });
+  if (paymentStatus && !PAYMENT_STATUTS.includes(paymentStatus)) throw Object.assign(new Error("Statut de paiement invalide."), { status: 400 });
+
+  const current = await B.getRdv(admin, rdvId);
+  if (!current) throw Object.assign(new Error("Rendez-vous introuvable."), { status: 404 });
+
+  const patch = {};
+  if (statut !== undefined) patch.statut = statut;
+  if (paymentStatus !== undefined) patch.payment_status = paymentStatus;
+  if (lieu !== undefined && lieu) patch.lieu = lieu;
+
+  // Changement de jour/horaire : la plage complète est recalculée (durée de la
+  // prestation) et la base refuse tout chevauchement avec un autre créneau bloqué.
+  const newDate = dateRdv !== undefined ? dateRdv : current.date_rdv;
+  const newHeure = heureRdv !== undefined ? (heureRdv || "").slice(0, 5) : (current.heure_rdv ? String(current.heure_rdv).slice(0, 5) : null);
+  if ((dateRdv !== undefined || heureRdv !== undefined) && newDate && newHeure) {
+    if (!B.DATE_RE.test(newDate) || !B.TIME_RE.test(newHeure)) throw Object.assign(new Error("Jour ou horaire invalide."), { status: 400 });
+    let duree = current.duree_minutes;
+    if (!duree && current.type_prestation) duree = (await B.loadPrestation(admin, current.type_prestation).catch(() => null))?.duree_minutes;
+    duree = duree || 180;
+    const debut = B.localToDate(newDate, newHeure);
+    patch.date_rdv = newDate;
+    patch.heure_rdv = newHeure;
+    patch.debut = debut.toISOString();
+    patch.fin = new Date(debut.getTime() + duree * 60000).toISOString();
+    patch.duree_minutes = duree;
+  }
+
+  const finalStatut = patch.statut || current.statut;
+  if (finalStatut === "annule" || finalStatut === "terminee") {
+    patch.bloque = false;
+    patch.maintien_expire_le = null;
+  } else if ((patch.debut || current.debut) && ["confirme", "modifie", "demande"].includes(finalStatut)) {
+    patch.bloque = true;
+  }
+  // Toute modification d'un rendez-vous confirmé est répercutée sur l'agenda et la feuille.
+  if (patch.bloque === false && current.agenda_evenement_id) patch.agenda_statut = "a_retirer";
+  else if (patch.bloque === true && (patch.debut || !current.bloque || current.agenda_statut !== "ok")) patch.agenda_statut = "a_synchroniser";
+  else if (patch.bloque === true && patch.lieu) patch.agenda_statut = "a_synchroniser";
+  if (current.feuille_statut !== "non_requis" || patch.bloque) patch.feuille_statut = "a_synchroniser";
+
+  const { data, error } = await admin.from("rendez_vous").update(patch).eq("id", rdvId).select().single();
+  if (error) {
+    if (error.code === "23P01" || error.code === "23505") throw Object.assign(new Error("Ce créneau chevauche un autre rendez-vous déjà bloqué."), { status: 409 });
+    throw error;
+  }
+
+  if (releaseSlot && statut === "annule" && data?.type_prestation) {
+    const { data: reservation } = await admin
+      .from("prestations_reservation")
+      .select("is_limited_offer")
+      .eq("type_prestation", data.type_prestation)
+      .maybeSingle();
+    if (reservation?.is_limited_offer) {
+      await admin.rpc("release_modele_slot", { p_type_prestation: data.type_prestation });
+    }
+  }
+
+  if (data.agenda_statut === "a_synchroniser" || data.agenda_statut === "a_retirer" || data.feuille_statut === "a_synchroniser") {
+    await B.syncBookingExternal(admin, rdvId).catch((e) => console.error("[admin-myu] synchro :", e.message));
+  }
+  return await B.getRdv(admin, rdvId);
+}
+
+// ------------------------------------------------------------
+// Offres limitées / acomptes ("MODÈLE MYU" et, plus largement,
+// prestations_reservation) — même table que celle lue par le site public
+// pour le montant de l'acompte et les places restantes ; ici l'équipe MYU
+// peut la consulter et l'éditer (aucun doublon de données).
+// ------------------------------------------------------------
+
+async function listPrestationsReservation(admin) {
+  const { data, error } = await admin.from("prestations_reservation").select("*").order("type_prestation", { ascending: true });
+  if (error) throw error;
+  return data || [];
+}
+
+async function upsertPrestationReservation(admin, { typePrestation, depositAmount, active, totalSlots, availableSlots, dureeMinutes }) {
+  if (!typePrestation) throw Object.assign(new Error("typePrestation requis."), { status: 400 });
+  const patch = { type_prestation: typePrestation, updated_at: new Date().toISOString() };
+  if (depositAmount !== undefined) patch.deposit_amount = depositAmount;
+  if (active !== undefined) patch.active = active;
+  if (totalSlots !== undefined) patch.total_slots = totalSlots;
+  if (availableSlots !== undefined) patch.available_slots = availableSlots;
+  if (dureeMinutes !== undefined) {
+    const d = Number(dureeMinutes);
+    if (!Number.isInteger(d) || d < 15 || d > 600) throw Object.assign(new Error("Durée invalide (15 à 600 minutes)."), { status: 400 });
+    patch.duree_minutes = d;
+  }
+  const { data, error } = await admin.from("prestations_reservation").upsert(patch).select().single();
+  if (error) throw error;
+  return data;
+}
+
+// Libère une place manuellement (indépendamment de l'annulation d'un
+// rendez-vous précis) — ex. correction d'un décompte, place libérée pour une
+// autre raison que le flux normal d'annulation ci-dessus.
+async function releaseModeleSlot(admin, { typePrestation }) {
+  if (!typePrestation) throw Object.assign(new Error("typePrestation requis."), { status: 400 });
+  const { data, error } = await admin.rpc("release_modele_slot", { p_type_prestation: typePrestation });
+  if (error) throw error;
+  return { typePrestation, availableSlots: data };
+}
+
+// Liste, pour une offre limitée donnée (par défaut "modele_myu"), toutes les
+// réservations avec le nom de la cliente — vue admin dédiée demandée pour
+// suivre qui a réservé, le paiement, et pouvoir agir (annuler + libérer).
+async function listModeleBookings(admin, { typePrestation }) {
+  const type = typePrestation || "modele_myu";
+  const { data: rdvs, error } = await admin
+    .from("rendez_vous")
+    .select("*")
+    .eq("type_prestation", type)
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  const clientIds = [...new Set((rdvs || []).map((r) => r.client_id))];
+  let profiles = [];
+  if (clientIds.length) {
+    const { data } = await admin.from("profiles").select("id, first_name, last_name, phone").in("id", clientIds);
+    profiles = data || [];
+  }
+  const byId = Object.fromEntries(profiles.map((p) => [p.id, p]));
+  return (rdvs || []).map((r) => ({ ...r, client: byId[r.client_id] || null }));
+}
+
+// ------------------------------------------------------------
+// Agenda central : tous les rendez-vous, quelle que soit leur origine.
+// ------------------------------------------------------------
+async function listAgenda(admin, { dateFrom, dateTo }) {
+  let query = admin
+    .from("rendez_vous")
+    .select("*")
+    .order("date_rdv", { ascending: true })
+    .order("heure_rdv", { ascending: true });
+  if (dateFrom) query = query.gte("date_rdv", dateFrom);
+  if (dateTo) query = query.lte("date_rdv", dateTo);
+  const { data: rdvs, error } = await query;
+  if (error) throw error;
+
+  // Rattrapage des synchronisations en attente à chaque ouverture du suivi.
+  await B.retryPendingSyncs(admin, { limit: 3, minDelayMs: 30000 }).catch(() => {});
+
+  const ids = (rdvs || []).map((r) => r.id);
+  let fresh = rdvs || [];
+  if (ids.length) {
+    const { data: again } = await admin.from("rendez_vous").select("*").in("id", ids);
+    if (again) {
+      const byId = Object.fromEntries(again.map((r) => [r.id, r]));
+      fresh = fresh.map((r) => byId[r.id] || r);
+    }
+  }
+
+  const clientIds = [...new Set(fresh.map((r) => r.client_id).filter(Boolean))];
+  let profiles = [];
+  if (clientIds.length) {
+    const { data, error: profilesError } = await admin
+      .from("profiles")
+      .select("id, first_name, last_name, phone")
+      .in("id", clientIds);
+    if (profilesError) throw profilesError;
+    profiles = data || [];
+  }
+  const clientsById = Object.fromEntries(profiles.map((p) => [p.id, p]));
+
+  // Conflits avec l'agenda Google (événements occupés qui ne sont pas des rendez-vous MYU).
+  let busy = null;
+  let agendaErreur = null;
+  const blocked = fresh.filter((r) => r.bloque && r.debut && r.fin);
+  if (blocked.length) {
+    try {
+      const settings = await B.loadSettings(admin);
+      const from = new Date(Math.min(...blocked.map((r) => new Date(r.debut).getTime())));
+      const to = new Date(Math.max(...blocked.map((r) => new Date(r.fin).getTime())));
+      busy = await B.fetchCalendarBusy(from, to, settings.agenda_mots_ignores);
+    } catch (e) {
+      agendaErreur = e.message;
+    }
+  }
+
+  return fresh.map((r) => {
+    const client = clientsById[r.client_id] || null;
+    const affichage = B.bookingView(r, { profile: client, scope: "admin" });
+    if (busy && r.bloque && r.debut) {
+      const s = new Date(r.debut); const e = new Date(r.fin);
+      affichage.conflitsAgenda = busy
+        .filter((b) => b.myuRdv !== r.id && B.overlaps(s, e, b.start, b.end))
+        .map((b) => ({ titre: b.title || "Événement occupé", debut: B.zoned(b.start).time, fin: B.zoned(b.end).time }));
+    }
+    if (agendaErreur) affichage.agendaLectureErreur = agendaErreur;
+    return { ...r, client, affichage };
+  });
+}
+
+async function createManualRendezVous(admin, {
+  clientId, typePrestation, dateRdv, heureRdv, lieu,
+  statut, paymentStatus, depositAmount, note,
+}) {
+  if (!clientId || !typePrestation || !dateRdv || !heureRdv) {
+    throw Object.assign(new Error("Cliente, prestation, date et heure sont requises."), { status: 400 });
+  }
+  const safeStatut = statut || "confirme";
+  const safePayment = paymentStatus || "non_requis";
+  if (!RDV_STATUTS.includes(safeStatut)) {
+    throw Object.assign(new Error("Statut de rendez-vous invalide."), { status: 400 });
+  }
+  if (!PAYMENT_STATUTS.includes(safePayment)) {
+    throw Object.assign(new Error("Statut de paiement invalide."), { status: 400 });
+  }
+  const heure = String(heureRdv).slice(0, 5);
+  if (!B.DATE_RE.test(dateRdv) || !B.TIME_RE.test(heure)) throw Object.assign(new Error("Jour ou horaire invalide."), { status: 400 });
+  const settings = await B.loadSettings(admin);
+  const lieuFinal = lieu || settings.lieux[0];
+  const { data: presta } = await admin.from("prestations_reservation").select("duree_minutes").eq("type_prestation", typePrestation).maybeSingle();
+  const duree = Number(presta?.duree_minutes) || 180;
+  const debut = B.localToDate(dateRdv, heure);
+  const fin = new Date(debut.getTime() + duree * 60000);
+  const bloque = safeStatut !== "annule" && safeStatut !== "terminee";
+
+  const { data, error } = await admin
+    .from("rendez_vous")
+    .insert({
+      client_id: clientId,
+      type_prestation: typePrestation,
+      date_rdv: dateRdv,
+      heure_rdv: heure,
+      lieu: lieuFinal,
+      debut: debut.toISOString(),
+      fin: fin.toISOString(),
+      duree_minutes: duree,
+      bloque,
+      statut: safeStatut,
+      payment_status: safePayment,
+      deposit_amount: Number(depositAmount) || 0,
+      confirme_le: new Date().toISOString(),
+      agenda_statut: bloque ? "a_synchroniser" : "non_requis",
+      feuille_statut: "a_synchroniser",
+    })
+    .select()
+    .single();
+  if (error) {
+    if (error.code === "23P01" || error.code === "23505") {
+      throw Object.assign(new Error("Ce créneau chevauche un rendez-vous déjà bloqué."), { status: 409 });
+    }
+    throw error;
+  }
+
+  if (note && note.trim()) {
+    const { error: noteError } = await admin.from("notes_internes").insert({
+      client_id: clientId,
+      note: `Rendez-vous ajouté manuellement le ${dateRdv} à ${heure} — ${note.trim()}`,
+    });
+    if (noteError) console.error("[admin-myu] note du rendez-vous manuel :", noteError.message);
+  }
+  await B.syncBookingExternal(admin, data.id).catch((e) => console.error("[admin-myu] synchro :", e.message));
+  return await B.getRdv(admin, data.id);
+}
+
+// Relance manuelle de la synchronisation agenda + feuille d'un rendez-vous.
+async function retryBookingSync(admin, { rdvId }) {
+  if (!rdvId) throw Object.assign(new Error("rdvId requis."), { status: 400 });
+  const r = await B.syncBookingExternal(admin, rdvId);
+  const fresh = await B.getRdv(admin, rdvId);
+  const profile = await B.loadProfile(admin, fresh.client_id);
+  return { resultat: r, affichage: B.bookingView(fresh, { profile, scope: "admin" }) };
+}
+
+async function getBookingSettings(admin) {
+  const settings = await B.loadSettings(admin);
+  const { data, error } = await admin.from("prestations_reservation").select("type_prestation,duree_minutes,deposit_amount,active").order("type_prestation");
+  if (error) throw error;
+  return { reglages: settings, prestations: (data || []).map((p) => ({ ...p, libelle: B.serviceLabel(p.type_prestation) })) };
+}
+
+async function updateBookingSettings(admin, { lieux, horaires, pasMinutes, delaiMinMinutes, maintienMinutes, horizonJours, agendaMotsIgnores }) {
+  const patch = { updated_at: new Date().toISOString() };
+  if (lieux !== undefined) {
+    const l = (Array.isArray(lieux) ? lieux : String(lieux).split(",")).map((x) => String(x).trim()).filter(Boolean);
+    if (!l.length) throw Object.assign(new Error("Au moins un lieu est requis."), { status: 400 });
+    patch.lieux = l;
+  }
+  if (horaires !== undefined) {
+    const clean = {};
+    for (const [day, ranges] of Object.entries(horaires || {})) {
+      if (!/^[1-7]$/.test(day) || !Array.isArray(ranges)) throw Object.assign(new Error("Horaires invalides."), { status: 400 });
+      clean[day] = ranges.filter((r) => Array.isArray(r) && B.TIME_RE.test(r[0]) && B.TIME_RE.test(r[1]) && r[0] < r[1]);
+    }
+    patch.horaires = clean;
+  }
+  const num = (v, min, max, label) => {
+    const n = Number(v);
+    if (!Number.isInteger(n) || n < min || n > max) throw Object.assign(new Error(`${label} invalide.`), { status: 400 });
+    return n;
+  };
+  if (pasMinutes !== undefined) patch.pas_minutes = num(pasMinutes, 5, 240, "Pas");
+  if (delaiMinMinutes !== undefined) patch.delai_min_minutes = num(delaiMinMinutes, 0, 10080, "Délai minimum");
+  if (maintienMinutes !== undefined) patch.maintien_minutes = num(maintienMinutes, 5, 60, "Durée de maintien");
+  if (horizonJours !== undefined) patch.horizon_jours = num(horizonJours, 1, 365, "Horizon");
+  if (agendaMotsIgnores !== undefined) {
+    patch.agenda_mots_ignores = (Array.isArray(agendaMotsIgnores) ? agendaMotsIgnores : String(agendaMotsIgnores).split(",")).map((x) => String(x).trim()).filter(Boolean);
+  }
+  const { error } = await admin.from("myu_reglages_reservation").update(patch).eq("id", 1);
+  if (error) throw error;
+  return getBookingSettings(admin);
+}
+
+const ACTIONS = {
+  searchClients, getClient, addTampon, resetTampons, validateParrainage, markAvantageUsed,
+  listConsignes, upsertConsigne, addNoteInterne, createPrestation, updatePrestationStatus, upsertEtapeParcours, updateRendezVous,
+  listPrestationsReservation, upsertPrestationReservation, releaseModeleSlot, listModeleBookings,
+  listAgenda, createManualRendezVous, retryBookingSync, getBookingSettings, updateBookingSettings,
+};
+
+module.exports = async function handler(req, res) {
+  if (req.method !== "POST") {
+    res.status(405).json({ error: "Méthode non autorisée." });
+    return;
+  }
+
+  let body = req.body;
+  if (typeof body === "string") {
+    try { body = JSON.parse(body || "{}"); } catch { body = {}; }
+  }
+  body = body || {};
+
+  try {
+    requireAdminToken(req, body);
+  } catch (e) {
+    res.status(e.status || 401).json({ error: e.message });
+    return;
+  }
+
+  const fn = ACTIONS[body.action];
+  if (!fn) {
+    res.status(400).json({ error: "Action inconnue." });
+    return;
+  }
+
+  let admin;
+  try {
+    admin = getAdminClient();
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+    return;
+  }
+
+  try {
+    const result = await fn(admin, body.payload || {});
+    res.status(200).json({ success: true, data: result });
+  } catch (e) {
+    console.error(`[admin-myu] action "${body.action}" a échoué :`, e.message);
+    res.status(e.status || 500).json({ error: e.message || "L'action a échoué." });
+  }
+};
