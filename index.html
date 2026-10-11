@@ -17,8 +17,13 @@
 <meta name="twitter:title" content="MYU by Miss'U — The Art of Glow" />
 <meta name="twitter:description" content="Maquillage permanent en Martinique. Découvrez les prestations MYU et réservez votre rendez-vous." />
 <meta name="twitter:image" content="https://missu-two.vercel.app/myu-social-preview.png" />
+<meta name="theme-color" content="#0D0B09" />
+<meta name="color-scheme" content="dark" />
 <style>
-  html, body { margin: 0; padding: 0; }
+  html, body { margin: 0; padding: 0; background: #0D0B09; color: #F6EFE4; color-scheme: dark; }
+  ::placeholder { color: #8A7F6E; opacity: 1; }
+  option { background: #17130E; color: #F6EFE4; }
+  ::selection { background: #C9A26B; color: #0D0B09; }
   #root { min-height: 100vh; }
 </style>
 <script type="importmap">
@@ -100,18 +105,19 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
 });
 
 const C = {
-  blush: "#F7E5DF",
-  blushDeep: "#EFD2C7",
-  cream: "#FFFCF8",
-  creamSoft: "#FBF4ED",
-  roseGold: "#C99A82",
-  roseGoldDeep: "#A9775D",
-  goldLine: "#D9B493",
-  espresso: "#4A372F",
-  espressoSoft: "#86695D",
-  white: "#FFFFFF",
-  danger: "#B5564A",
-  success: "#7E8F6B",
+  // Thème noir & doré MYU (les noms de clés sont conservés pour tout le code existant)
+  blush: "#1D1812",
+  blushDeep: "#3A2F20",
+  cream: "#14110D",
+  creamSoft: "#19150F",
+  roseGold: "#C9A26B",
+  roseGoldDeep: "#E3C38D",
+  goldLine: "#6B5532",
+  espresso: "#F6EFE4",
+  espressoSoft: "#B5A998",
+  white: "#0F0C09",
+  danger: "#E0877B",
+  success: "#9DB38A",
 };
 
 const FONT_DISPLAY = "'Cormorant Garamond', serif";
@@ -154,9 +160,9 @@ function MarblePanel({ children, style = {} }) {
         position: "relative",
         overflow: "hidden",
         background: `
-          radial-gradient(120% 80% at 15% 0%, rgba(255,255,255,0.9), transparent 55%),
-          radial-gradient(90% 70% at 90% 100%, rgba(217,180,147,0.35), transparent 60%),
-          linear-gradient(155deg, ${C.creamSoft} 0%, ${C.blush} 55%, ${C.blushDeep} 100%)
+          radial-gradient(120% 80% at 15% 0%, rgba(201,162,107,0.14), transparent 55%),
+          radial-gradient(90% 70% at 90% 100%, rgba(201,162,107,0.10), transparent 60%),
+          linear-gradient(155deg, #0D0B09 0%, #15110C 55%, #1D1812 100%)
         `,
         ...style,
       }}
@@ -306,6 +312,14 @@ const SERVICES = [
     key: "neutralisation", label: "Neutralisation lèvres foncées", icon: Droplet, category: "levres", price: 250,
     desc: "Rééquilibre les tons foncés ou violacés pour une couleur lèvres homogène et naturelle.",
     longDesc: "Cette technique rééquilibre en douceur les tons foncés ou violacés, pour révéler une couleur de lèvres homogène et lumineuse. Un travail minutieux, adapté à votre carnation, pour un résultat naturel qui vous ressemble. Réalisé avec le pigment premium Malina Ice.",
+    preNotice: {
+      title: "À savoir avant votre neutralisation",
+      paragraphs: [
+        "La neutralisation vise à atténuer la teinte foncée des lèvres. Le résultat varie selon votre couleur de départ, votre peau et votre cicatrisation, et il peut être progressif.",
+        "Juste après la séance, l'aspect des lèvres n'est pas le résultat final : il évolue pendant la cicatrisation. Le rendu se juge une fois la peau cicatrisée.",
+        "Les photos présentées sont des exemples, pas une promesse de résultat. Vos soins après la séance comptent : vous recevrez les consignes à la suite de votre rendez-vous.",
+      ],
+    },
   },
   {
     key: "eyeliner_classique", label: "Eyeliner classique", icon: Eye, category: "regard", price: 200,
@@ -523,14 +537,14 @@ function PrimaryButton({ children, onClick, disabled, icon: Icon, full = true, t
         border: "none",
         cursor: disabled ? "not-allowed" : "pointer",
         background: disabled
-          ? "linear-gradient(135deg, #E4D2C6, #DAC1B0)"
+          ? "linear-gradient(135deg, #2A241B, #231E16)"
           : `linear-gradient(135deg, ${C.roseGold}, ${C.roseGoldDeep})`,
-        color: C.white,
+        color: disabled ? C.espressoSoft : C.white,
         fontFamily: FONT_BODY,
         fontWeight: 500,
         fontSize: 15,
         letterSpacing: 0.4,
-        boxShadow: disabled ? "none" : "0 8px 20px -8px rgba(169,119,93,0.55)",
+        boxShadow: disabled ? "none" : "0 8px 20px -8px rgba(201,162,107,0.35)",
         transition: "transform 0.15s ease, box-shadow 0.15s ease",
         opacity: disabled ? 0.7 : 1,
       }}
@@ -679,7 +693,8 @@ function HomeStep({ onStart, onOpenPrivacy, majorConfirmed, onToggleMajor, onAdm
             borderRadius: 20,
             overflow: "hidden",
             height: 170,
-            background: `linear-gradient(135deg, ${C.roseGold}, ${C.roseGoldDeep})`,
+            border: `1.2px solid ${C.goldLine}`,
+            background: "linear-gradient(135deg, #17130D, #2A2216)",
             position: "relative",
             display: "flex",
             alignItems: "center",
@@ -690,13 +705,13 @@ function HomeStep({ onStart, onOpenPrivacy, majorConfirmed, onToggleMajor, onAdm
               remplacer ce bloc par une balise <video autoPlay muted loop playsInline>
               une fois qu'un fichier vidéo réel sera disponible. Rien n'est inventé
               ici en attendant — le fond dégradé + l'icône restent le rendu par défaut. */}
-          <div style={{ position: "absolute", inset: 0, opacity: 0.25 }}>
+          <div style={{ position: "absolute", inset: 0, opacity: 0.9 }}>
             <svg width="100%" height="100%" viewBox="0 0 300 170" preserveAspectRatio="none">
-              <circle cx="40" cy="30" r="60" fill="white" opacity="0.15" />
-              <circle cx="270" cy="150" r="80" fill="white" opacity="0.12" />
+              <circle cx="40" cy="30" r="60" fill="#C9A26B" opacity="0.18" />
+              <circle cx="270" cy="150" r="80" fill="#C9A26B" opacity="0.14" />
             </svg>
           </div>
-          <Sparkles size={40} color="white" style={{ opacity: 0.9 }} />
+          <Sparkles size={40} color={C.roseGoldDeep} style={{ opacity: 0.95 }} />
         </div>
       </MarblePanel>
 
@@ -707,25 +722,25 @@ function HomeStep({ onStart, onOpenPrivacy, majorConfirmed, onToggleMajor, onAdm
           display: "flex", alignItems: "center", gap: 12, width: "100%", textAlign: "left",
           padding: "16px 18px", borderRadius: 20, cursor: "pointer", marginBottom: 18,
           border: `1.4px solid ${C.roseGoldDeep}`,
-          background: `linear-gradient(135deg, ${C.espresso}, ${C.espressoSoft})`,
-          boxShadow: "0 14px 30px -18px rgba(74,55,47,0.55)",
+          background: "linear-gradient(135deg, #1F1912, #2C2317)",
+          boxShadow: "0 14px 30px -18px rgba(0,0,0,0.8)",
         }}
       >
         <div style={{
           width: 42, height: 42, borderRadius: "50%", flexShrink: 0,
-          background: "rgba(255,255,255,0.14)", display: "flex", alignItems: "center", justifyContent: "center",
+          background: "rgba(201,162,107,0.16)", display: "flex", alignItems: "center", justifyContent: "center",
         }}>
-          <UserCircle2 size={22} color={C.blush} />
+          <UserCircle2 size={22} color={C.roseGoldDeep} />
         </div>
         <div style={{ flex: 1 }}>
-          <div style={{ fontFamily: FONT_DISPLAY, fontWeight: 600, fontSize: 17, color: C.white, letterSpacing: 0.3 }}>
+          <div style={{ fontFamily: FONT_DISPLAY, fontWeight: 600, fontSize: 17, color: C.espresso, letterSpacing: 0.3 }}>
             Mon Espace MYU
           </div>
-          <div style={{ fontFamily: FONT_BODY, fontSize: 11.5, color: C.blush, opacity: 0.85, marginTop: 1 }}>
+          <div style={{ fontFamily: FONT_BODY, fontSize: 11.5, color: C.espressoSoft, marginTop: 1 }}>
             Parcours Glow, fidélité, rendez-vous & suivi personnalisé
           </div>
         </div>
-        <ChevronRight size={18} color={C.blush} />
+        <ChevronRight size={18} color={C.roseGoldDeep} />
       </button>
 
       <div
@@ -734,7 +749,7 @@ function HomeStep({ onStart, onOpenPrivacy, majorConfirmed, onToggleMajor, onAdm
           borderRadius: 24,
           border: `1.4px solid ${C.goldLine}`,
           padding: "26px 22px",
-          boxShadow: "0 18px 40px -24px rgba(74,55,47,0.35)",
+          boxShadow: "0 18px 40px -24px rgba(0,0,0,0.55)",
         }}
       >
         <p style={{
@@ -764,7 +779,7 @@ function HomeStep({ onStart, onOpenPrivacy, majorConfirmed, onToggleMajor, onAdm
             background: majorConfirmed ? C.roseGoldDeep : "transparent",
             display: "flex", alignItems: "center", justifyContent: "center",
           }}>
-            {majorConfirmed && <Check size={12} color="white" />}
+            {majorConfirmed && <Check size={12} color="#0D0B09" />}
           </div>
           <span style={{ fontFamily: FONT_BODY, fontSize: 12.5, color: C.espresso, lineHeight: 1.5 }}>
             Je certifie être majeure (18 ans ou plus). Le pré-diagnostic et les prestations proposées ne
@@ -840,7 +855,7 @@ function OfferSlotBadge({ typePrestation }) {
     <div style={{ marginTop: 6 }} onClick={(e) => e.stopPropagation()}>
       <div style={{
         display: "inline-flex", alignItems: "center", gap: 5, padding: "3px 10px", borderRadius: 99,
-        background: complet ? "#EFE5E2" : C.blush, border: `1px solid ${complet ? C.blushDeep : C.goldLine}`,
+        background: complet ? "#1E1A14" : C.blush, border: `1px solid ${complet ? C.blushDeep : C.goldLine}`,
       }}>
         <span style={{
           fontFamily: FONT_BODY, fontSize: 10.5, fontWeight: 500, textTransform: "uppercase", letterSpacing: 0.3,
@@ -887,7 +902,7 @@ function ServiceStep({ value, onChange, onNext, onBack }) {
           cursor: "pointer",
           background: selected ? `linear-gradient(160deg, ${C.cream}, ${C.blush})` : C.cream,
           border: selected ? `1.6px solid ${C.roseGoldDeep}` : `1.4px solid ${C.blushDeep}`,
-          boxShadow: selected ? "0 10px 24px -14px rgba(169,119,93,0.55)" : "none",
+          boxShadow: selected ? "0 10px 24px -14px rgba(201,162,107,0.35)" : "none",
           transition: "all 0.18s ease",
         }}
       >
@@ -896,12 +911,12 @@ function ServiceStep({ value, onChange, onNext, onBack }) {
           onClick={(e) => { e.stopPropagation(); toggle(s.key); }}
           style={{
             position: "absolute", top: 10, right: 10, width: 20, height: 20, borderRadius: "50%",
-            background: selected ? `linear-gradient(135deg, ${C.roseGold}, ${C.roseGoldDeep})` : "rgba(255,255,255,0.9)",
+            background: selected ? `linear-gradient(135deg, ${C.roseGold}, ${C.roseGoldDeep})` : "#1B1712",
             border: selected ? "none" : `1.4px solid ${C.blushDeep}`,
             display: "flex", alignItems: "center", justifyContent: "center", zIndex: 2,
           }}
         >
-          {selected && <Check size={11} color="white" />}
+          {selected && <Check size={11} color="#0D0B09" />}
         </div>
 
         {s.image && (
@@ -996,7 +1011,7 @@ function ServiceDetailModal({ service, selected, onToggle, onClose }) {
     <div
       onClick={onClose}
       style={{
-        position: "fixed", inset: 0, background: "rgba(74,55,47,0.45)",
+        position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)",
         display: "flex", alignItems: "flex-end", justifyContent: "center", zIndex: 50,
       }}
     >
@@ -1021,7 +1036,7 @@ function ServiceDetailModal({ service, selected, onToggle, onClose }) {
                 <span style={{
                   position: "absolute", bottom: 5, left: "50%", transform: "translateX(-50%)",
                   padding: "2px 6px", borderRadius: 99, whiteSpace: "nowrap",
-                  background: i === 2 ? `linear-gradient(135deg, ${C.roseGold}, ${C.roseGoldDeep})` : "rgba(74,55,47,0.6)",
+                  background: i === 2 ? `linear-gradient(135deg, ${C.roseGold}, ${C.roseGoldDeep})` : "rgba(0,0,0,0.65)",
                   color: "white", fontFamily: FONT_BODY, fontSize: 8.5, letterSpacing: 0.3,
                 }}>{stage.label}</span>
               </div>
@@ -1033,14 +1048,14 @@ function ServiceDetailModal({ service, selected, onToggle, onClose }) {
               <img src={service.imageBefore} alt={`${service.label} avant`} style={{ width: "100%", height: 160, objectFit: "cover", display: "block" }} />
               <span style={{
                 position: "absolute", bottom: 6, left: 6, padding: "2px 8px", borderRadius: 99,
-                background: "rgba(74,55,47,0.6)", color: "white", fontFamily: FONT_BODY, fontSize: 9.5, letterSpacing: 0.4,
+                background: "rgba(0,0,0,0.65)", color: "white", fontFamily: FONT_BODY, fontSize: 9.5, letterSpacing: 0.4,
               }}>AVANT</span>
             </div>
             <div style={{ flex: 1, position: "relative" }}>
               <img src={service.image} alt={`${service.label} après`} style={{ width: "100%", height: 160, objectFit: "cover", display: "block" }} />
               <span style={{
                 position: "absolute", bottom: 6, right: 6, padding: "2px 8px", borderRadius: 99,
-                background: `linear-gradient(135deg, ${C.roseGold}, ${C.roseGoldDeep})`, color: "white",
+                background: `linear-gradient(135deg, ${C.roseGold}, ${C.roseGoldDeep})`, color: "#0D0B09",
                 fontFamily: FONT_BODY, fontSize: 9.5, letterSpacing: 0.4,
               }}>APRÈS</span>
             </div>
@@ -1055,7 +1070,7 @@ function ServiceDetailModal({ service, selected, onToggle, onClose }) {
             background: `linear-gradient(135deg, ${C.roseGold}, ${C.roseGoldDeep})`,
             display: "flex", alignItems: "center", justifyContent: "center",
           }}>
-            <Icon size={20} color="white" />
+            <Icon size={20} color="#0D0B09" />
           </div>
           <button
             onClick={onClose}
@@ -1096,6 +1111,21 @@ function ServiceDetailModal({ service, selected, onToggle, onClose }) {
         <p style={{ fontFamily: FONT_BODY, fontSize: 14, color: C.espresso, lineHeight: 1.7, margin: "0 0 18px" }}>
           {service.longDesc}
         </p>
+
+        {service.preNotice && (
+          <div style={{
+            background: C.creamSoft, border: `1px solid ${C.goldLine}`, borderRadius: 16,
+            padding: "14px 16px", margin: "0 0 18px",
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 8 }}>
+              <AlertCircle size={15} color={C.roseGoldDeep} style={{ flexShrink: 0 }} />
+              <span style={{ fontFamily: FONT_DISPLAY, fontWeight: 600, fontSize: 15.5, color: C.espresso }}>{service.preNotice.title}</span>
+            </div>
+            {service.preNotice.paragraphs.map((t, i) => (
+              <p key={i} style={{ fontFamily: FONT_BODY, fontSize: 12.5, color: C.espresso, lineHeight: 1.6, margin: i === service.preNotice.paragraphs.length - 1 ? 0 : "0 0 8px" }}>{t}</p>
+            ))}
+          </div>
+        )}
 
         <div style={{
           display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8,
@@ -1140,7 +1170,7 @@ function PrivacyModal({ onClose }) {
     <div
       onClick={onClose}
       style={{
-        position: "fixed", inset: 0, background: "rgba(74,55,47,0.45)",
+        position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)",
         display: "flex", alignItems: "flex-end", justifyContent: "center", zIndex: 60,
       }}
     >
@@ -1160,7 +1190,7 @@ function PrivacyModal({ onClose }) {
             background: `linear-gradient(135deg, ${C.roseGold}, ${C.roseGoldDeep})`,
             display: "flex", alignItems: "center", justifyContent: "center",
           }}>
-            <ShieldCheck size={20} color="white" />
+            <ShieldCheck size={20} color="#0D0B09" />
           </div>
           <button
             onClick={onClose}
@@ -1478,14 +1508,14 @@ function UploadZone({ zone, image, loading, onUpload, onRemove }) {
             className="missu-focusable"
             style={{
               position: "absolute", top: 6, right: 6, width: 24, height: 24, borderRadius: "50%",
-              background: "rgba(74,55,47,0.65)", border: "none", color: "white", cursor: "pointer",
+              background: "rgba(0,0,0,0.7)", border: "none", color: "white", cursor: "pointer",
               display: "flex", alignItems: "center", justifyContent: "center",
             }}
           >
             <X size={13} />
           </button>
           <div style={{
-            position: "absolute", bottom: 0, left: 0, right: 0, background: "rgba(74,55,47,0.55)",
+            position: "absolute", bottom: 0, left: 0, right: 0, background: "rgba(0,0,0,0.65)",
             color: "white", fontFamily: FONT_BODY, fontSize: 10.5, padding: "4px 8px",
           }}>
             {zone.label}
@@ -1587,8 +1617,8 @@ function PhotosStep({ photos, onUpload, onRemove, onNext, onBack }) {
 
       {errorMsg && (
         <div style={{
-          display: "flex", alignItems: "center", gap: 8, background: "#FBEAE6",
-          border: "1px solid #E0B6AC", borderRadius: 14, padding: "10px 12px", marginBottom: 4,
+          display: "flex", alignItems: "center", gap: 8, background: "#2A1A17",
+          border: "1px solid #7A3F36", borderRadius: 14, padding: "10px 12px", marginBottom: 4,
         }}>
           <AlertCircle size={14} color={C.danger} />
           <span style={{ fontFamily: FONT_BODY, fontSize: 12, color: C.danger }}>{errorMsg}</span>
@@ -1664,7 +1694,7 @@ function ContraStep({ selected, onToggle, otherText, onOtherText, onNext, onBack
                 background: checked ? C.roseGoldDeep : "transparent",
                 display: "flex", alignItems: "center", justifyContent: "center",
               }}>
-                {checked && <Check size={12} color="white" />}
+                {checked && <Check size={12} color="#0D0B09" />}
               </div>
               <span style={{ fontFamily: FONT_BODY, fontSize: 13, color: C.espresso, lineHeight: 1.4, flex: 1 }}>
                 {item}
@@ -1746,7 +1776,7 @@ function ConsentStep({ consents, onToggle, onSubmit, onBack, submitting, onOpenP
                     background: checked ? `linear-gradient(135deg, ${C.roseGold}, ${C.roseGoldDeep})` : "transparent",
                     display: "flex", alignItems: "center", justifyContent: "center",
                   }}>
-                    {checked && <Check size={11} color="white" />}
+                    {checked && <Check size={11} color="#0D0B09" />}
                   </div>
                   <span style={{ fontFamily: FONT_BODY, fontSize: 12.5, color: C.espresso, lineHeight: 1.5 }}>{c.label}</span>
                 </button>
@@ -1770,9 +1800,9 @@ function ConfirmationStep({ firstName, onRestart }) {
         width: 64, height: 64, borderRadius: "50%", margin: "0 auto 18px",
         background: `linear-gradient(135deg, ${C.roseGold}, ${C.roseGoldDeep})`,
         display: "flex", alignItems: "center", justifyContent: "center",
-        boxShadow: "0 12px 28px -12px rgba(169,119,93,0.6)",
+        boxShadow: "0 12px 28px -12px rgba(201,162,107,0.4)",
       }}>
-        <Check size={28} color="white" />
+        <Check size={28} color="#0D0B09" />
       </div>
       <Crown size={22} />
       <h1 style={{ fontFamily: FONT_DISPLAY, fontWeight: 600, fontSize: 26, color: C.espresso, margin: "10px 0 8px" }}>
@@ -2062,7 +2092,17 @@ async function fetchPrestationsReservation(typesList) {
 // côté navigateur). Renvoie { rendezVous, checkoutUrl }. Si l'offre est à
 // stock limité et qu'il n'y a plus de place, le serveur répond une erreur
 // claire ("COMPLET") plutôt que de créer un paiement pour rien.
-async function createBookingCheckout({ typePrestation, lieu, dateRdv, heureRdv }) {
+// Consentement "Résultat et cicatrisation" demandé avant le paiement de
+// l'acompte. Les mêmes clés sont revérifiées côté serveur (api/create-checkout).
+// Si le texte change, incrémenter la version (côté serveur aussi).
+const RESULTAT_CICATRISATION_CONSENT = [
+  { key: "resultat_varie", label: "Je comprends que le résultat varie selon ma peau et ma cicatrisation, et qu'il peut différer des photos d'exemple." },
+  { key: "apres_immediat", label: "Je comprends que l'aspect juste après la séance n'est pas le résultat final : il évolue pendant la cicatrisation." },
+  { key: "seances_possibles", label: "Je comprends qu'une ou plusieurs séances peuvent être nécessaires, et qu'aucun résultat précis ne m'est garanti." },
+  { key: "consignes_soin", label: "Je m'engage à suivre les consignes de soin transmises par Miss'U après ma séance." },
+];
+
+async function createBookingCheckout({ typePrestation, lieu, dateRdv, heureRdv, consentementResultat }) {
   const { data: sessionData, error: sessErr } = await supabase.auth.getSession();
   if (sessErr) throw sessErr;
   const token = sessionData.session?.access_token;
@@ -2070,7 +2110,7 @@ async function createBookingCheckout({ typePrestation, lieu, dateRdv, heureRdv }
   const res = await fetch("/api/create-checkout", {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-    body: JSON.stringify({ typePrestation, lieu, dateRdv, heureRdv }),
+    body: JSON.stringify({ typePrestation, lieu, dateRdv, heureRdv, consentementResultat }),
   });
   const body = await res.json().catch(() => ({}));
   if (!res.ok || !body.success) {
@@ -2179,7 +2219,7 @@ function SlotPicker({ typePrestation, value, onChange }) {
     flex: "0 0 auto", minWidth: 70, padding: "8px 10px", borderRadius: 14, cursor: "pointer",
     fontFamily: FONT_BODY, fontSize: 12, lineHeight: 1.25,
     border: active ? `1.6px solid ${C.espresso}` : `1.2px solid ${C.blushDeep}`,
-    background: active ? C.espresso : C.white, color: active ? C.white : C.espresso,
+    background: active ? `linear-gradient(135deg, ${C.roseGold}, ${C.roseGoldDeep})` : C.white, color: active ? C.white : C.espresso,
   });
   const fmtDay = (iso) => new Date(iso + "T12:00:00Z").toLocaleDateString("fr-FR", { timeZone: "UTC", weekday: "short", day: "numeric", month: "short" });
   const addMin = (hhmm, m) => { const [h, mi] = hhmm.split(":").map(Number); const t = h * 60 + mi + m; return `${String(Math.floor(t / 60)).padStart(2, "0")}:${String(t % 60).padStart(2, "0")}`; };
@@ -2556,7 +2596,7 @@ function AdminDashboard({ submissions, loading, onOpen, onLogout, onRefresh }) {
 
       {!loading && filtered.length === 0 && (
         <div style={{ textAlign: "center", padding: "40px 10px" }}>
-          <ClipboardList size={28} color={C.blushDeep} style={{ marginBottom: 10 }} />
+          <ClipboardList size={28} color={C.roseGold} style={{ marginBottom: 10 }} />
           <p style={{ fontFamily: FONT_BODY, fontSize: 13, color: C.espressoSoft }}>
             {submissions.length === 0 ? "Aucune demande reçue pour le moment." : "Aucun résultat pour cette recherche."}
           </p>
@@ -3512,7 +3552,7 @@ function SectionCard({ title, children, alert }) {
   return (
     <div style={{
       background: C.cream, borderRadius: 18,
-      border: `1.3px solid ${alert ? "#E0B6AC" : C.blushDeep}`,
+      border: `1.3px solid ${alert ? "#7A3F36" : C.blushDeep}`,
       padding: "14px 16px", marginBottom: 12,
     }}>
       <div style={{
@@ -3980,7 +4020,7 @@ function GlowTimeline({ etapes }) {
               border: e.franchie ? "none" : `1.6px solid ${C.blushDeep}`,
               display: "flex", alignItems: "center", justifyContent: "center",
             }}>
-              {e.franchie && <Check size={11} color="white" />}
+              {e.franchie && <Check size={11} color="#0D0B09" />}
             </div>
             {i < etapes.length - 1 && (
               <div style={{ width: 2, flex: 1, minHeight: 24, background: e.franchie ? C.roseGold : C.blushDeep }} />
@@ -4014,9 +4054,9 @@ function LoyaltyCard({ tampons }) {
           background: i < tampons ? `linear-gradient(135deg, ${C.roseGold}, ${C.roseGoldDeep})` : C.white,
           border: i < tampons ? "none" : `1.6px dashed ${C.blushDeep}`,
           display: "flex", alignItems: "center", justifyContent: "center",
-          boxShadow: i < tampons ? "0 8px 16px -8px rgba(169,119,93,0.6)" : "none",
+          boxShadow: i < tampons ? "0 8px 16px -8px rgba(201,162,107,0.4)" : "none",
         }}>
-          <Star size={20} color={i < tampons ? "white" : C.blushDeep} fill={i < tampons ? "white" : "none"} />
+          <Star size={20} color={i < tampons ? "white" : C.blushDeep} fill={i < tampons ? "#0D0B09" : "none"} />
         </div>
       ))}
     </div>
@@ -4094,7 +4134,7 @@ function PaymentReturnStatus({ rdvId, onClose }) {
       {confirmed && (
         <>
           <div style={{ width: 52, height: 52, margin: "0 auto 14px", borderRadius: "50%", background: `linear-gradient(135deg, ${C.roseGold}, ${C.roseGoldDeep})`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <Check size={24} color="white" />
+            <Check size={24} color="#0D0B09" />
           </div>
           <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 600, fontSize: 18, color: C.espresso, margin: "0 0 6px" }}>Rendez-vous confirmé !</p>
         </>
@@ -4144,6 +4184,8 @@ function BookingFlow({ onError }) {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [doneId, setDoneId] = useState(null);
+  const [consent, setConsent] = useState({});
+  const allConsented = RESULTAT_CICATRISATION_CONSENT.every((c) => consent[c.key] === true);
 
   const bookableServices = SERVICES.filter((s) => s.key !== "conseil");
   const selectedService = SERVICES.find((s) => s.key === typePrestation);
@@ -4165,9 +4207,10 @@ function BookingFlow({ onError }) {
 
   const handleConfirm = async () => {
     if (!slot) { setError("Choisissez un jour et un horaire."); setStep(1); return; }
+    if (!allConsented) { setError("Merci de cocher les 4 cases ci-dessus pour continuer."); return; }
     setSubmitting(true); setError("");
     try {
-      const result = await createBookingCheckout({ typePrestation, lieu: slot.lieu, dateRdv: slot.dateRdv, heureRdv: slot.heureRdv });
+      const result = await createBookingCheckout({ typePrestation, lieu: slot.lieu, dateRdv: slot.dateRdv, heureRdv: slot.heureRdv, consentementResultat: consent });
       if (result.checkoutUrl) {
         window.location.href = result.checkoutUrl;
       } else {
@@ -4182,7 +4225,7 @@ function BookingFlow({ onError }) {
   };
 
   if (step === 3) {
-    return <PaymentReturnStatus rdvId={doneId} onClose={() => { setStep(0); setTypePrestation(""); setSlot(null); setDoneId(null); }} />;
+    return <PaymentReturnStatus rdvId={doneId} onClose={() => { setStep(0); setTypePrestation(""); setSlot(null); setDoneId(null); setConsent({}); }} />;
   }
 
   return (
@@ -4231,6 +4274,20 @@ function BookingFlow({ onError }) {
             <DetailRow label="Lieu" value={slot.lieu} />
             <DetailRow label="Acompte à régler maintenant" value={depositAmount ? `${depositAmount}€` : "Aucun"} />
           </div>
+          <div style={{ border: `1px solid ${C.goldLine}`, borderRadius: 16, padding: "12px 14px", marginBottom: 14, background: C.cream }}>
+            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 600, fontSize: 14.5, color: C.espresso, margin: "0 0 8px" }}>Résultat et cicatrisation</p>
+            {RESULTAT_CICATRISATION_CONSENT.map((c) => (
+              <label key={c.key} style={{ display: "flex", gap: 9, alignItems: "flex-start", marginBottom: 9, cursor: "pointer" }}>
+                <input
+                  type="checkbox"
+                  checked={consent[c.key] === true}
+                  onChange={(e) => setConsent((prev) => ({ ...prev, [c.key]: e.target.checked }))}
+                  style={{ marginTop: 3, width: 16, height: 16, flexShrink: 0, accentColor: C.roseGoldDeep }}
+                />
+                <span style={{ fontFamily: FONT_BODY, fontSize: 12, color: C.espresso, lineHeight: 1.5 }}>{c.label}</span>
+              </label>
+            ))}
+          </div>
           <ErrorNote>{error}</ErrorNote>
           <p style={{ fontFamily: FONT_BODY, fontSize: 11.5, color: C.espressoSoft, marginBottom: 14, lineHeight: 1.5 }}>
             {depositAmount
@@ -4240,7 +4297,7 @@ function BookingFlow({ onError }) {
           <div style={{ display: "flex", gap: 10 }}>
             <GhostButton onClick={() => setStep(1)} icon={ChevronLeft}>Retour</GhostButton>
             <div style={{ flex: 1 }}>
-              <PrimaryButton onClick={handleConfirm} disabled={submitting} icon={ShieldCheck}>
+              <PrimaryButton onClick={handleConfirm} disabled={submitting || !allConsented} icon={ShieldCheck}>
                 {submitting ? "Réservation du créneau…" : depositAmount ? `Payer l'acompte (${depositAmount}€)` : "Réserver ce créneau"}
               </PrimaryButton>
             </div>
@@ -4834,7 +4891,7 @@ function AccountDashboard({ user, profile, onLogout }) {
                   flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
                   padding: "12px 18px", borderRadius: 999, border: "none",
                   cursor: (deleting || deleteConfirmText.trim().toUpperCase() !== "SUPPRIMER") ? "not-allowed" : "pointer",
-                  background: (deleting || deleteConfirmText.trim().toUpperCase() !== "SUPPRIMER") ? "#D9B9B3" : C.danger,
+                  background: (deleting || deleteConfirmText.trim().toUpperCase() !== "SUPPRIMER") ? "#4A3A36" : C.danger,
                   color: C.white, fontFamily: FONT_BODY, fontWeight: 500, fontSize: 14,
                   opacity: (deleting || deleteConfirmText.trim().toUpperCase() !== "SUPPRIMER") ? 0.7 : 1,
                 }}
@@ -5164,7 +5221,7 @@ export default function App() {
         <section aria-label="Contacter MYU" style={{ marginTop: 28, paddingTop: 22, borderTop: `1px solid ${C.blushDeep}`, fontFamily: FONT_BODY }}>
           <h2 style={{ fontFamily: FONT_DISPLAY, fontWeight: 500, fontSize: 24, color: C.espresso, margin: "0 0 8px" }}>Une question ? Parlons-en.</h2>
           <p style={{ fontSize: 12, lineHeight: 1.6, color: C.espressoSoft, margin: "0 0 14px" }}>Pour échanger avec MYU, privilégiez les messages écrits et vocaux sur WhatsApp.</p>
-          <a href="https://wa.me/596696178587" target="_blank" rel="noopener noreferrer" className="missu-focusable" style={{ display: "block", padding: "14px 16px", borderRadius: 16, background: C.espresso, color: C.white, textDecoration: "none", lineHeight: 1.6 }}>
+          <a href="https://wa.me/596696178587" target="_blank" rel="noopener noreferrer" className="missu-focusable" style={{ display: "block", padding: "14px 16px", borderRadius: 16, background: `linear-gradient(135deg, ${C.roseGold}, ${C.roseGoldDeep})`, color: C.white, textDecoration: "none", lineHeight: 1.6 }}>
             <strong style={{ display: "block", fontSize: 13 }}>WhatsApp · Contact privilégié</strong>
             <span style={{ display: "block", fontSize: 16 }}>+596 696 17 85 87</span>
             <span style={{ fontSize: 11 }}>Messages et vocaux de préférence →</span>
