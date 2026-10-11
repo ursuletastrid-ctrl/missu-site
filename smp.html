@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Liste d'attente SMP — MYU by Miss'U</title>
-<meta name="description" content="Tricopigmentation (SMP) bientôt chez MYU by Miss'U en Martinique. Inscrivez-vous gratuitement à la liste d'attente, sans paiement ni engagement.">
+<title>Tricopigmentation (SMP) — Demande de diagnostic · MYU by Miss'U</title>
+<meta name="description" content="Tricopigmentation (SMP) disponible chez MYU by Miss'U en Martinique. Demandez votre diagnostic personnalisé, sans paiement ni engagement.">
 <meta name="robots" content="index,follow">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=Montserrat:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
@@ -18,6 +18,8 @@
   h1{font-family:"Cormorant Garamond",serif;font-weight:600;font-size:36px;line-height:1.1;margin-bottom:14px}
   h1 span{color:var(--or)}
   .intro{font-size:15px;line-height:1.6;color:#e2d8c8;margin-bottom:10px}
+  .wa{display:block;text-align:center;text-decoration:none;border:1px solid var(--or);color:var(--or-clair);border-radius:999px;padding:13px 14px;font-size:14px;margin:6px 0 4px}
+  .wa:focus-visible{outline:3px solid var(--or);outline-offset:3px}
   .badge{display:inline-block;border:1px solid var(--or);color:var(--or-clair);border-radius:999px;padding:6px 14px;font-size:12px;margin:8px 0 28px}
   form{display:flex;flex-direction:column;gap:16px}
   label{font-size:13px;color:var(--or-clair);display:block;margin-bottom:6px}
@@ -44,10 +46,11 @@
 
   <div id="formulaire">
     <div class="tag">TRICOPIGMENTATION · SMP</div>
-    <h1>Bientôt chez <span>MYU</span>.</h1>
-    <p class="intro">Effet rasé ou illusion de densité, pour les hommes et les femmes. La prestation n'est pas encore disponible.</p>
-    <p class="intro">Inscrivez-vous pour être prévenu·e dès l'ouverture.</p>
-    <span class="badge">Aucun paiement · Aucun engagement</span>
+    <h1>La SMP est ouverte chez <span>MYU</span>.</h1>
+    <p class="intro">Effet rasé net ou illusion de densité, pour les hommes comme pour les femmes. La SMP ne fait pas repousser les cheveux : elle redessine visuellement la densité avec de fins points de pigment.</p>
+    <p class="intro">Première étape : un diagnostic personnalisé. Dites-nous en 30 secondes ce qui vous intéresse, MYU vous recontacte.</p>
+    <a class="wa" href="https://wa.me/596696178587?text=SMP" target="_blank" rel="noopener noreferrer">Plus rapide : écrire « SMP » sur WhatsApp</a>
+    <span class="badge">À partir de 150 € · Aucun paiement pour la demande</span>
 
     <form id="smpForm" novalidate>
       <div>
@@ -84,20 +87,20 @@
       <div class="hp" aria-hidden="true"><label for="site_web">Ne pas remplir</label><input id="site_web" name="site_web" type="text" tabindex="-1" autocomplete="off"></div>
       <div class="consent">
         <input id="ok" type="checkbox" required>
-        <label for="ok" style="color:inherit;font-size:inherit;margin:0">J'accepte que MYU by Miss'U me contacte au sujet de l'ouverture de la SMP. Mes données ne servent qu'à cela et je peux demander leur suppression à tout moment.</label>
+        <label for="ok" style="color:inherit;font-size:inherit;margin:0">J'accepte que MYU by Miss'U me contacte au sujet de ma demande de diagnostic SMP. Mes données ne servent qu'à cela et je peux demander leur suppression à tout moment.</label>
       </div>
       <p class="err" id="err" role="alert"></p>
-      <button type="submit" id="submitBtn">Rejoindre la liste d'attente</button>
-      <p class="note">Vous serez contacté·e dès que la prestation sera disponible, pour un diagnostic personnalisé.</p>
+      <button type="submit" id="submitBtn">Demander mon diagnostic</button>
+      <p class="note">MYU vous recontacte pour un diagnostic personnalisé, avant toute réservation. À partir de 150 € : le tarif exact dépend de l'étendue de la zone et vous est confirmé lors de cet échange. Un acompte sécurisé via SumUp confirme ensuite le rendez-vous, le solde se règle lors de la séance.</p>
     </form>
   </div>
 
   <div class="merci" id="merci">
     <h2>C'est noté ✨</h2>
-    <p class="intro">Vous êtes sur la liste d'attente SMP. Nous vous contacterons dès l'ouverture.</p>
+    <p class="intro">Votre demande de diagnostic SMP est bien enregistrée. MYU vous recontacte très vite.</p>
   </div>
 
-  <a class="retour" href="/landing.html">← Découvrir les prestations MYU disponibles</a>
+  <a class="retour" href="/landing.html">← Découvrir toutes les prestations MYU</a>
 
   <footer>MARTINIQUE</footer>
 </main>
@@ -109,7 +112,7 @@
   var EMAILJS_SERVICE_ID = "service_d3xyd7";
   var EMAILJS_TEMPLATE_ID = "template_qg62m3r";
   var EMAILJS_PUBLIC_KEY = "Pc_zxIXpLOJWQ0nhU";
-  var LABEL = "Tricopigmentation / SMP — LISTE D'ATTENTE";
+  var LABEL = "Tricopigmentation / SMP — DEMANDE DE DIAGNOSTIC";
   var INTERETS = {rase:"Effet rasé", densite:"Illusion de densité", nsp:"Je ne sais pas encore"};
   var startedAt = Date.now();
   function $(id){ return document.getElementById(id); }
@@ -130,7 +133,7 @@
     // Anti-robot : champ piège rempli ou envoi anormalement rapide -> on affiche le merci sans rien envoyer.
     var suspect = val("site_web") !== "" || (Date.now() - startedAt) < 2500;
     var interet = INTERETS[choix.value] || choix.value;
-    var notes = "Liste d'attente SMP — Intérêt : " + interet + (source ? " — Connu via : " + source : "") + " — Accord de contact donné le " + new Date().toLocaleString("fr-FR", {timeZone:"America/Martinique"});
+    var notes = "Demande de diagnostic SMP — Intérêt : " + interet + (source ? " — Connu via : " + source : "") + " — Accord de contact donné le " + new Date().toLocaleString("fr-FR", {timeZone:"America/Martinique"});
     var btn = $("submitBtn"); btn.disabled = true; btn.textContent = "Envoi en cours…";
 
     function done(){ $("formulaire").style.display="none"; $("merci").style.display="block"; window.scrollTo({top:0,behavior:"smooth"}); }
@@ -152,7 +155,7 @@
       var ok = results.some(function(r){ return r.status === "fulfilled"; });
       if(ok){ done(); }
       else {
-        btn.disabled=false; btn.textContent="Rejoindre la liste d'attente";
+        btn.disabled=false; btn.textContent="Demander mon diagnostic";
         showErr("L'envoi n'a pas abouti. Réessayez, ou écrivez « SMP » à MYU sur WhatsApp : +596 696 17 85 87.");
       }
     });

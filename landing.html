@@ -83,6 +83,39 @@ h1,h2,.serif{font-family:'Cormorant Garamond',Georgia,serif}
 .contact-whatsapp small{color:var(--rose-gold)}
 .contact-whatsapp:hover{background:#5c483d}
 .contact-link .contact-detail{font-size:12px;font-weight:400;opacity:.85}
+
+/* --- Hommes / SMP (visible dès l'entrée) --- */
+.men-pill{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:12px 0 0;padding:13px 16px;border-radius:999px;text-decoration:none;background:#0d0b09;color:#f6efe4;border:1px solid #c9a26b;font-size:12.5px;font-weight:600;letter-spacing:.2px}
+.men-pill small{display:block;font-size:9.5px;letter-spacing:2px;text-transform:uppercase;color:#c9a26b;font-weight:600}
+.men .price{margin:14px 0 4px;padding:12px 14px;border:1px solid #c9a26b;border-radius:14px;font-size:13px;line-height:1.5;color:#f6efe4}
+.men .price b{color:#e8cfa4;font-size:15px}
+.men-pill:focus-visible{outline:3px solid #c9a26b;outline-offset:3px}
+.men{background:#0d0b09;border:1px solid #c9a26b;color:#f6efe4}
+.men .eyebrow-sm{color:#c9a26b}
+.men h2{color:#f6efe4}
+.men .lead{color:#e2d8c8}
+.men-steps{list-style:none;margin:0 0 18px;padding:0;display:grid;gap:8px}
+.men-steps li{display:flex;gap:11px;align-items:flex-start;font-size:12.5px;line-height:1.5;color:#efe6d6}
+.men-steps b{flex:none;width:24px;height:24px;border-radius:50%;border:1px solid #c9a26b;color:#c9a26b;display:flex;align-items:center;justify-content:center;font-size:12px}
+.men .cta{background:linear-gradient(135deg,#d9b88a,#b98f57);color:#0d0b09}
+.men .cta2{display:block;text-align:center;text-decoration:none;margin-top:10px;padding:14px 18px;border-radius:999px;border:1px solid #c9a26b;color:#f6efe4;font-weight:600;font-size:13px}
+.men .cta2:focus-visible,.men .cta:focus-visible{outline:3px solid #fff;outline-offset:3px}
+.men .note{color:#cdbfa8;opacity:1}
+.men .note a{color:#d9b88a}
+/* --- Octobre Rose (affiché jusqu'au 31 octobre) --- */
+.rose{background:#0d0b09;border:1px solid #c9a26b;color:#f6efe4}
+.rose .eyebrow-sm{color:#e8a9bd}
+.rose h2{color:#f6efe4}
+.rose .lead{color:#e2d8c8}
+.rose-track{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;padding:2px 2px 12px;margin:0 -4px}
+.rose-slide{flex:0 0 78%;max-width:300px;scroll-snap-align:center;margin:0}
+.rose-slide img{display:block;width:100%;height:auto;border-radius:16px;border:1px solid rgba(201,162,107,.45)}
+.rose-slide figcaption{font-size:11.5px;line-height:1.5;color:#e2d8c8;margin-top:8px}
+.rose .cta{background:linear-gradient(135deg,#e8a9bd,#c9738f);color:#0d0b09}
+.rose .cta2{display:block;text-align:center;text-decoration:none;margin-top:10px;padding:14px 18px;border-radius:999px;border:1px solid #c9a26b;color:#f6efe4;font-weight:600;font-size:13px}
+.rose .note{color:#cdbfa8;opacity:1}
+.rose .note a{color:#e8a9bd}
+.rose-slide.jeu[hidden]{display:none}
 </style><script defer src="/myu-tracking.js"></script><script defer src="/myu-catalog.js"></script></head>
 <body><main class="wrap">
 
@@ -97,8 +130,44 @@ h1,h2,.serif{font-family:'Cormorant Garamond',Georgia,serif}
 <p>Maquillage permanent et dermopigmentation pensés pour votre visage, votre carnation et le résultat que vous recherchez — à Ducos, en Martinique.</p>
 <a class="cta" href="/book.html">RÉSERVER MON RENDEZ-VOUS →</a>
 <p class="micro">Choix de la prestation · Acompte sécurisé via SumUp · Pré-diagnostic après réservation</p>
+<a class="men-pill" href="#hommes"><span><small>Pour les hommes · ouvert</small>Tricopigmentation (SMP) · dès 150 €</span><span aria-hidden="true">→</span></a>
 <a class="jump" href="#contact">Une question ? Contactez MYU</a>
 </div>
+</section>
+
+<section class="section men" id="hommes" aria-labelledby="men-title">
+<p class="eyebrow-sm">Pour les hommes · Disponible chez MYU</p>
+<h2 id="men-title">Tricopigmentation (SMP)</h2>
+<p class="lead">Effet rasé net ou illusion de densité : de fins points de pigment déposés sur le cuir chevelu. Pour les hommes comme pour les femmes. La SMP ne fait pas repousser les cheveux : elle redessine visuellement la densité. Première étape : un diagnostic personnalisé, sans paiement ni engagement.</p>
+<ol class="men-steps">
+<li><b>1</b><span>Vous écrivez « SMP » sur WhatsApp, ou vous remplissez la demande (30 secondes).</span></li>
+<li><b>2</b><span>MYU vous recontacte pour un diagnostic personnalisé.</span></li>
+<li><b>3</b><span>On fixe votre rendez-vous ensemble. Le tarif exact vous est confirmé lors de l'échange.</span></li>
+</ol>
+<p class="price"><b>À partir de 150 €</b> — le tarif dépend de l'étendue de la zone. Un acompte sécurisé via SumUp confirme votre rendez-vous, le solde se règle lors de la séance.</p>
+<a class="cta" href="https://wa.me/596696178587?text=SMP" target="_blank" rel="noopener noreferrer">ÉCRIRE « SMP » SUR WHATSAPP →</a>
+<a class="cta2" href="/smp.html">Ou remplir ma demande de diagnostic</a>
+<p class="note">Besoin d'un accompagnement du cuir chevelu, des sourcils ou de la barbe ? Pas de miracle, un processus : un bilan d'abord, puis une approche progressive, sans promesse de repousse. <a href="https://wa.me/596696178587?text=BILAN" target="_blank" rel="noopener noreferrer">Écrivez « BILAN »</a>.</p>
+</section>
+
+<section class="section rose" id="octobre-rose" aria-labelledby="rose-title" hidden>
+<p class="eyebrow-sm">Octobre Rose chez MYU</p>
+<h2 id="rose-title">Candy Lips à -50 % jusqu'au 31 octobre</h2>
+<p class="lead">100 € au lieu de 200 €, 10 places seulement. La teinte est choisie avec vous, selon vos lèvres et vos envies. Faites défiler pour tout voir.</p>
+<div class="rose-track" role="group" aria-label="Octobre Rose chez MYU">
+<figure class="rose-slide"><img src="/assets/myu/octobre-rose/octobre-rose-01-offre-candy-lips-moins-50.webp" alt="Octobre Rose chez MYU : Candy Lips à -50 %, tout le mois d'octobre, en Martinique" width="720" height="900" loading="lazy"><figcaption>Candy Lips, c'est le maquillage permanent des lèvres. Tout octobre : 100 € au lieu de 200 €.</figcaption></figure>
+<figure class="rose-slide"><img src="/assets/myu/octobre-rose/octobre-rose-02-comment-ca-marche.webp" alt="Comment ça marche : 1. écrivez ROSE en message, 2. on échange sur vos envies, 3. on choisit votre teinte ensemble, 4. on fixe votre rendez-vous" width="720" height="900" loading="lazy"><figcaption>Vous écrivez « ROSE » en message, on échange, on choisit votre teinte ensemble, puis on fixe votre rendez-vous.</figcaption></figure>
+<figure class="rose-slide"><img src="/assets/myu/octobre-rose/octobre-rose-03-depistage.webp" alt="Pensez aussi à votre dépistage. De 50 à 74 ans : tous les 2 ans. Parlez-en à votre médecin." width="720" height="900" loading="lazy"><figcaption>Et ce mois-ci, pensez aussi à votre dépistage. De 50 à 74 ans : tous les 2 ans. Parlez-en à votre médecin.</figcaption></figure>
+<figure class="rose-slide jeu"><img src="/assets/myu/octobre-rose/octobre-rose-04-jeu-concours.webp" alt="Jeu concours Octobre Rose : 2 prestations MYU de 300 € à gagner, jusqu'au 25 octobre" width="720" height="900" loading="lazy"><figcaption>Jeu concours : 2 prestations d'une valeur de 300 € à gagner, jusqu'au 25 octobre.</figcaption></figure>
+<figure class="rose-slide jeu"><img src="/assets/myu/octobre-rose/octobre-rose-05-jeu-concours-pour-participer.webp" alt="Pour participer : suivez le compte MYU, aimez la publication, commentez en identifiant une amie. Tirage au sort le 26 octobre." width="720" height="900" loading="lazy"><figcaption>Pour participer : suivre le compte MYU, aimer la publication, commenter en identifiant une amie. Tirage au sort le 26 octobre.</figcaption></figure>
+<figure class="rose-slide jeu"><img src="/assets/myu/octobre-rose/octobre-rose-06-jeu-concours-velvet-lips.webp" alt="Velvet Lips, valeur 300 € : un blush lèvres uniforme, pour une couleur homogène du contour au centre" width="720" height="900" loading="lazy"><figcaption>Velvet Lips : un blush lèvres uniforme, pour une couleur homogène du contour au centre. La teinte se choisit avec vous.</figcaption></figure>
+<figure class="rose-slide jeu"><img src="/assets/myu/octobre-rose/octobre-rose-07-jeu-concours-powder-brows.webp" alt="Powder Brows, valeur 300 € : des sourcils à l'effet poudré, façon maquillage, dessinés selon la forme de votre visage" width="720" height="900" loading="lazy"><figcaption>Powder Brows : des sourcils à l'effet poudré, façon maquillage, dessinés selon la forme de votre visage. Le rendu s'adoucit en cicatrisant.</figcaption></figure>
+<figure class="rose-slide jeu"><img src="/assets/myu/octobre-rose/octobre-rose-08-jeu-concours-eyeliner-poudre.webp" alt="Eyeliner poudré, valeur 300 € : un trait doux et estompé, comme une ombre légère qui souligne le regard" width="720" height="900" loading="lazy"><figcaption>Eyeliner poudré : un trait doux et estompé, comme une ombre légère qui souligne le regard. Le tracé se décide ensemble.</figcaption></figure>
+</div>
+<a class="cta" href="https://ig.me/m/myu_theartofglow_bymissu" target="_blank" rel="noopener noreferrer">ÉCRIRE « ROSE » SUR INSTAGRAM →</a>
+<a class="cta2" href="https://wa.me/596696178587?text=ROSE" target="_blank" rel="noopener noreferrer">Ou sur WhatsApp</a>
+<a class="cta2 jeu-link" href="/concours.html">Règlement du jeu concours</a>
+<p class="note">L'offre Candy Lips à -50 % se demande par message (« ROSE ») : la réservation en ligne affiche le tarif habituel. Jeu gratuit, sans obligation d'achat. Ce jeu n'est ni organisé ni parrainé par Instagram. <a href="/concours.html">Règlement</a>.</p>
 </section>
 
 <section class="section">
@@ -110,7 +179,7 @@ h1,h2,.serif{font-family:'Cormorant Garamond',Georgia,serif}
 <a class="cat" href="/book.html?service=powder_brows"><img class="cat-icon" src="/assets/myu/brand/myu_cover_sourcils.webp" alt="" loading="lazy"><b>Sourcils</b><span>Structure · douceur · naturel</span></a>
 <a class="cat" href="/book.html?service=eyeliner_poudre"><b>Regard</b><span>Intensité · élégance</span></a>
 </div>
-<a class="soon" href="/smp.html"><small>Bientôt chez MYU</small><b>Tricopigmentation · SMP</b><span>Effet rasé ou illusion de densité — hommes et femmes. Rejoindre la liste d'attente, sans paiement →</span></a>
+<a class="soon soin" href="https://wa.me/596696178587?text=LED" target="_blank" rel="noopener noreferrer"><small>Soins beauté · nouveau</small><b>Séance découverte lumière LED · 25 €</b><span>30 minutes, accueil et installation compris, avec un accompagnement personnalisé. Acompte sécurisé via SumUp, solde lors de la séance. Réserver par message →</span></a>
 <a class="soon soin" href="/hydralips.html"><small>Soin des lèvres</small><b>Hydralips</b><span>Un soin des lèvres, pas du maquillage permanent. Demander mon diagnostic →</span></a>
 </section>
 
@@ -131,7 +200,7 @@ h1,h2,.serif{font-family:'Cormorant Garamond',Georgia,serif}
 <div class="techcard"><img src="/assets/myu/technique/technique-etude-forme.webp" alt="Étude de la forme et de la symétrie — entraînement MYU" loading="lazy"><div class="tclabel"><b>Étude & symétrie</b>Contenu technique MYU</div></div>
 <div class="techcard"><img src="/assets/myu/technique/technique-trace-precision.webp" alt="Tracé de précision — entraînement MYU sur support synthétique" loading="lazy"><div class="tclabel"><b>Tracé & précision</b>Contenu technique MYU</div></div>
 </div>
-<p class="lead" style="margin:0">Envie de voir de vraies réalisations clientes ? <a class="ig-link" href="https://www.instagram.com/missu_the_artofglow/" target="_blank" rel="noopener noreferrer">Voir les réalisations MYU sur Instagram →</a></p>
+<p class="lead" style="margin:0">Envie de voir de vraies réalisations clientes ? <a class="ig-link" href="https://www.instagram.com/myu_theartofglow_bymissu/" target="_blank" rel="noopener noreferrer">Voir les réalisations MYU sur Instagram →</a></p>
 <p class="note">Les visuels ci-dessus illustrent le travail de précision MYU sur support d'entraînement synthétique — ce ne sont pas des résultats clients. Les réalisations réelles sont partagées sur Instagram. Les visuels immédiatement après prestation peuvent paraître plus intenses que le résultat cicatrisé : la couleur et le rendu évoluent pendant la cicatrisation.</p>
 </section>
 
@@ -182,6 +251,22 @@ h1,h2,.serif{font-family:'Cormorant Garamond',Georgia,serif}
 </main>
 
 <div class="sticky"><a class="cta" href="/book.html">RÉSERVER MAINTENANT ✨</a></div>
+
+<script>
+(function(){
+  // Octobre Rose : section visible jusqu'au 31 octobre 2026 23 h 59 (heure de Martinique = UTC-4).
+  // Les cartes du jeu concours disparaissent après la clôture du 25 octobre 23 h 59.
+  var now = Date.now();
+  var endOffer = Date.UTC(2026, 10, 1, 4, 0, 0);   // 31/10 24:00 Martinique
+  var endGame  = Date.UTC(2026, 9, 26, 4, 0, 0);   // 25/10 24:00 Martinique
+  var sec = document.getElementById('octobre-rose');
+  if (!sec || now >= endOffer) return;
+  sec.hidden = false;
+  if (now >= endGame) {
+    Array.prototype.forEach.call(sec.querySelectorAll('.jeu, .jeu-link'), function(el){ el.hidden = true; el.style.display = 'none'; });
+  }
+})();
+</script>
 
 <script>
 (function(){
