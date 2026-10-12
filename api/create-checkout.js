@@ -1,4 +1,4 @@
-/ POST /api/create-checkout — réservation avec acompte depuis "Mon Espace MYU"
+// POST /api/create-checkout — réservation avec acompte depuis "Mon Espace MYU"
 // (cliente connectée). Même règle que /api/public-booking : prestation, lieu,
 // jour et horaire obligatoires et re-vérifiés côté serveur, créneau maintenu
 // pendant le paiement, montant de l'acompte relu en base (jamais envoyé par
