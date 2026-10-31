@@ -22,6 +22,7 @@ window.MYU_CATALOG = [
   { key: "microneedling", label: "Microneedling", category: "soins", price: 150, desc: "Stimule le renouvellement cellulaire, resserre les pores." },
   { key: "bb_glow", label: "BB Glow", category: "soins", price: 200, desc: "Effet bonne mine progressif, teint plus lumineux." },
   { key: "soins_corps_infrarouge", label: "Soins corps infrarouge", category: "soins", price: 45, priceFrom: true, desc: "Chaleur infrarouge, stimule la circulation." },
+  { key: "freckles", label: "Taches de rousseur — Freckles", category: "regard", price: 160, desc: "Taches de rousseur pigmentées, placement et intensité personnalisés." },
   { key: "modele_myu", label: "Offre modèle MYU", category: "offre", price: 160, desc: "Tarif spécial modèle MYU — places limitées." },
 ];
 
