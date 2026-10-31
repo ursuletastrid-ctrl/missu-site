@@ -102,7 +102,7 @@ button:disabled{opacity:.5;box-shadow:none}
 <a class="back" href="/">← Retour au site MYU</a>
 </main>
 <script>
-const labels={freckles:'Taches de rousseur — Freckles',soins_led:'Soins lumière LED',candy_lips:'Candy Lips',powder_brows:'Powder Brows',velvet_lips:'Velvet Lips',aqualips_blush:'AquaLips Blush',neutralisation:'Neutralisation lèvres foncées',eyeliner_classique:'Eyeliner classique',eyeliner_poudre:'Eyeliner poudré',modele_myu:'MODÈLE MYU',taches_brunes_visage:'Taches brunes · visage',taches_brunes_corps:'Taches brunes · corps',vergetures:'Vergetures',conseil:'Conseil personnalisé',microneedling:'Microneedling',bb_glow:'BB Glow',soins_corps_infrarouge:'Soin corps infrarouge'};
+const labels={freckles:'Taches de rousseur — Freckles',soins_led:'Lumière rouge LED · 30 min par zone',candy_lips:'Candy Lips',powder_brows:'Powder Brows',velvet_lips:'Velvet Lips',aqualips_blush:'AquaLips Blush',neutralisation:'Neutralisation lèvres foncées',eyeliner_classique:'Eyeliner classique',eyeliner_poudre:'Eyeliner poudré',modele_myu:'MODÈLE MYU',taches_brunes_visage:'Taches brunes · visage',taches_brunes_corps:'Taches brunes · corps',vergetures:'Vergetures',conseil:'Conseil personnalisé',microneedling:'Microneedling',bb_glow:'BB Glow',soins_corps_infrarouge:'Soin corps infrarouge'};
 let catalog=[];
 let bientot=[];
 const eur=n=>{const v=Math.round((Number(n)||0)*100)/100;return (Number.isInteger(v)?String(v):v.toFixed(2).replace('.',','))+' €'};
@@ -318,7 +318,7 @@ function renderStatus(v){
     const params=new URLSearchParams({rdv:v.id, service:v.typePrestation||'', fn:v.prenom||''});
     $('prediagLink').href='/prediag.html?'+params.toString();
     // Le pré-diagnostic concerne la dermopigmentation : pas pour les soins de la vitrine (LED).
-    if(v.prixTotal==null) $('prediagLink').classList.remove('hidden');
+    if(v.prixTotal==null&&v.typePrestation!=='soins_led') $('prediagLink').classList.remove('hidden');
     return 'final';
   }
   if(v.statut==='annule'){

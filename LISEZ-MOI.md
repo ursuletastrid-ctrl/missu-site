@@ -1,13 +1,14 @@
-# Reservation + paiement Freckles - VERSION FINALE (31/10/2026)
+# LED 40 € (30 min de lumière rouge par zone) - à déposer sur GitHub
 
-Freckles : 160 EUR, acompte en ligne 80 EUR (SumUp), seance de 1 h.
+Dépose ces 5 fichiers à la racine du dépôt (missu-site), pas dans un sous-dossier :
+1. led.html (nouvelle page)
+2. landing.html
+3. myu-catalog.js
+4. book.html
+5. led-pub-1.jpg (visuel de la pub)
 
-## Etape 1 - GitHub (3 fichiers, tous a la racine)
-https://github.com/ursuletastrid-ctrl/missu-site/upload/main
-Glisse UNIQUEMENT ces 3 fichiers de CE dossier : book.html, freckles.html, landing.html
--> Commit changes.
+Puis, dans Supabase > SQL Editor : colle SQL-activer-LED-Supabase.sql et clique Run
+(tu confirmes ainsi avoir lu la notice de l'appareil).
 
-## Etape 2 - Supabase (active la reservation, a faire en dernier)
-https://supabase.com/dashboard/project/blfsbzwwsqixlzxobavh/sql/new
-Colle le contenu de SQL-activer-Freckles-Supabase.sql -> Run.
-Resultat attendu : freckles | 80.00 | true | 60
+Lien final : https://missu-two.vercel.app/led.html
+Prix : 40 € par zone (30 min de lumière rouge) - acompte en ligne 20 € - solde 20 € sur place.
