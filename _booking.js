@@ -47,6 +47,7 @@ const SERVICE_LABELS = {
   taches_brunes_corps: "Correction taches brunes · corps", vergetures: "Correction vergetures",
   conseil: "Conseil personnalisé", microneedling: "Microneedling", bb_glow: "BB Glow",
   soins_corps_infrarouge: "Soins corps infrarouge",
+  freckles: "Taches de rousseur — Freckles",
 };
 
 const STATUT_LABELS = {
