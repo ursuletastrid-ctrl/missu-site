@@ -26,7 +26,10 @@ button:disabled{opacity:.5;box-shadow:none}
 .price-box .deposit{font-size:11px;color:var(--rose-gold-deep);font-weight:600;text-align:right}
 .success{text-align:center;padding:22px 5px}
 .success b{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:600}
-.hidden{display:none}
+.hidden,.prediag-cta.hidden{display:none}
+#engagements{margin-top:16px;padding:12px 14px;border:1px solid var(--blush-deep);border-radius:16px;background:var(--cream-soft)}
+#engagements .consent{margin:10px 0}
+.eng-title{font-family:'Cormorant Garamond',serif;font-size:19px;font-weight:600;margin:0}
 .slot-days{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 8px;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch}
 .slot-day{flex:0 0 auto;width:auto;min-width:74px;padding:9px 10px;border-radius:14px;border:1px solid var(--blush-deep);background:var(--cream-soft);color:var(--espresso);font-size:12px;font-weight:500;box-shadow:none;scroll-snap-align:start;line-height:1.25}
 .slot-day b{display:block;font-size:17px;font-family:'Cormorant Garamond',serif}
@@ -73,6 +76,7 @@ button:disabled{opacity:.5;box-shadow:none}
 <label id="slotsLabel">Jour et horaire</label>
 <div id="slotPicker"><p class="slot-note" id="slotNote">Choisissez d'abord une prestation pour voir les créneaux disponibles.</p><div class="slot-days" id="slotDays" role="listbox" aria-label="Jours disponibles"></div><div class="slot-grid" id="slotGrid" role="listbox" aria-label="Horaires disponibles"></div></div>
 <div class="slot-summary" id="slotSummary" aria-live="polite"></div>
+<div class="hidden" id="engagements"></div>
 <label class="consent"><input id="consent" type="checkbox" required><span>J'accepte que mes coordonnées soient utilisées uniquement pour traiter cette demande, organiser le rendez-vous et le paiement éventuel. Le pré-diagnostic et les informations de santé nécessaires à la prestation pourront être complétés séparément.</span></label>
 <div class="msg" id="msg" role="alert"></div>
 <button id="submit" type="submit" disabled>Choisissez un créneau</button>
@@ -98,8 +102,10 @@ button:disabled{opacity:.5;box-shadow:none}
 <a class="back" href="/">← Retour au site MYU</a>
 </main>
 <script>
-const labels={candy_lips:'Candy Lips',powder_brows:'Powder Brows',velvet_lips:'Velvet Lips',aqualips_blush:'AquaLips Blush',neutralisation:'Neutralisation lèvres foncées',eyeliner_classique:'Eyeliner classique',eyeliner_poudre:'Eyeliner poudré',modele_myu:'MODÈLE MYU',taches_brunes_visage:'Taches brunes · visage',taches_brunes_corps:'Taches brunes · corps',vergetures:'Vergetures',conseil:'Conseil personnalisé',microneedling:'Microneedling',bb_glow:'BB Glow',soins_corps_infrarouge:'Soin corps infrarouge'};
+const labels={soins_led:'Soins lumière LED',candy_lips:'Candy Lips',powder_brows:'Powder Brows',velvet_lips:'Velvet Lips',aqualips_blush:'AquaLips Blush',neutralisation:'Neutralisation lèvres foncées',eyeliner_classique:'Eyeliner classique',eyeliner_poudre:'Eyeliner poudré',modele_myu:'MODÈLE MYU',taches_brunes_visage:'Taches brunes · visage',taches_brunes_corps:'Taches brunes · corps',vergetures:'Vergetures',conseil:'Conseil personnalisé',microneedling:'Microneedling',bb_glow:'BB Glow',soins_corps_infrarouge:'Soin corps infrarouge'};
 let catalog=[];
+let bientot=[];
+const eur=n=>{const v=Math.round((Number(n)||0)*100)/100;return (Number.isInteger(v)?String(v):v.toFixed(2).replace('.',','))+' €'};
 let lieux=[];
 let slotData=null;
 const sel={date:null,heure:null};
@@ -119,11 +125,12 @@ async function load(){
     const j=await r.json();
     if(!r.ok)throw Error(j.error);
     catalog=j.data||[];
+    bientot=j.bientot||[];
     lieux=j.lieux&&j.lieux.length?j.lieux:['Ducos'];
     $('lieu').replaceChildren(...lieux.map(l=>new Option(l,l)));
     $('service').replaceChildren(new Option('Choisir une prestation',''));
     catalog.forEach(x=>{
-      const label=labels[x.type_prestation]||x.type_prestation.replace(/_/g,' ');
+      const label=x.libelle||labels[x.type_prestation]||x.type_prestation.replace(/_/g,' ');
       const option=new Option(label+(x.is_limited_offer&&x.available_slots!=null?' · '+x.available_slots+' place(s)':''),x.type_prestation);
       option.disabled=!!(x.is_limited_offer&&Number(x.available_slots)<=0);
       $('service').add(option);
@@ -132,6 +139,13 @@ async function load(){
     if(wanted&&catalog.some(x=>x.type_prestation===wanted&&!(x.is_limited_offer&&Number(x.available_slots)<=0))){
       $('service').value=wanted;
       onServiceChange();
+    }else{
+      const soon=bientot.find(x=>x.type_prestation===wanted);
+      if(soon){
+        const wa='https://wa.me/596696178587'+(soon.whatsapp_message?'?text='+encodeURIComponent(soon.whatsapp_message):'');
+        $('msg').innerHTML=`<b>${esc(soon.libelle)}</b> : bientôt disponible. La réservation et le paiement en ligne ouvriront au lancement. <a href="${esc(wa)}" target="_blank" rel="noopener noreferrer" style="color:inherit;font-weight:600">Être informé du lancement →</a>`;
+        $('msg').style.display='block';
+      }
     }
   }catch(e){
     $('service').innerHTML='<option value="">Réservation indisponible</option>';
@@ -144,11 +158,37 @@ function showPrice(){
   const box=$('priceBox');
   if(!x){ box.classList.remove('show'); return; }
   const full = window.myuFindService ? window.myuFindService(x.type_prestation) : null;
-  $('priceFull').textContent = full ? (window.myuFormatPrice(full)) : '';
-  $('priceDeposit').textContent = Number(x.deposit_amount)>0 ? `Acompte en ligne : ${Number(x.deposit_amount).toFixed(0)} €` : 'Aucun acompte requis en ligne';
+  $('priceFull').textContent = x.prix_total!=null ? eur(x.prix_total) : (full ? (window.myuFormatPrice(full)) : '');
+  $('priceDeposit').textContent = Number(x.deposit_amount)>0
+    ? `Acompte en ligne : ${eur(x.deposit_amount)}`+(x.solde!=null?` · solde sur place : ${eur(x.solde)}`:'')
+    : 'Aucun acompte requis en ligne';
   box.classList.add('show');
+  renderEngagements(x);
 }
 
+// Engagements propres à certaines prestations (soins LED) : cochés avant le
+// paiement, revérifiés côté serveur. Jamais de champ libre santé.
+function renderEngagements(x){
+  const box=$('engagements');
+  const items=(x&&x.consentement)||[];
+  box.replaceChildren();
+  if(!items.length){ box.classList.add('hidden'); return; }
+  const t=document.createElement('p'); t.className='eng-title'; t.textContent='Avant votre séance';
+  box.appendChild(t);
+  items.forEach(c=>{
+    const l=document.createElement('label'); l.className='consent';
+    const i=document.createElement('input'); i.type='checkbox'; i.dataset.key=c.key; i.addEventListener('change',updateSubmit);
+    const sp=document.createElement('span'); sp.textContent=c.label;
+    l.append(i,sp); box.appendChild(l);
+  });
+  if(x.duree_note){ const n=document.createElement('p'); n.className='slot-note'; n.textContent=x.duree_note; box.appendChild(n); }
+  box.classList.remove('hidden');
+}
+function engagementsState(){
+  const boxes=[...document.querySelectorAll('#engagements input[type=checkbox]')];
+  const v={}; boxes.forEach(b=>{v[b.dataset.key]=b.checked});
+  return {all:boxes.every(b=>b.checked), value:v, count:boxes.length};
+}
 function resetSelection(){
   sel.date=null; sel.heure=null;
   $('slotSummary').classList.remove('show');
@@ -156,10 +196,11 @@ function resetSelection(){
 }
 
 function updateSubmit(){
-  const ok=!!($('service').value&&$('lieu').value&&sel.date&&sel.heure);
+  const eng=engagementsState();
+  const ok=!!($('service').value&&$('lieu').value&&sel.date&&sel.heure)&&eng.all;
   $('submit').disabled=!ok;
   const x=catalog.find(v=>v.type_prestation===$('service').value);
-  $('submit').textContent=!ok?'Choisissez un créneau':(x&&Number(x.deposit_amount)>0?`Réserver et payer l'acompte (${Number(x.deposit_amount).toFixed(0)} €)`:'Réserver ce créneau');
+  $('submit').textContent=!($('service').value&&sel.date&&sel.heure)?'Choisissez un créneau':(!eng.all?'Cochez les engagements':(x&&Number(x.deposit_amount)>0?`Réserver et payer l'acompte (${eur(x.deposit_amount)})`:'Réserver ce créneau'));
 }
 
 async function loadSlots(){
@@ -221,12 +262,13 @@ $('lieu').addEventListener('change',loadSlots);
 $('booking').addEventListener('submit',async e=>{
   e.preventDefault();
   if(!sel.date||!sel.heure){show('Choisissez un jour et un horaire.');return}
+  if(!engagementsState().all){show('Merci de cocher les engagements de la prestation.');return}
   if(!$('booking').reportValidity())return;
   hideMsg();
   $('submit').disabled=true;
   $('submit').textContent='Réservation du créneau…';
   try{
-    const r=await fetch('/api/public-booking',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({typePrestation:$('service').value,lieu:$('lieu').value,dateRdv:sel.date,heureRdv:sel.heure,firstName:$('firstName').value,lastName:$('lastName').value,phone:$('phone').value,email:$('email').value,consent:$('consent').checked})});
+    const r=await fetch('/api/public-booking',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({typePrestation:$('service').value,lieu:$('lieu').value,dateRdv:sel.date,heureRdv:sel.heure,firstName:$('firstName').value,lastName:$('lastName').value,phone:$('phone').value,email:$('email').value,consent:$('consent').checked,...(engagementsState().count?{consentementPrestation:engagementsState().value}:{})})});
     const j=await r.json();
     if(!r.ok||!j.success){ const err=Error(j.error||'Impossible de réserver.'); err.status=r.status; throw err; }
     const tracked=window.MYUTracking?.bookingCreated(j.data.rdvId,!!j.data.checkoutUrl);
@@ -250,6 +292,8 @@ function recapHtml(v){
     `<div><span>Jour</span>${esc(v.dateLongue||v.date||'—')}</div>`+
     `<div><span>Horaire</span>${esc(v.heureDebut||'—')}${v.heureFin?' – '+esc(v.heureFin):''}</div>`+
     `<div><span>Lieu</span>${esc(v.lieu||'—')}</div>`+
+    (v.dureeMinutes?`<div><span>Durée</span>${esc(v.dureeMinutes>=60?Math.floor(v.dureeMinutes/60)+' h'+(v.dureeMinutes%60?' '+String(v.dureeMinutes%60).padStart(2,'0'):''):v.dureeMinutes+' min')}</div>`:'')+
+    (v.montants?`<div><span>Prix</span>${esc(v.montants.total)}</div><div><span>Acompte</span>${esc(v.montants.acompte)}</div><div><span>Solde</span>${esc(v.montants.solde)} (sur place)</div>`:'')+
     `<div><span>Paiement</span>${esc(v.paiement.libelle)}</div>`+
     `<div><span>Statut</span>${esc(v.statutLibelle)}</div>`+
     (v.dossierId?`<div><span>Dossier</span>${esc(v.dossierId)}</div>`:'');
@@ -273,7 +317,8 @@ function renderStatus(v){
     $('successText').textContent=v.paiement.statut==='paye'?'Votre acompte est bien reçu : ce créneau vous est réservé.':'Votre créneau est réservé.';
     const params=new URLSearchParams({rdv:v.id, service:v.typePrestation||'', fn:v.prenom||''});
     $('prediagLink').href='/prediag.html?'+params.toString();
-    $('prediagLink').classList.remove('hidden');
+    // Le pré-diagnostic concerne la dermopigmentation : pas pour les soins de la vitrine (LED).
+    if(v.prixTotal==null) $('prediagLink').classList.remove('hidden');
     return 'final';
   }
   if(v.statut==='annule'){
