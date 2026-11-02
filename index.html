@@ -2974,15 +2974,14 @@ function AdminAgenda({ adminToken }) {
 }
 
 // ------------------------------------------------------------------
-// MYU VIP — onglet "Demandes VIP" (acceptation, contre-proposition, refus)
-// Aucun paiement n'est possible avant l'acceptation ; à l'acceptation le créneau
-// est maintenu 48 h ; le message à la cliente part via un lien WhatsApp pré-rempli
-// (aucun SMS/e-mail automatique).
+// MYU VIP — Private Experience : demandes + réglages (formules, quota, dates, créneaux bloqués)
+// Aucun paiement n'est possible avant l'acceptation ; à l'acceptation le créneau est maintenu
+// 48 h ; le message à la cliente part via un lien WhatsApp pré-rempli (aucun SMS/e-mail automatique).
 // ------------------------------------------------------------------
 const VIP_FILTERS = [
   { key: "", label: "Toutes" },
   { key: "en_attente", label: "À traiter" },
-  { key: "contre_proposition", label: "Contre-proposition" },
+  { key: "contre_proposition", label: "Proposition envoyée" },
   { key: "accepte_attente_paiement", label: "Attente paiement" },
   { key: "confirme", label: "Confirmées" },
 ];
@@ -2990,14 +2989,39 @@ const VIP_STATUT_COLORS = {
   en_attente: "#E3C38D", contre_proposition: "#C9A26B", accepte_attente_paiement: "#C9A26B",
   confirme: "#9DB38A", refuse: "#E0877B", annule: "#B5A998", expire: "#B5A998",
 };
+const VIP_JOURS = [{ n: 1, l: "Lun" }, { n: 2, l: "Mar" }, { n: 3, l: "Mer" }, { n: 4, l: "Jeu" }, { n: 5, l: "Ven" }, { n: 6, l: "Sam" }, { n: 0, l: "Dim" }];
+const vipEur = (n) => `${Number(n || 0).toLocaleString("fr-FR", { maximumFractionDigits: 2 })} €`;
+const vipWhen = (q) => new Date(q).toLocaleString("fr-FR", { timeZone: "America/Martinique", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+const vipField = { width: "100%", boxSizing: "border-box", padding: "9px 10px", borderRadius: 10, border: `1px solid ${C.blushDeep}`, background: C.white, color: C.espresso, fontFamily: FONT_BODY, fontSize: 13 };
+const vipLabel = { fontFamily: FONT_BODY, fontSize: 11, color: C.espressoSoft, margin: "8px 0 3px", display: "block" };
 
 function AdminVip({ adminToken }) {
+  const [sub, setSub] = useState("demandes");
+  const tabBtn = (key, label) => (
+    <button key={key} type="button" onClick={() => setSub(key)} className="missu-focusable" style={{
+      flex: 1, padding: "9px 10px", borderRadius: 12, cursor: "pointer", fontFamily: FONT_BODY, fontSize: 12.5, fontWeight: 600,
+      border: sub === key ? `1.5px solid ${C.roseGoldDeep}` : `1.3px solid ${C.blushDeep}`,
+      background: sub === key ? C.blush : C.white, color: C.espresso,
+    }}>{label}</button>
+  );
+  return (
+    <div className="missu-step">
+      <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
+        {tabBtn("demandes", "Demandes")}
+        {tabBtn("reglages", "Réglages VIP")}
+      </div>
+      {sub === "demandes" ? <AdminVipDemandes adminToken={adminToken} /> : <AdminVipReglages adminToken={adminToken} />}
+    </div>
+  );
+}
+
+function AdminVipDemandes({ adminToken }) {
   const [filter, setFilter] = useState("en_attente");
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState("");
   const [busyId, setBusyId] = useState("");
-  const [drafts, setDrafts] = useState({}); // id -> { reponse, date, heure, supplement, note, open }
+  const [drafts, setDrafts] = useState({}); // id -> { reponse, date, heure, total, note, open }
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -3019,20 +3043,29 @@ function AdminVip({ adminToken }) {
     } catch (e) { setMsg(e.message); }
     setBusyId("");
   };
-
-  const fieldStyle = { width: "100%", boxSizing: "border-box", padding: "9px 10px", borderRadius: 10, border: `1px solid ${C.blushDeep}`, background: C.white, color: C.espresso, fontFamily: FONT_BODY, fontSize: 13 };
-  const smallLabel = { fontFamily: FONT_BODY, fontSize: 11, color: C.espressoSoft, margin: "8px 0 3px", display: "block" };
-  const supplementOn = (data?.reglages?.supplement || 0) > 0;
+  const v = data?.vigie;
 
   return (
-    <div className="missu-step">
+    <div>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 12 }}>
         <div>
-          <h2 style={{ fontFamily: FONT_DISPLAY, color: C.espresso, margin: 0, fontSize: 24 }}>Demandes VIP</h2>
-          <div style={{ fontFamily: FONT_BODY, color: C.espressoSoft, fontSize: 11.5 }}>Votre heure est la mienne · maintien {data?.reglages?.maintienHeures || 48} h après acceptation</div>
+          <h2 style={{ fontFamily: FONT_DISPLAY, color: C.espresso, margin: 0, fontSize: 24 }}>MYU VIP</h2>
+          <div style={{ fontFamily: FONT_BODY, color: C.espressoSoft, fontSize: 11.5 }}>Private Experience · maintien {data?.maintienHeures || 48} h après acceptation</div>
         </div>
         <GhostButton onClick={load}>Actualiser</GhostButton>
       </div>
+
+      {v && (
+        <div role="status" style={{ padding: "11px 13px", borderRadius: 14, marginBottom: 12, background: v.enAttente || v.expirentBientot.length ? C.blush : C.cream, border: `1.3px solid ${v.enRetard || v.expirentBientot.length ? "#E0877B" : C.blushDeep}`, fontFamily: FONT_BODY, fontSize: 12.5, color: C.espresso, lineHeight: 1.6 }}>
+          <strong>Vigie VIP</strong>
+          {v.enAttente === 0 && v.propositionsEnCours === 0 && v.attentePaiement === 0 ? <div>Rien à traiter pour le moment.</div> : (<>
+            {v.enAttente > 0 && <div>🔔 {v.enAttente} demande{v.enAttente > 1 ? "s" : ""} à traiter{v.prochainesPrenoms.length ? ` (${v.prochainesPrenoms.join(", ")})` : ""} · la plus ancienne attend depuis {v.plusAncienneHeures} h{v.enRetard ? ` · ${v.enRetard} en retard (+ de 24 h)` : ""}</div>}
+            {v.propositionsEnCours > 0 && <div>✉️ {v.propositionsEnCours} proposition{v.propositionsEnCours > 1 ? "s" : ""} en attente de réponse de la cliente</div>}
+            {v.attentePaiement > 0 && <div>💳 {v.attentePaiement} créneau{v.attentePaiement > 1 ? "x" : ""} réservé{v.attentePaiement > 1 ? "s" : ""} en attente d'acompte</div>}
+            {v.expirentBientot.map((e, i) => <div key={i} style={{ color: "#B2463A" }}>⏳ Le créneau de {e.prenom} expire le {vipWhen(e.expireLe)}</div>)}
+          </>)}
+        </div>
+      )}
 
       <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 12 }}>
         {VIP_FILTERS.map((f) => (
@@ -3054,48 +3087,58 @@ function AdminVip({ adminToken }) {
         const dr = drafts[d.id] || {};
         const busy = busyId === d.id;
         const open = d.statut === "en_attente" || d.statut === "contre_proposition";
+        const devis = d.devisRequis && d.statut === "en_attente";
+        const showProp = devis || dr.open;
         return (
           <div key={d.id} style={{ padding: 14, borderRadius: 16, background: C.cream, border: `1.3px solid ${C.blushDeep}`, borderLeft: `4px solid ${VIP_STATUT_COLORS[d.statut] || C.roseGold}`, marginBottom: 12 }}>
             <div style={{ display: "flex", justifyContent: "space-between", gap: 8, alignItems: "baseline" }}>
               <strong style={{ fontFamily: FONT_BODY, color: C.espresso, fontSize: 15 }}>{d.prenom} {d.nom}</strong>
-              <span style={{ fontFamily: FONT_BODY, fontSize: 10.5, color: C.espressoSoft }}>{new Date(d.creeLe).toLocaleString("fr-FR", { timeZone: "America/Martinique", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</span>
+              <span style={{ fontFamily: FONT_BODY, fontSize: 10.5, color: C.espressoSoft }}>{vipWhen(d.creeLe)}</span>
             </div>
             <div style={{ fontFamily: FONT_BODY, fontSize: 11, fontWeight: 600, letterSpacing: 0.4, color: VIP_STATUT_COLORS[d.statut] || C.roseGold, margin: "3px 0 8px" }}>{d.statutLibelle.toUpperCase()}</div>
             <div style={{ fontFamily: FONT_BODY, fontSize: 13, color: C.espresso, lineHeight: 1.6 }}>
               <div><strong>{d.prestation}</strong> · {d.lieu}</div>
+              {d.formule && <div>Formule : <strong>{d.formule.nom}</strong></div>}
+              <div style={{ margin: "4px 0", padding: "7px 10px", borderRadius: 10, background: C.white, border: `1px solid ${C.blushDeep}` }}>
+                {d.total != null ? (<>
+                  {d.prixPrestation != null && <div>Prestation : {vipEur(d.prixPrestation)}{d.supplement > 0 ? ` + supplément ${vipEur(d.supplement)}` : ""}</div>}
+                  <div>Total : <strong>{vipEur(d.total)}</strong>{d.devisRequis && d.statut === "en_attente" ? " (estimation, à confirmer)" : ""} · Acompte 50 % : <strong>{vipEur(d.acompte)}</strong></div>
+                </>) : <div><strong>Sur devis</strong> : fixe le montant ci-dessous</div>}
+                {d.prixAccepteLe && <div style={{ color: "#4F7A3A" }}>✓ Prix accepté par la cliente le {vipWhen(d.prixAccepteLe)}</div>}
+                {d.paiement && <div>{d.paiement.paye ? "✅" : "💳"} {d.paiement.libelle}</div>}
+              </div>
               <div>Demandé : {d.souhaitLibelle}</div>
               {d.souhaitAltLibelle && <div>Ou bien : {d.souhaitAltLibelle}</div>}
               {d.dateRetenue && d.statut !== "en_attente" && <div>{d.statut === "contre_proposition" ? "Proposé" : "Retenu"} : {d.dateRetenue} à {d.heureRetenue}</div>}
               {d.statut === "accepte_attente_paiement" && d.expireLibelle && <div style={{ color: C.roseGoldDeep }}>⏳ Créneau maintenu jusqu'au {d.expireLibelle}, sans paiement il est libéré</div>}
-              {d.supplement > 0 && <div>Supplément VIP : {d.supplement} €</div>}
               <div style={{ color: C.espressoSoft }}>📞 {d.telephone}{d.email ? ` · ${d.email}` : ""}</div>
+              {d.provenance && <div style={{ color: C.espressoSoft, fontSize: 12 }}>📣 Venue de : {[d.provenance.source, d.provenance.campagne, d.provenance.contenu].filter(Boolean).join(" · ") || "lien pub"}{d.provenance.presta ? ` · presta du lien : ${d.provenance.presta}` : ""}</div>}
               {d.message && <div style={{ marginTop: 4, fontStyle: "italic", color: C.espressoSoft }}>« {d.message} »</div>}
               {d.reponse && <div style={{ marginTop: 4, color: C.espressoSoft }}>Ta réponse : {d.reponse}</div>}
             </div>
 
             {open && (
               <div style={{ marginTop: 10 }}>
-                <label style={smallLabel}>Message pour la cliente (affiché sur son lien de suivi)</label>
-                <textarea rows={2} value={dr.reponse || ""} onChange={(e) => setDraft(d.id, { reponse: e.target.value })} style={{ ...fieldStyle, resize: "vertical" }} placeholder="Facultatif" />
-                {supplementOn && d.statut === "en_attente" && (<>
-                  <label style={smallLabel}>Supplément VIP (€) — laissé vide = {data.reglages.supplement} €</label>
-                  <input type="number" min="0" max="200" step="1" value={dr.supplement ?? ""} onChange={(e) => setDraft(d.id, { supplement: e.target.value })} style={fieldStyle} />
-                </>)}
+                <label style={vipLabel}>Message pour la cliente (affiché sur son lien de suivi)</label>
+                <textarea rows={2} value={dr.reponse || ""} onChange={(e) => setDraft(d.id, { reponse: e.target.value })} style={{ ...vipField, resize: "vertical" }} placeholder="Facultatif" />
                 <div style={{ display: "grid", gap: 8, marginTop: 10 }}>
-                  {d.statut === "en_attente" && (
-                    <PrimaryButton disabled={busy} onClick={() => run(d.id, "vipAccept", { reponse: dr.reponse, supplementEur: dr.supplement === "" ? undefined : dr.supplement }, `Créneau accepté et maintenu ${data.reglages.maintienHeures} h. Envoie-lui le lien (bouton WhatsApp) pour qu'elle confirme et paie l'acompte.`)}>
-                      {busy ? "Vérification de l'agenda…" : `Accepter · maintenir ${data.reglages.maintienHeures} h`}
+                  {d.statut === "en_attente" && !devis && (
+                    <PrimaryButton disabled={busy} onClick={() => run(d.id, "vipAccept", { reponse: dr.reponse }, `Créneau accepté et maintenu ${data.maintienHeures} h. Envoie-lui le lien (bouton WhatsApp) pour qu'elle confirme et paie l'acompte.`)}>
+                      {busy ? "Vérification de l'agenda…" : `Accepter · maintenir ${data.maintienHeures} h`}
                     </PrimaryButton>
                   )}
-                  <GhostButton onClick={() => setDraft(d.id, { open: !dr.open })}>Proposer un autre créneau</GhostButton>
-                  {dr.open && (
+                  {devis && <div style={{ fontFamily: FONT_BODY, fontSize: 12, color: C.espressoSoft }}>Cette demande est sur devis : propose un créneau et un montant. Elle devra accepter les deux avant de payer.</div>}
+                  {!devis && <GhostButton onClick={() => setDraft(d.id, { open: !dr.open })}>Proposer un autre créneau ou un devis</GhostButton>}
+                  {showProp && (
                     <div style={{ padding: 10, borderRadius: 12, border: `1px dashed ${C.goldLine}` }}>
                       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-                        <div><label style={smallLabel}>Jour</label><input type="date" value={dr.date || ""} onChange={(e) => setDraft(d.id, { date: e.target.value })} style={fieldStyle} /></div>
-                        <div><label style={smallLabel}>Heure</label><input type="time" step="1800" value={dr.heure || ""} onChange={(e) => setDraft(d.id, { heure: e.target.value })} style={fieldStyle} /></div>
+                        <div><label style={vipLabel}>Jour</label><input type="date" value={dr.date ?? d.dateSouhaitee ?? ""} onChange={(e) => setDraft(d.id, { date: e.target.value })} style={vipField} /></div>
+                        <div><label style={vipLabel}>Heure de début</label><input type="time" step="1800" value={dr.heure ?? d.heureSouhaitee ?? ""} onChange={(e) => setDraft(d.id, { heure: e.target.value })} style={vipField} /></div>
                       </div>
+                      <label style={vipLabel}>Montant total (€) — {devis ? "obligatoire (devis)" : "laisser vide : calculé selon l'heure"}</label>
+                      <input type="number" min="0" step="1" value={dr.total ?? ""} onChange={(e) => setDraft(d.id, { total: e.target.value })} style={vipField} />
                       <div style={{ marginTop: 8 }}>
-                        <PrimaryButton disabled={busy || !dr.date || !dr.heure} onClick={() => run(d.id, "vipCounter", { dateRdv: dr.date, heureRdv: dr.heure, reponse: dr.reponse, supplementEur: dr.supplement === "" ? undefined : dr.supplement }, "Contre-proposition enregistrée (le créneau n'est PAS maintenu tant qu'elle n'a pas accepté). Envoie-lui le lien par WhatsApp.")}>Envoyer la contre-proposition</PrimaryButton>
+                        <PrimaryButton disabled={busy || !(dr.date ?? d.dateSouhaitee) || !(dr.heure ?? d.heureSouhaitee) || (devis && !dr.total)} onClick={() => run(d.id, "vipCounter", { dateRdv: dr.date ?? d.dateSouhaitee, heureRdv: dr.heure ?? d.heureSouhaitee, totalEur: dr.total === "" || dr.total == null ? undefined : dr.total, reponse: dr.reponse }, "Proposition enregistrée (le créneau n'est PAS maintenu tant qu'elle n'a pas accepté). Envoie-lui le lien par WhatsApp.")}>{devis ? "Envoyer le devis" : "Envoyer la proposition"}</PrimaryButton>
                       </div>
                     </div>
                   )}
@@ -3123,13 +3166,163 @@ function AdminVip({ adminToken }) {
               <summary style={{ fontFamily: FONT_BODY, fontSize: 11.5, color: C.espressoSoft, cursor: "pointer" }}>Historique et note interne</summary>
               <div style={{ fontFamily: FONT_BODY, fontSize: 12, color: C.espresso, marginTop: 6, lineHeight: 1.6 }}>
                 {(d.historique || []).map((h, i) => (
-                  <div key={i}>• {new Date(h.quand).toLocaleString("fr-FR", { timeZone: "America/Martinique", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })} — {h.texte}</div>
+                  <div key={i}>• {vipWhen(h.quand)} — {h.acteur ? `[${h.acteur}] ` : ""}{h.texte}</div>
                 ))}
               </div>
-              <label style={smallLabel}>Note interne (jamais visible par la cliente)</label>
-              <textarea rows={2} defaultValue={d.noteInterne} onChange={(e) => setDraft(d.id, { note: e.target.value })} style={{ ...fieldStyle, resize: "vertical" }} />
+              <label style={vipLabel}>Note interne (jamais visible par la cliente)</label>
+              <textarea rows={2} defaultValue={d.noteInterne} onChange={(e) => setDraft(d.id, { note: e.target.value })} style={{ ...vipField, resize: "vertical" }} />
               <div style={{ marginTop: 6 }}><GhostButton onClick={() => run(d.id, "vipSaveNote", { note: dr.note ?? d.noteInterne }, "Note enregistrée.")}>Enregistrer la note</GhostButton></div>
             </details>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function AdminVipReglages({ adminToken }) {
+  const [cfg, setCfg] = useState(null);
+  const [p, setP] = useState(null);           // paramètres en cours d'édition
+  const [forms, setForms] = useState({});     // code -> formule en cours d'édition
+  const [msg, setMsg] = useState("");
+  const [busy, setBusy] = useState("");
+  const [newDate, setNewDate] = useState("");
+  const [newBloc, setNewBloc] = useState({ date: "", de: "", a: "", note: "" });
+
+  const hydrate = (c) => {
+    setCfg(c);
+    setP({
+      demandesActives: c.parametres.demandesActives, datePremiereDispo: c.parametres.datePremiereDispo,
+      quotaMax: c.parametres.quotaMax == null ? "" : String(c.parametres.quotaMax), quotaPeriode: c.parametres.quotaPeriode,
+      joursOuverts: c.parametres.joursOuverts, datesIndisponibles: c.parametres.datesIndisponibles,
+      creneauxBloques: c.parametres.creneauxBloques, messageComplet: c.parametres.messageComplet, maintienHeures: String(c.maintienHeures),
+    });
+    setForms(Object.fromEntries(c.formules.map((f) => [f.code, { ...f, supplement: f.supplement == null ? "" : String(f.supplement) }])));
+  };
+  const load = useCallback(async () => {
+    try { hydrate(await callAdminMyu("vipConfig", {}, adminToken)); setMsg(""); } catch (e) { setMsg(e.message); }
+  }, [adminToken]);
+  useEffect(() => { load(); }, [load]);
+
+  const saveParams = async () => {
+    setBusy("params"); setMsg("");
+    try {
+      hydrate(await callAdminMyu("vipSaveParams", {
+        demandesActives: p.demandesActives, datePremiereDispo: p.datePremiereDispo,
+        quotaMax: p.quotaMax === "" ? null : Number(p.quotaMax), quotaPeriode: p.quotaPeriode,
+        joursOuverts: p.joursOuverts, datesIndisponibles: p.datesIndisponibles, creneauxBloques: p.creneauxBloques,
+        messageComplet: p.messageComplet, maintienHeures: Number(p.maintienHeures),
+      }, adminToken));
+      setMsg("Paramètres enregistrés.");
+    } catch (e) { setMsg(e.message); }
+    setBusy("");
+  };
+  const saveFormule = async (code) => {
+    const f = forms[code];
+    setBusy(code); setMsg("");
+    try {
+      hydrate(await callAdminMyu("vipSaveFormule", {
+        code, nom: f.nom, description: f.description, supplementEur: f.surDevis ? undefined : Number(f.supplement),
+        plages: f.surDevis ? [] : f.plages, plagesValidees: f.surDevis ? false : !!f.plagesValidees, actif: !!f.actif,
+      }, adminToken));
+      setMsg(`${f.nom} enregistrée.`);
+    } catch (e) { setMsg(e.message); }
+    setBusy("");
+  };
+  const setForm = (code, patch) => setForms((x) => ({ ...x, [code]: { ...x[code], ...patch } }));
+
+  if (!p) return <div style={{ fontFamily: FONT_BODY, color: C.espressoSoft, fontSize: 13 }}>{msg || "Chargement…"}</div>;
+  const q = cfg.quota;
+  const chk = { display: "flex", alignItems: "center", gap: 8, fontFamily: FONT_BODY, fontSize: 13, color: C.espresso };
+  const box = { padding: 14, borderRadius: 16, background: C.cream, border: `1.3px solid ${C.blushDeep}`, marginBottom: 12 };
+  const h3 = { fontFamily: FONT_DISPLAY, color: C.espresso, margin: "0 0 6px", fontSize: 19 };
+
+  return (
+    <div>
+      <h2 style={{ fontFamily: FONT_DISPLAY, color: C.espresso, margin: "0 0 10px", fontSize: 24 }}>Réglages VIP</h2>
+      {msg && <div role="alert" style={{ fontFamily: FONT_BODY, fontSize: 12.5, padding: "10px 12px", borderRadius: 12, background: C.blush, color: C.espresso, border: `1px solid ${C.blushDeep}`, marginBottom: 12 }}>{msg}</div>}
+
+      <div style={box}>
+        <h3 style={h3}>Ouverture et quota</h3>
+        <label style={chk}><input type="checkbox" checked={p.demandesActives} onChange={(e) => setP({ ...p, demandesActives: e.target.checked })} /> Demandes VIP ouvertes (décoche pour suspendre)</label>
+        <label style={vipLabel}>Première date possible (pas avant le 7 novembre 2026)</label>
+        <input type="date" min="2026-11-07" value={p.datePremiereDispo} onChange={(e) => setP({ ...p, datePremiereDispo: e.target.value })} style={vipField} />
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+          <div><label style={vipLabel}>Nombre max d'expériences (vide = sans limite)</label><input type="number" min="0" value={p.quotaMax} onChange={(e) => setP({ ...p, quotaMax: e.target.value })} style={vipField} /></div>
+          <div><label style={vipLabel}>Par</label><select value={p.quotaPeriode} onChange={(e) => setP({ ...p, quotaPeriode: e.target.value })} style={vipField}><option value="semaine">semaine</option><option value="mois">mois</option></select></div>
+        </div>
+        <div style={{ fontFamily: FONT_BODY, fontSize: 12, color: C.espressoSoft, marginTop: 6 }}>
+          Période en cours ({q.debut} → {q.fin}) : {q.utilises} acceptée{q.utilises > 1 ? "s" : ""}{q.max == null ? " (sans limite)" : ` sur ${q.max}`}{q.complet ? " — COMPLET" : ""}. Seules les expériences acceptées ou payées comptent.
+        </div>
+        <label style={vipLabel}>Message affiché quand c'est complet</label>
+        <input value={p.messageComplet} maxLength={200} onChange={(e) => setP({ ...p, messageComplet: e.target.value })} style={vipField} />
+        <label style={vipLabel}>Durée du maintien après acceptation (heures)</label>
+        <input type="number" min="1" max="168" value={p.maintienHeures} onChange={(e) => setP({ ...p, maintienHeures: e.target.value })} style={vipField} />
+      </div>
+
+      <div style={box}>
+        <h3 style={h3}>Jours ouverts aux demandes</h3>
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+          {VIP_JOURS.map((j) => (
+            <label key={j.n} style={{ ...chk, padding: "6px 10px", borderRadius: 99, border: `1.3px solid ${C.blushDeep}`, background: p.joursOuverts.includes(j.n) ? C.blush : C.white }}>
+              <input type="checkbox" checked={p.joursOuverts.includes(j.n)} onChange={(e) => setP({ ...p, joursOuverts: e.target.checked ? [...p.joursOuverts, j.n] : p.joursOuverts.filter((x) => x !== j.n) })} /> {j.l}
+            </label>
+          ))}
+        </div>
+        <label style={vipLabel}>Dates indisponibles</label>
+        <div style={{ display: "flex", gap: 8 }}>
+          <input type="date" value={newDate} onChange={(e) => setNewDate(e.target.value)} style={vipField} />
+          <GhostButton onClick={() => { if (newDate && !p.datesIndisponibles.includes(newDate)) { setP({ ...p, datesIndisponibles: [...p.datesIndisponibles, newDate].sort() }); setNewDate(""); } }}>Ajouter</GhostButton>
+        </div>
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 8 }}>
+          {p.datesIndisponibles.map((d) => (
+            <button key={d} type="button" onClick={() => setP({ ...p, datesIndisponibles: p.datesIndisponibles.filter((x) => x !== d) })} className="missu-focusable" style={{ padding: "5px 10px", borderRadius: 99, border: `1.3px solid ${C.blushDeep}`, background: C.white, fontFamily: FONT_BODY, fontSize: 12, cursor: "pointer", color: C.espresso }}>{d} ✕</button>
+          ))}
+        </div>
+        <label style={vipLabel}>Créneaux bloqués (heures vides = journée entière)</label>
+        {p.creneauxBloques.map((c, i) => (
+          <div key={i} style={{ display: "flex", justifyContent: "space-between", gap: 8, fontFamily: FONT_BODY, fontSize: 12.5, color: C.espresso, padding: "4px 0" }}>
+            <span>{c.date} {c.de ? `${c.de}–${c.a}` : "journée entière"}{c.note ? ` · ${c.note}` : ""}</span>
+            <button type="button" onClick={() => setP({ ...p, creneauxBloques: p.creneauxBloques.filter((_, j) => j !== i) })} className="missu-focusable" style={{ border: 0, background: "transparent", cursor: "pointer", color: C.roseGoldDeep }}>Retirer</button>
+          </div>
+        ))}
+        <div style={{ display: "grid", gridTemplateColumns: "1.3fr 1fr 1fr", gap: 6, marginTop: 6 }}>
+          <input type="date" value={newBloc.date} onChange={(e) => setNewBloc({ ...newBloc, date: e.target.value })} style={vipField} aria-label="Date" />
+          <input type="time" value={newBloc.de} onChange={(e) => setNewBloc({ ...newBloc, de: e.target.value })} style={vipField} aria-label="De" />
+          <input type="time" value={newBloc.a} onChange={(e) => setNewBloc({ ...newBloc, a: e.target.value })} style={vipField} aria-label="À" />
+        </div>
+        <input placeholder="Note (facultatif)" value={newBloc.note} onChange={(e) => setNewBloc({ ...newBloc, note: e.target.value })} style={{ ...vipField, marginTop: 6 }} />
+        <div style={{ marginTop: 6 }}><GhostButton onClick={() => { if (newBloc.date) { setP({ ...p, creneauxBloques: [...p.creneauxBloques, { ...newBloc }] }); setNewBloc({ date: "", de: "", a: "", note: "" }); } }}>Bloquer ce créneau</GhostButton></div>
+        <div style={{ marginTop: 12 }}><PrimaryButton disabled={busy === "params"} onClick={saveParams}>{busy === "params" ? "Enregistrement…" : "Enregistrer les paramètres"}</PrimaryButton></div>
+      </div>
+
+      <h3 style={{ ...h3, margin: "16px 0 8px" }}>Formules et tarifs</h3>
+      <div style={{ fontFamily: FONT_BODY, fontSize: 12, color: C.espressoSoft, marginBottom: 8 }}>
+        La formule est choisie automatiquement d'après l'heure de DÉBUT de la prestation. Hors plages (très tôt le matin, journée, demande particulière) : VIP Sur mesure, sur devis. Les prix des prestations classiques et leurs durées se règlent dans l'onglet « Prestations » ; le VIP utilise ces mêmes durées pour l'heure de fin et les conflits d'agenda.
+      </div>
+      {cfg.formules.map((c) => {
+        const f = forms[c.code]; if (!f) return null;
+        return (
+          <div key={c.code} style={box}>
+            <input value={f.nom} onChange={(e) => setForm(c.code, { nom: e.target.value })} style={{ ...vipField, fontWeight: 600 }} aria-label="Nom" />
+            <label style={vipLabel}>Description affichée</label>
+            <input value={f.description} onChange={(e) => setForm(c.code, { description: e.target.value })} style={vipField} />
+            {f.surDevis ? <div style={{ fontFamily: FONT_BODY, fontSize: 12.5, color: C.espressoSoft, marginTop: 8 }}>Sur devis : le montant est fixé par toi pour chaque demande (aucun prix automatique).</div> : (<>
+              <label style={vipLabel}>Supplément (€) — s'ajoute au tarif de la prestation</label>
+              <input type="number" min="0" max="200" value={f.supplement} onChange={(e) => setForm(c.code, { supplement: e.target.value })} style={vipField} />
+              <label style={vipLabel}>Plages d'heure de DÉBUT (de → à, incluses)</label>
+              {f.plages.map((r, i) => (
+                <div key={i} style={{ display: "flex", gap: 6, marginBottom: 6 }}>
+                  <input type="time" value={r.de} onChange={(e) => setForm(c.code, { plages: f.plages.map((x, j) => (j === i ? { ...x, de: e.target.value } : x)) })} style={vipField} aria-label="De" />
+                  <input type="time" value={r.a} onChange={(e) => setForm(c.code, { plages: f.plages.map((x, j) => (j === i ? { ...x, a: e.target.value } : x)) })} style={vipField} aria-label="À" />
+                  <button type="button" onClick={() => setForm(c.code, { plages: f.plages.filter((_, j) => j !== i) })} className="missu-focusable" style={{ border: 0, background: "transparent", cursor: "pointer", color: C.roseGoldDeep }}>✕</button>
+                </div>
+              ))}
+              <GhostButton onClick={() => setForm(c.code, { plages: [...f.plages, { de: "18:00", a: "19:59" }] })}>Ajouter une plage</GhostButton>
+              <label style={{ ...chk, marginTop: 8 }}><input type="checkbox" checked={!!f.plagesValidees} onChange={(e) => setForm(c.code, { plagesValidees: e.target.checked })} /> Plages actives (j'ai validé ces horaires)</label>
+            </>)}
+            <label style={{ ...chk, marginTop: 8 }}><input type="checkbox" checked={!!f.actif} onChange={(e) => setForm(c.code, { actif: e.target.checked })} /> Formule proposée</label>
+            <div style={{ marginTop: 10 }}><PrimaryButton disabled={busy === c.code} onClick={() => saveFormule(c.code)}>{busy === c.code ? "Enregistrement…" : "Enregistrer cette formule"}</PrimaryButton></div>
           </div>
         );
       })}
