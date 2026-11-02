@@ -1,0 +1,129 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Ma demande MYU VIP</title><meta name="robots" content="noindex,nofollow"><meta name="description" content="Suivi privé de votre demande MYU VIP — Private Experience."><meta name="theme-color" content="#0A0907"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet"><style>
+:root{--ink:#0A0907;--ink2:#14110D;--ink3:#1D1812;--line:#3A3023;--gold:#C9A45C;--gold-soft:#E3C38D;--ivory:#F5EDE0;--muted:#A89B86;--danger:#E0877B;--ok:#9DB38A}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ink);color:var(--ivory);font-family:'Jost',Arial,sans-serif;-webkit-font-smoothing:antialiased;line-height:1.55}
+.wrap{max-width:540px;margin:auto;padding:30px 18px 50px}
+.brand{text-align:center;margin:6px 0 24px}
+.brand small{letter-spacing:3.5px;color:var(--gold);font-weight:500;font-size:11px;text-transform:uppercase}
+.brand h1{font-family:'Cormorant Garamond',Georgia,serif;font-size:38px;margin:6px 0 2px;font-weight:500}
+.brand p{margin:0;color:var(--muted);font-size:13.5px;font-family:'Cormorant Garamond',serif;font-style:italic;font-size:16px}
+.card{background:var(--ink2);border:1px solid var(--line);border-radius:26px;padding:22px 20px}
+h2{font-family:'Cormorant Garamond',Georgia,serif;margin:0 0 8px;font-size:28px;font-weight:500}
+.sub{font-size:14px;color:var(--muted);line-height:1.55;margin:14px 0 0}
+.stat{display:inline-block;font-size:11.5px;font-weight:600;letter-spacing:.6px;padding:6px 13px;border-radius:999px;border:1px solid var(--line);color:var(--gold-soft);margin:0 0 12px}
+.stat.ok{border-color:var(--ok);color:var(--ok)}.stat.warn{border-color:var(--gold);color:var(--gold-soft)}.stat.ko{border-color:var(--danger);color:var(--danger)}
+.recap{margin:14px 0 0;padding:14px 16px;border-radius:16px;background:var(--ink);border:1px solid var(--line);font-size:14px}
+.recap .r{display:flex;gap:10px;line-height:1.55;margin:3px 0}.recap .r span{flex:0 0 92px;min-width:0;color:var(--muted)}.recap .r em{font-style:normal;flex:1}
+.prix{margin:14px 0 0;padding:16px;border:1px solid var(--gold);border-radius:18px;background:linear-gradient(160deg,#1E1810,#14110D)}
+.prix .row{display:flex;justify-content:space-between;gap:12px;padding:5px 0;font-size:14.5px}
+.prix .row span:first-child{color:var(--muted)}
+.prix .total{margin-top:6px;padding-top:10px;border-top:1px solid var(--gold);font-size:16px}
+.prix .total span:last-child{font-family:'Cormorant Garamond',serif;font-size:25px;color:var(--gold);font-weight:600}
+.prix .acompte span:last-child{color:var(--gold-soft);font-weight:500}
+.reply{margin:14px 0 0;padding:12px 14px;border-radius:14px;background:var(--ink);border:1px solid var(--line);font-size:14px}
+.reply small{display:block;font-size:11px;font-weight:600;letter-spacing:.6px;text-transform:uppercase;color:var(--gold);margin-bottom:3px}
+.deadline{margin:14px 0 0;padding:13px 15px;border-radius:14px;background:var(--ink3);border:1px solid var(--gold);font-size:14px}
+.deadline b{color:var(--gold-soft)}
+.actions{display:grid;gap:10px;margin-top:18px}
+button,.btn{display:block;width:100%;border:0;border-radius:999px;padding:16px;background:linear-gradient(135deg,#E3C38D,#B88F45);color:#14110D;font-weight:600;font-size:13.5px;letter-spacing:1.4px;cursor:pointer;font-family:'Jost',sans-serif;text-align:center;text-decoration:none;text-transform:uppercase}
+button:disabled{opacity:.5}
+button:focus-visible,.btn:focus-visible,a:focus-visible{outline:2px solid var(--gold-soft);outline-offset:3px}
+.btn-ghost{background:transparent;color:var(--gold-soft);border:1px solid var(--line);letter-spacing:.6px;text-transform:none;font-weight:500}
+.consent{display:flex;gap:10px;align-items:flex-start;margin:14px 0 2px;font-size:12.5px;line-height:1.5;color:var(--muted)}
+.consent input{width:20px;height:20px;flex:0 0 20px;margin-top:1px;accent-color:var(--gold)}
+.msg{margin:14px 0 0;padding:12px 14px;border-radius:14px;background:rgba(224,135,123,.12);border:1px solid var(--danger);font-size:13.5px}
+.wa{display:block;padding:14px 16px;border:1px solid var(--line);border-radius:16px;text-decoration:none;color:var(--ivory);background:var(--ink)}
+.wa small{display:block;font-size:11px;letter-spacing:.8px;color:var(--gold);text-transform:uppercase}
+.back{display:block;text-align:center;color:var(--muted);font-size:12.5px;margin-top:22px;text-decoration:none}
+</style></head>
+<body><main class="wrap">
+<div class="brand"><small>MYU by Miss'U · VIP</small><h1>Private Experience</h1><p>Suivi de ma demande</p></div>
+<section class="card" id="card"><p class="sub" id="loading">Chargement de votre demande…</p></section>
+<a class="back" href="/">← Retour au site MYU</a>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+const esc=t=>String(t==null?'':t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const eur=n=>{const v=Math.round((Number(n)||0)*100)/100;return (Number.isInteger(v)?String(v):v.toFixed(2).replace('.',','))+' €'};
+const hh=t=>String(t||'').replace(':','h');
+const qs=new URLSearchParams(location.search);const T=qs.get('t')||'';const paid=qs.get('paid')==='1';
+let polls=0;
+const cls={confirme:'ok',accepte_attente_paiement:'warn',contre_proposition:'warn',refuse:'ko',annule:'ko',expire:'ko',en_attente:''};
+const row=(l,v)=>'<div class="r"><span>'+esc(l)+'</span><em>'+v+'</em></div>';
+const WA='https://wa.me/596696178587';
+async function api(action,method,body){
+  const r=await fetch('/api/vip?action='+action+'&t='+encodeURIComponent(T),{method:method||'GET',cache:'no-store',headers:body?{'Content-Type':'application/json'}:undefined,body:body?JSON.stringify(body):undefined});
+  const j=await r.json().catch(()=>({}));
+  if(!r.ok||!j.success)throw new Error(j.error||'Service momentanément indisponible.');
+  return j.data;
+}
+// Détail du prix : tarif de la prestation, supplément de la formule, total, acompte (50 %)
+function prixBlock(d){
+  const p=d.prix||{};
+  if(p.total==null){return '<div class="prix"><div class="row"><span>'+esc(d.formule?d.formule.nom:'Formule')+'</span><span>Sur devis</span></div><p class="sub" style="margin:8px 0 0">Miss\'U vous communiquera un montant avant tout paiement. Vous pourrez l\'accepter ou non.</p></div>'}
+  let h='<div class="prix">';
+  if(p.prestation!=null)h+='<div class="row"><span>Tarif de la prestation</span><span>'+eur(p.prestation)+'</span></div>';
+  if(d.formule&&p.supplement>0)h+='<div class="row"><span>Supplément '+esc(d.formule.nom)+'</span><span>+ '+eur(p.supplement)+'</span></div>';
+  h+='<div class="row total"><span>Prix total'+(p.montantAConfirmer&&!p.surDevis?' estimé':'')+'</span><span>'+eur(p.total)+'</span></div>';
+  if(d.acompteTotal!=null)h+='<div class="row acompte"><span>Acompte (50 %)</span><span>'+eur(d.acompteTotal)+'</span></div>';
+  if(p.montantAConfirmer)h+='<p class="sub" style="margin:8px 0 0">Montant à confirmer par Miss\'U avant tout paiement.</p>';
+  return h+'</div>';
+}
+function render(d,msg){
+  let h='<span class="stat '+(cls[d.statut]||'')+'">'+esc(d.statutLibelle)+'</span>';
+  h+='<h2>Bonjour '+esc(d.prenom)+'</h2>';
+  h+='<div class="recap">'+row('Prestation',esc(d.prestation))+(d.formule?row('Formule',esc(d.formule.nom)):'')+row('Lieu',esc(d.lieu))+row('Demandé',esc(d.souhait.dateLongue)+' à '+esc(hh(d.souhait.heure)))+(d.souhaitAlt?row('Ou bien',esc(d.souhaitAlt.dateLongue)+' à '+esc(hh(d.souhaitAlt.heure))):'')+'</div>';
+  if(d.retenu&&d.statut!=='en_attente'&&d.statut!=='refuse'){h+='<div class="recap">'+row(d.statut==='contre_proposition'?'Proposé':'Retenu',esc(d.retenu.dateLongue)+' à '+esc(hh(d.retenu.heure)))+'</div>'}
+  if(['en_attente','contre_proposition','accepte_attente_paiement','confirme'].includes(d.statut))h+=prixBlock(d);
+  if(d.reponse){h+='<div class="reply"><small>Message de Miss\'U</small>'+esc(d.reponse)+'</div>'}
+  if(msg){h+='<div class="msg" role="alert">'+esc(msg)+'</div>'}
+  h+='<div class="actions">';
+  if(d.statut==='en_attente'){
+    h+='<p class="sub" style="margin:0">Votre demande a bien été reçue : Miss\'U vérifie sa disponibilité et vous répond personnellement. Aucun horaire n\'est garanti avant sa validation et rien n\'est à payer pour l\'instant.</p>';
+  }
+  if(d.statut==='contre_proposition'){
+    h+='<p class="sub" style="margin:0">Miss\'U vous fait une proposition. Si vous l\'acceptez, le créneau est réservé pour vous pendant 48 h, le temps de régler l\'acompte de 50 %. <strong>En acceptant, vous acceptez le créneau ET le montant ci-dessus.</strong></p>';
+    h+='<button id="btnAccept" type="button">J\'accepte le créneau et le montant</button>';
+  }
+  if(d.statut==='accepte_attente_paiement'){
+    if(d.maintienActif){
+      h+='<div class="deadline">Votre créneau est <b>réservé pour vous</b> jusqu\'au <b>'+esc(d.expireLibelle)+'</b> (heure de Martinique). Passé ce délai sans paiement, il est libéré automatiquement.</div>';
+      h+='<label class="consent"><input id="payConsent" type="checkbox"><span>Je confirme ce rendez-vous au prix total de '+(d.prix&&d.prix.total!=null?esc(eur(d.prix.total)):'convenu')+' et j\'accepte de régler l\'acompte de '+esc(d.acompteLibelle||'')+' par paiement sécurisé SumUp. Le rendez-vous n\'est confirmé qu\'à réception de l\'acompte.</span></label>';
+      h+='<button id="btnPay" type="button">Confirmer et payer l\'acompte</button>';
+    }else{
+      h+='<p class="sub" style="margin:0">Le délai de confirmation est dépassé. Vérification en cours…</p>';
+    }
+  }
+  if(d.statut==='confirme'){
+    h+='<p class="sub" style="margin:0"><strong>Votre acompte est bien reçu : votre expérience privée est confirmée.</strong> Miss\'U vous contactera pour les détails si nécessaire. À très vite !</p>';
+  }
+  if(d.statut==='refuse'||d.statut==='annule'||d.statut==='expire'){
+    h+='<p class="sub" style="margin:0">'+(d.statut==='expire'?'Le créneau n\'a pas été confirmé à temps et a été libéré. ':'')+'Vous pouvez faire une nouvelle demande ou réserver un créneau classique.</p>';
+    h+='<a class="btn" href="/vip.html">Nouvelle demande VIP</a><a class="btn btn-ghost" href="/book.html">Réserver un créneau classique</a>';
+  }
+  if(d.peutAnnuler){h+='<button id="btnCancel" type="button" class="btn-ghost">Annuler ma demande</button>'}
+  h+='<button id="btnRefresh" type="button" class="btn-ghost">Actualiser</button>';
+  h+='<a class="wa" href="'+WA+'" target="_blank" rel="noopener noreferrer"><small>WhatsApp · Écrire à Miss\'U</small>+596 696 17 85 87</a></div>';
+  $('card').innerHTML=h;
+  const on=(id,fn)=>{const e=$(id);if(e)e.addEventListener('click',fn)};
+  on('btnRefresh',()=>load());
+  on('btnCancel',async()=>{if(!confirm('Annuler cette demande ?'))return;try{render(await api('cancel','POST',{}))}catch(e){render(d,e.message)}});
+  on('btnAccept',async()=>{const b=$('btnAccept');b.disabled=true;b.textContent='Réservation du créneau…';try{render(await api('accept','POST',{}))}catch(e){render(d,e.message)}});
+  on('btnPay',async()=>{
+    if(!$('payConsent').checked){return render(d,'Cochez la case pour confirmer le prix et payer l\'acompte.')}
+    const b=$('btnPay');b.disabled=true;b.textContent='Ouverture du paiement sécurisé…';
+    try{const r=await api('pay','POST',{consent:true});if(r.dejaPaye)return load();if(r.checkoutUrl){location.href=r.checkoutUrl;return}throw new Error('Lien de paiement indisponible.')}
+    catch(e){render(d,e.message)}
+  });
+}
+async function load(msg){
+  if(!/^[0-9a-f]{40,100}$/i.test(T)){$('card').innerHTML='<h2>Lien invalide</h2><p class="sub">Ce lien de suivi n\'est pas valide. Vérifiez le lien reçu ou refaites une demande.</p><div class="actions"><a class="btn" href="/vip.html">Nouvelle demande VIP</a></div>';return}
+  try{
+    const d=await api('status');
+    render(d,msg||(paid&&d.statut!=='confirme'&&polls<6?'Vérification de votre paiement en cours… cette page se met à jour toute seule.':''));
+    if(paid&&d.statut==='accepte_attente_paiement'&&polls<6){polls++;setTimeout(()=>load(),4000)}
+  }catch(e){$('card').innerHTML='<h2>Demande introuvable</h2><p class="sub">'+esc(e.message)+'</p><div class="actions"><a class="btn" href="/vip.html">Nouvelle demande VIP</a></div>'}
+}
+load();
+</script>
+</body></html>
