@@ -48,7 +48,7 @@ const SERVICE_LABELS = {
   conseil: "Conseil personnalisé", microneedling: "Microneedling", bb_glow: "BB Glow",
   soins_corps_infrarouge: "Soins corps infrarouge", tricopigmentation: "Tricopigmentation",
   freckles: "Freckles", soins_led: "Lumière rouge LED (30 min)",
-  consultation_camouflage: "Consultation camouflage (30 min)",
+  consultation_camouflage: "RDV camouflage (30 min)",
 };
 
 const STATUT_LABELS = {
