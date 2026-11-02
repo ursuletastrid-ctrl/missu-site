@@ -173,7 +173,7 @@ textarea{min-height:84px;resize:vertical}
       <label for="message">Un mot pour Miss'U <span style="color:var(--muted);font-weight:300">(facultatif)</span></label><textarea id="message" maxlength="500" placeholder="Contrainte d'horaire, occasion particulière…"></textarea>
       <div class="pot" aria-hidden="true"><label>Ne pas remplir<input id="website" tabindex="-1" autocomplete="off"></label></div>
 
-      <label class="consent"><input id="consent" type="checkbox" required><span>J'accepte d'être recontactée au sujet de cette demande. Je comprends que ma demande est soumise à confirmation de disponibilité et qu'aucun paiement n'est demandé avant son acceptation par Miss'U.</span></label>
+      <label class="consent"><input id="consent" type="checkbox" required><span>J'accepte d'être recontacté(e) au sujet de cette demande. Je comprends que ma demande est soumise à confirmation de disponibilité et qu'aucun paiement n'est demandé avant son acceptation par Miss'U.</span></label>
       <div class="avail">Votre expérience privée est soumise à confirmation de disponibilité.</div>
       <div class="msg" id="msg" role="alert"></div>
       <button class="cta" id="submit" type="submit" style="margin-top:18px">ENVOYER MA DEMANDE</button>
@@ -214,9 +214,9 @@ async function api(path){const r=await fetch(path,{cache:'no-store'});const j=aw
 
 function renderPicks(){
   const q=norm($('q').value).trim();const words=q.split(/\s+/).filter(Boolean);
-  const list=(cat.prestations||[]).filter(p=>{if(!words.length)return true;const hay=norm(p.label+' '+(KW[p.type]||'')+' '+p.type.replace(/_/g,' '));return words.every(w=>hay.includes(w))});
+  const list=(cat.prestations||[]).filter(p=>{if(!words.length)return true;const hay=norm(p.label+' '+(KW[p.type]||'')+' '+p.type.replace(/_/g,' ')+(/trico/.test(norm(p.label+p.type))?' cheveux crane cuir chevelu calvitie densite barbe':''));return words.every(w=>hay.includes(w))});
   if(!list.length){$('picks').innerHTML='<div class="empty">Aucune prestation ne correspond à « '+esc($('q').value)+' ». Essayez un autre mot, ou <a href="https://wa.me/596696178587" target="_blank" rel="noopener noreferrer">écrivez à Miss\'U</a> pour une demande sur mesure.</div>';return}
-  $('picks').innerHTML=list.map(p=>'<button type="button" class="pick" data-t="'+esc(p.type)+'" aria-pressed="'+(sel&&sel.type===p.type)+'"><span>'+esc(p.label)+'</span><small>'+(p.aPartirDe?'dès ':'')+eur(p.prix)+' · '+esc(fmtDur(p.dureeMinutes))+'</small></button>').join('');
+  $('picks').innerHTML=list.map(p=>'<button type="button" class="pick" data-t="'+esc(p.type)+'" aria-pressed="'+(sel&&sel.type===p.type)+'"><span>'+esc(p.label)+'</span><small>'+(p.aPartirDe?'dès ':'')+eur(p.prix)+(p.type==='tricopigmentation'?' par zone':'')+' · '+esc(fmtDur(p.dureeMinutes))+'</small></button>').join('');
   $('picks').querySelectorAll('.pick').forEach(b=>b.addEventListener('click',()=>{sel=cat.prestations.find(p=>p.type===b.dataset.t);$('serviceHint').textContent='Prestation choisie : '+sel.label+' · durée '+fmtDur(sel.dureeMinutes)+'.';renderPicks();refresh()}));
 }
 async function estimate(heure){if(!sel||!heure)return null;try{return await api('/api/vip?action=estimation&type='+encodeURIComponent(sel.type)+'&heure='+encodeURIComponent(heure))}catch(e){return {erreur:e.message}}}
