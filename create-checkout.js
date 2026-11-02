@@ -4,12 +4,39 @@
 // pendant le paiement, montant de l'acompte relu en base (jamais envoyé par
 // le navigateur).
 //
-// Corps attendu : { typePrestation, lieu, dateRdv, heureRdv }
+// Corps attendu : { typePrestation, lieu, dateRdv, heureRdv, consentementResultat }
 // Réponse : { success: true, data: { rdvId, checkoutUrl } } — checkoutUrl est
 // null quand aucun acompte n'est requis (le rendez-vous est alors confirmé).
 
 const { getAdminClient, getCallerFromRequest } = require("./_supabaseAdmin");
 const B = require("./_booking");
+
+// Consentement "Résultat et cicatrisation" : les 4 cases doivent être cochées
+// (revérifié ici car un bouton désactivé côté navigateur se contourne).
+// Incrémenter la version si le texte affiché dans index.html change.
+const RESULTAT_CICATRISATION_CONSENT_VERSION = "2026-10-06";
+const RESULTAT_CICATRISATION_KEYS = ["resultat_varie", "apres_immediat", "seances_possibles", "consignes_soin"];
+
+// Traçabilité : ne bloque jamais la réservation ni le paiement. Si les colonnes
+// optionnelles (type_prestation, details) n'existent pas encore, seconde
+// tentative avec les colonnes de base uniquement.
+async function recordConsent(admin, clientId, typePrestation, consent) {
+  const base = {
+    client_id: clientId,
+    type_consentement: "resultat_et_cicatrisation",
+    version: RESULTAT_CICATRISATION_CONSENT_VERSION,
+    accepte_le: new Date().toISOString(),
+  };
+  const details = {};
+  RESULTAT_CICATRISATION_KEYS.forEach((k) => { details[k] = consent[k] === true; });
+  try {
+    let { error } = await admin.from("documents_consentements").insert({ ...base, type_prestation: typePrestation, details });
+    if (error) ({ error } = await admin.from("documents_consentements").insert(base));
+    if (error) console.error("[create-checkout] traçabilité consentement :", error.message);
+  } catch (e) {
+    console.error("[create-checkout] traçabilité consentement :", e.message);
+  }
+}
 
 module.exports = async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "Méthode non autorisée." });
@@ -29,9 +56,15 @@ module.exports = async function handler(req, res) {
     heureRdv: B.clean(body.heureRdv, 5),
   };
 
+  const consent = body.consentementResultat && typeof body.consentementResultat === "object" ? body.consentementResultat : {};
+  if (!RESULTAT_CICATRISATION_KEYS.every((k) => consent[k] === true)) {
+    return res.status(400).json({ error: "Merci de cocher les 4 cases « Résultat et cicatrisation » avant de réserver." });
+  }
+
   try {
     const { settings, prestation } = await B.assertSlotBookable(admin, input);
     const rdv = await B.createHold(admin, { clientId: caller.id, input, contactEmail: caller.email || null, settings, prestation });
+    await recordConsent(admin, caller.id, input.typePrestation, consent);
     if (prestation.deposit_amount <= 0) {
       await B.syncBookingExternal(admin, rdv.id).catch((e) => console.error("[create-checkout] synchro :", e.message));
       return res.status(200).json({ success: true, data: { rdvId: rdv.id, checkoutUrl: null } });
