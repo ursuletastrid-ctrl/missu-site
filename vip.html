@@ -1,0 +1,159 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>MYU VIP — Votre heure est la mienne</title><meta name="description" content="Demandez un créneau prioritaire MYU VIP. Astrid vous répond personnellement ; aucun paiement avant son accord."><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Jost:wght@300;400;500;600;700&display=swap" rel="stylesheet"><style>
+:root{--blush:#F7E5DF;--blush-deep:#EFD2C7;--cream:#FFFCF8;--cream-soft:#FBF4ED;--rose-gold:#C99A82;--rose-gold-deep:#A9775D;--espresso:#4A372F;--espresso-soft:#86695D}
+*{box-sizing:border-box}
+body{margin:0;background:var(--cream-soft);color:var(--espresso);font-family:'Jost',Arial,sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{max-width:520px;margin:auto;padding:26px 18px 50px}
+.brand{text-align:center;margin:8px 0 26px}
+.brand small{letter-spacing:3px;color:var(--rose-gold-deep);font-weight:600;font-size:11px}
+.brand h1{font-family:'Cormorant Garamond',Georgia,serif;font-size:40px;margin:6px 0;font-weight:500}
+.brand p{margin:0;color:var(--espresso-soft);font-size:13.5px}
+.card{background:var(--cream);border:1px solid var(--blush-deep);border-radius:26px;padding:22px;box-shadow:0 14px 34px rgba(74,55,47,.09)}
+h2{font-family:'Cormorant Garamond',Georgia,serif;margin:0 0 6px;font-size:27px;font-weight:500}
+.sub{font-size:14px;color:var(--espresso-soft);line-height:1.55;margin:0 0 20px}
+label{font-size:12px;font-weight:600;display:block;margin:14px 0 6px;color:var(--espresso)}
+input,select{width:100%;padding:13px 12px;border:1px solid var(--blush-deep);border-radius:13px;background:var(--cream-soft);font-size:16px;color:var(--espresso);font-family:'Jost',sans-serif}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.consent{display:flex;gap:9px;align-items:flex-start;margin:18px 0;font-size:12px;line-height:1.45;color:var(--espresso-soft)}
+.consent input{width:auto;margin-top:2px}
+button{width:100%;border:0;border-radius:14px;padding:15px;background:linear-gradient(135deg,var(--rose-gold),var(--rose-gold-deep));color:#fff;font-weight:600;font-size:15px;cursor:pointer;font-family:'Jost',sans-serif;letter-spacing:.3px;box-shadow:0 10px 24px -8px rgba(169,119,93,.5)}
+button:disabled{opacity:.5;box-shadow:none}
+.trust{text-align:center;font-size:11px;color:var(--espresso-soft);margin:12px 0 0}
+.msg{margin:12px 0;padding:11px;border-radius:12px;background:var(--blush);font-size:13px;display:none;color:var(--espresso)}
+.back{display:block;text-align:center;color:var(--rose-gold-deep);font-size:12px;margin-top:18px;text-decoration:none}
+.price-box{display:flex;justify-content:space-between;align-items:baseline;margin-top:8px;padding:10px 12px;border-radius:12px;background:var(--blush);display:none}
+.price-box.show{display:flex}
+.price-box .full{font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--espresso);font-weight:600}
+.price-box .deposit{font-size:11px;color:var(--rose-gold-deep);font-weight:600;text-align:right}
+.success{text-align:center;padding:22px 5px}
+.success b{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:600}
+.hidden,.prediag-cta.hidden{display:none}
+#engagements{margin-top:16px;padding:12px 14px;border:1px solid var(--blush-deep);border-radius:16px;background:var(--cream-soft)}
+#engagements .consent{margin:10px 0}
+.eng-title{font-family:'Cormorant Garamond',serif;font-size:19px;font-weight:600;margin:0}
+.slot-days{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 8px;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch}
+.slot-day{flex:0 0 auto;width:auto;min-width:74px;padding:9px 10px;border-radius:14px;border:1px solid var(--blush-deep);background:var(--cream-soft);color:var(--espresso);font-size:12px;font-weight:500;box-shadow:none;scroll-snap-align:start;line-height:1.25}
+.slot-day b{display:block;font-size:17px;font-family:'Cormorant Garamond',serif}
+.slot-day.full{opacity:.45}
+.slot-day.sel{background:var(--espresso);border-color:var(--espresso);color:#fff}
+.slot-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:8px;margin-top:6px}
+.slot{width:100%;padding:11px 4px;border-radius:12px;border:1px solid var(--blush-deep);background:#fff;color:var(--espresso);font-size:14px;font-weight:600;box-shadow:none}
+.slot.sel{background:linear-gradient(135deg,var(--rose-gold),var(--rose-gold-deep));color:#fff;border-color:transparent}
+.slot-note{font-size:12px;color:var(--espresso-soft);margin:8px 0 0;line-height:1.45}
+.slot-summary{margin:14px 0 0;padding:12px 14px;border-radius:14px;background:var(--blush);font-size:13.5px;line-height:1.5;display:none}
+.slot-summary.show{display:block}
+.recap{text-align:left;margin:16px 0 0;padding:14px 16px;border-radius:16px;background:var(--cream-soft);border:1px solid var(--blush-deep);font-size:14px;line-height:1.7}
+.recap span{color:var(--espresso-soft);display:inline-block;min-width:92px}
+.btn-ghost{background:transparent;color:var(--rose-gold-deep);border:1px solid var(--blush-deep);box-shadow:none;margin-top:10px}
+
+@media(max-width:390px){.grid{grid-template-columns:1fr}.wrap{padding:18px 13px 40px}}
+.contact-links{display:grid;gap:10px;margin:14px 0 0;font-style:normal}
+.contact-link{display:flex;flex-direction:column;gap:5px;min-height:64px;padding:14px 16px;background:var(--cream-soft);border:1px solid var(--blush-deep);border-radius:16px;text-decoration:none;color:var(--espresso);overflow-wrap:anywhere}
+.contact-link small{font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--rose-gold-deep)}
+.contact-link span{font-size:15px;line-height:1.4}
+.contact-link:hover{background:var(--blush)}
+.contact-link:focus-visible,.contact-jump:focus-visible{outline:3px solid var(--rose-gold-deep);outline-offset:3px}
+.contact-whatsapp{background:var(--espresso);border-color:var(--espresso);color:#fffaf6}
+.contact-whatsapp small{color:var(--rose-gold)}
+.contact-whatsapp:hover{background:#5c483d}
+.contact-link .contact-detail{font-size:12px;font-weight:400;opacity:.85}
+.prediag-cta{display:block;text-align:center;text-decoration:none;background:linear-gradient(135deg,var(--rose-gold),var(--rose-gold-deep));color:#fff;padding:15px 17px;border-radius:999px;font-weight:600;font-size:14px;margin-top:16px}
+
+.steps{margin:0 0 18px;padding:0;list-style:none;display:grid;gap:8px}
+.steps li{display:flex;gap:10px;align-items:flex-start;font-size:13.5px;line-height:1.45;color:var(--espresso)}
+.steps b{flex:0 0 26px;height:26px;border-radius:50%;background:var(--espresso);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:600}
+textarea{width:100%;padding:13px 12px;border:1px solid var(--blush-deep);border-radius:13px;background:var(--cream-soft);font-size:16px;color:var(--espresso);font-family:'Jost',sans-serif;min-height:84px;resize:vertical}
+.pot{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+.linkbox{word-break:break-all;font-size:12.5px;padding:11px 12px;border-radius:12px;background:var(--cream-soft);border:1px solid var(--blush-deep);margin:12px 0 0;text-align:left}
+.vipbadge{display:inline-block;font-size:10.5px;letter-spacing:2px;font-weight:700;padding:4px 10px;border-radius:999px;background:var(--espresso);color:#F3D9B1;margin-bottom:6px}
+</style><script defer src="/myu-tracking.js"></script></head>
+<body><main class="wrap">
+<div class="brand"><small>MYU BY MISS'U</small><h1>MYU VIP</h1><p>Votre heure est la mienne</p></div>
+
+<section class="card" id="formCard">
+<span class="vipbadge">DEMANDE VIP</span>
+<h2>Votre heure est la mienne</h2>
+<p class="sub">Vos horaires sortent de l'ordinaire ? Proposez le jour et l'heure qui vous conviennent, même en dehors des horaires habituels. Miss'U étudie chaque demande personnellement : ce n'est pas une disponibilité garantie 24 h/24, mais une demande que je regarde avec attention.</p>
+<ol class="steps">
+<li><b>1</b><span>Vous envoyez votre demande, <strong>sans payer</strong>.</span></li>
+<li><b>2</b><span>Miss'U accepte, vous propose un autre horaire ou décline.</span></li>
+<li><b>3</b><span>Si elle accepte, votre créneau est <strong>réservé pour vous pendant 48 h</strong>.</span></li>
+<li><b>4</b><span>Vous confirmez en réglant l'acompte sécurisé (SumUp). Sans paiement dans les 48 h, le créneau est libéré.</span></li>
+</ol>
+<form id="vipForm" novalidate>
+<label for="service">Prestation</label>
+<select id="service" required><option value="">Chargement…</option></select>
+<div class="price-box" id="priceBox"><span class="full" id="priceFull"></span><span class="deposit" id="priceDeposit"></span></div>
+<label for="lieu">Lieu</label>
+<select id="lieu" required></select>
+<div class="grid"><div><label for="dateRdv">Jour souhaité</label><input id="dateRdv" type="date" required></div><div><label for="heureRdv">Heure souhaitée</label><select id="heureRdv" required></select></div></div>
+<div class="grid"><div><label for="dateAlt">Second jour <span style="font-weight:normal">(facultatif)</span></label><input id="dateAlt" type="date"></div><div><label for="heureAlt">Seconde heure</label><select id="heureAlt"></select></div></div>
+<div class="grid"><div><label for="firstName">Prénom</label><input id="firstName" autocomplete="given-name" required></div><div><label for="lastName">Nom <span style="font-weight:normal">(facultatif)</span></label><input id="lastName" autocomplete="family-name"></div></div>
+<label for="phone">Téléphone (WhatsApp de préférence)</label><input id="phone" type="tel" autocomplete="tel" inputmode="tel" required placeholder="Votre numéro">
+<label for="email">Email <span style="font-weight:normal">(facultatif)</span></label><input id="email" type="email" autocomplete="email">
+<label for="message">Commentaire <span style="font-weight:normal">(facultatif)</span></label><textarea id="message" maxlength="500" placeholder="Contrainte d'horaire, occasion particulière…"></textarea>
+<div class="pot" aria-hidden="true"><label>Ne pas remplir<input id="website" tabindex="-1" autocomplete="off"></label></div>
+<label class="consent"><input id="consent" type="checkbox" required><span>J'accepte d'être recontactée au sujet de cette demande et que mes coordonnées soient utilisées uniquement pour la traiter. Je comprends qu'aucun paiement n'est demandé avant l'acceptation du créneau par Miss'U.</span></label>
+<div class="msg" id="msg" role="alert"></div>
+<button id="submit" type="submit">DEMANDER MON RENDEZ-VOUS VIP</button>
+<p class="trust">🔒 Aucun paiement à cette étape · Données non revendues</p>
+</form>
+</section>
+
+<section class="card hidden" id="success">
+<div class="success"><b>Votre demande VIP a bien été reçue ! ✨</b><p id="successText">Miss'U étudiera votre créneau souhaité et vous répondra personnellement. Vous pourrez ensuite confirmer votre rendez-vous si votre demande est acceptée.<br><em>MYU — Votre heure est la mienne.</em><br><br>Conservez ce lien : il vous permet de suivre la réponse et, si elle est acceptée, de confirmer votre créneau.</p></div>
+<div class="linkbox" id="suiviLink"></div>
+<button type="button" class="btn-ghost" id="copyBtn">Copier mon lien de suivi</button>
+<a class="prediag-cta" id="followBtn" href="#">Voir l'état de ma demande →</a>
+<p class="slot-note" style="text-align:center">Aucun message automatique n'est envoyé : ouvrez votre lien de suivi pour voir la réponse de Miss'U. Vous pouvez aussi lui écrire sur WhatsApp ci-dessous.</p>
+<a class="contact-link contact-whatsapp" id="waAstrid" href="https://wa.me/596696178587" target="_blank" rel="noopener noreferrer"><small>WhatsApp · Prévenir Miss'U</small><span>+596 696 17 85 87</span><span class="contact-detail">Messages et vocaux de préférence →</span></a>
+</section>
+<a class="back" href="/">← Retour au site MYU</a>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+const eur=n=>{const v=Math.round((Number(n)||0)*100)/100;return (Number.isInteger(v)?String(v):v.toFixed(2).replace('.',','))+' €'};
+const fmtDur=m=>m>=60?(Math.floor(m/60)+' h'+(m%60?(' '+String(m%60).padStart(2,'0')):'')):m+' min';
+let cat=[];
+function show(t){$('msg').textContent=t;$('msg').style.display='block'}
+function hideMsg(){$('msg').style.display='none'}
+function martiniqueDate(offsetDays){const d=new Date(Date.now()+offsetDays*864e5);return new Intl.DateTimeFormat('en-CA',{timeZone:'America/Martinique'}).format(d)}
+function fillHours(){let h='<option value="">Heure…</option>';for(let m=6*60;m<=22*60;m+=30){const t=String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0');h+='<option value="'+t+'">'+t.replace(':','h')+'</option>'}$('heureRdv').innerHTML=h;$('heureAlt').innerHTML=h}
+function showPrice(){const p=cat.find(x=>x.type===$('service').value);const b=$('priceBox');if(!p){b.classList.remove('show');return}b.classList.add('show');$('priceFull').textContent=fmtDur(p.dureeMinutes);$('priceDeposit').textContent=p.acompte>0?('Acompte '+eur(p.acompte)+' après acceptation'):''}
+async function load(){
+  fillHours();
+  try{
+    const r=await fetch('/api/vip?action=catalogue',{cache:'no-store'});const j=await r.json();
+    if(!r.ok||!j.success)throw new Error(j.error||'');
+    cat=j.data.prestations;
+    $('service').innerHTML='<option value="">Choisir une prestation…</option>'+cat.map(p=>'<option value="'+p.type.replace(/[^a-z0-9_]/gi,'')+'">'+p.label.replace(/[<>&"]/g,'')+'</option>').join('');
+    $('lieu').innerHTML=j.data.lieux.map(l=>'<option>'+String(l).replace(/[<>&"]/g,'')+'</option>').join('');
+    for(const id of ['dateRdv','dateAlt']){const d=$(id);d.min=martiniqueDate(0);d.max=martiniqueDate(j.data.horizonJours||60)}
+  }catch(e){show('Les demandes VIP sont momentanément indisponibles. Écrivez à Miss\'U sur WhatsApp.')}
+}
+$('service').addEventListener('change',showPrice);
+$('vipForm').addEventListener('submit',async ev=>{
+  ev.preventDefault();hideMsg();
+  const body={typePrestation:$('service').value,lieu:$('lieu').value,dateRdv:$('dateRdv').value,heureRdv:$('heureRdv').value,dateAlt:$('dateAlt').value,heureAlt:$('heureAlt').value,firstName:$('firstName').value.trim(),lastName:$('lastName').value.trim(),phone:$('phone').value.trim(),email:$('email').value.trim(),message:$('message').value.trim(),consent:$('consent').checked,website:$('website').value};
+  if(!body.typePrestation)return show('Choisissez une prestation.');
+  if(!body.dateRdv)return show('Choisissez un jour.');
+  if(!body.heureRdv)return show('Choisissez une heure.');
+  if(!!body.dateAlt!==!!body.heureAlt)return show('Second créneau : indiquez le jour ET l\'heure, ou laissez les deux vides.');
+  if(!body.firstName||!body.phone)return show('Prénom et téléphone sont requis.');
+  if(!body.consent)return show('Cochez la case d\'accord pour envoyer votre demande.');
+  const btn=$('submit');btn.disabled=true;btn.textContent='Envoi…';
+  try{
+    const r=await fetch('/api/vip?action=create',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const j=await r.json().catch(()=>({}));
+    if(!r.ok||!j.success){show(j.error||'La demande n\'a pas pu être envoyée. Réessayez ou écrivez à Miss\'U sur WhatsApp.');btn.disabled=false;btn.textContent='DEMANDER MON RENDEZ-VOUS VIP';return}
+    if(!j.data.enregistre){show('La demande n\'a pas pu être envoyée. Écrivez à Miss\'U sur WhatsApp.');btn.disabled=false;btn.textContent='DEMANDER MON RENDEZ-VOUS VIP';return}
+    const url=j.data.suiviUrl;
+    $('formCard').classList.add('hidden');$('success').classList.remove('hidden');
+    $('suiviLink').textContent=url;$('followBtn').href=url;
+    $('waAstrid').href='https://wa.me/596696178587?text='+encodeURIComponent('Bonjour Miss\'U, je viens d\'envoyer une demande MYU VIP. Mon lien de suivi : '+url);
+    window.scrollTo({top:0,behavior:'smooth'});
+  }catch(e){show('Connexion impossible. Réessayez dans un instant.');btn.disabled=false;btn.textContent='DEMANDER MON RENDEZ-VOUS VIP'}
+});
+$('copyBtn').addEventListener('click',async()=>{try{await navigator.clipboard.writeText($('suiviLink').textContent);$('copyBtn').textContent='Lien copié ✓'}catch(e){$('copyBtn').textContent='Sélectionne le lien ci-dessus pour le copier'}});
+load();
+</script>
+</body></html>

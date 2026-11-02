@@ -2973,6 +2973,170 @@ function AdminAgenda({ adminToken }) {
   );
 }
 
+// ------------------------------------------------------------------
+// MYU VIP — onglet "Demandes VIP" (acceptation, contre-proposition, refus)
+// Aucun paiement n'est possible avant l'acceptation ; à l'acceptation le créneau
+// est maintenu 48 h ; le message à la cliente part via un lien WhatsApp pré-rempli
+// (aucun SMS/e-mail automatique).
+// ------------------------------------------------------------------
+const VIP_FILTERS = [
+  { key: "", label: "Toutes" },
+  { key: "en_attente", label: "À traiter" },
+  { key: "contre_proposition", label: "Contre-proposition" },
+  { key: "accepte_attente_paiement", label: "Attente paiement" },
+  { key: "confirme", label: "Confirmées" },
+];
+const VIP_STATUT_COLORS = {
+  en_attente: "#E3C38D", contre_proposition: "#C9A26B", accepte_attente_paiement: "#C9A26B",
+  confirme: "#9DB38A", refuse: "#E0877B", annule: "#B5A998", expire: "#B5A998",
+};
+
+function AdminVip({ adminToken }) {
+  const [filter, setFilter] = useState("en_attente");
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [msg, setMsg] = useState("");
+  const [busyId, setBusyId] = useState("");
+  const [drafts, setDrafts] = useState({}); // id -> { reponse, date, heure, supplement, note, open }
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      setData(await callAdminMyu("vipList", filter ? { statut: filter } : {}, adminToken));
+      setMsg("");
+    } catch (e) { setMsg(e.message); }
+    setLoading(false);
+  }, [adminToken, filter]);
+  useEffect(() => { load(); }, [load]);
+
+  const setDraft = (id, patch) => setDrafts((d) => ({ ...d, [id]: { ...(d[id] || {}), ...patch } }));
+  const run = async (id, action, payload, okMsg) => {
+    setBusyId(id); setMsg("");
+    try {
+      await callAdminMyu(action, { id, ...payload }, adminToken);
+      setMsg(okMsg);
+      await load();
+    } catch (e) { setMsg(e.message); }
+    setBusyId("");
+  };
+
+  const fieldStyle = { width: "100%", boxSizing: "border-box", padding: "9px 10px", borderRadius: 10, border: `1px solid ${C.blushDeep}`, background: C.white, color: C.espresso, fontFamily: FONT_BODY, fontSize: 13 };
+  const smallLabel = { fontFamily: FONT_BODY, fontSize: 11, color: C.espressoSoft, margin: "8px 0 3px", display: "block" };
+  const supplementOn = (data?.reglages?.supplement || 0) > 0;
+
+  return (
+    <div className="missu-step">
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 12 }}>
+        <div>
+          <h2 style={{ fontFamily: FONT_DISPLAY, color: C.espresso, margin: 0, fontSize: 24 }}>Demandes VIP</h2>
+          <div style={{ fontFamily: FONT_BODY, color: C.espressoSoft, fontSize: 11.5 }}>Votre heure est la mienne · maintien {data?.reglages?.maintienHeures || 48} h après acceptation</div>
+        </div>
+        <GhostButton onClick={load}>Actualiser</GhostButton>
+      </div>
+
+      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 12 }}>
+        {VIP_FILTERS.map((f) => (
+          <button key={f.key} type="button" onClick={() => setFilter(f.key)} className="missu-focusable" style={{
+            padding: "6px 11px", borderRadius: 99, cursor: "pointer", fontFamily: FONT_BODY, fontSize: 11.5,
+            border: filter === f.key ? `1.5px solid ${C.roseGoldDeep}` : `1.3px solid ${C.blushDeep}`,
+            background: filter === f.key ? C.blush : C.white, color: C.espresso,
+          }}>{f.label}</button>
+        ))}
+      </div>
+
+      {msg && <div role="alert" style={{ fontFamily: FONT_BODY, fontSize: 12.5, padding: "10px 12px", borderRadius: 12, background: C.blush, color: C.espresso, border: `1px solid ${C.blushDeep}`, marginBottom: 12 }}>{msg}</div>}
+      {loading && !data && <div style={{ fontFamily: FONT_BODY, color: C.espressoSoft, fontSize: 13 }}>Chargement…</div>}
+      {data && data.demandes.length === 0 && (
+        <div style={{ fontFamily: FONT_BODY, color: C.espressoSoft, fontSize: 13, padding: 14, textAlign: "center" }}>Aucune demande dans cette catégorie.</div>
+      )}
+
+      {(data?.demandes || []).map((d) => {
+        const dr = drafts[d.id] || {};
+        const busy = busyId === d.id;
+        const open = d.statut === "en_attente" || d.statut === "contre_proposition";
+        return (
+          <div key={d.id} style={{ padding: 14, borderRadius: 16, background: C.cream, border: `1.3px solid ${C.blushDeep}`, borderLeft: `4px solid ${VIP_STATUT_COLORS[d.statut] || C.roseGold}`, marginBottom: 12 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", gap: 8, alignItems: "baseline" }}>
+              <strong style={{ fontFamily: FONT_BODY, color: C.espresso, fontSize: 15 }}>{d.prenom} {d.nom}</strong>
+              <span style={{ fontFamily: FONT_BODY, fontSize: 10.5, color: C.espressoSoft }}>{new Date(d.creeLe).toLocaleString("fr-FR", { timeZone: "America/Martinique", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</span>
+            </div>
+            <div style={{ fontFamily: FONT_BODY, fontSize: 11, fontWeight: 600, letterSpacing: 0.4, color: VIP_STATUT_COLORS[d.statut] || C.roseGold, margin: "3px 0 8px" }}>{d.statutLibelle.toUpperCase()}</div>
+            <div style={{ fontFamily: FONT_BODY, fontSize: 13, color: C.espresso, lineHeight: 1.6 }}>
+              <div><strong>{d.prestation}</strong> · {d.lieu}</div>
+              <div>Demandé : {d.souhaitLibelle}</div>
+              {d.souhaitAltLibelle && <div>Ou bien : {d.souhaitAltLibelle}</div>}
+              {d.dateRetenue && d.statut !== "en_attente" && <div>{d.statut === "contre_proposition" ? "Proposé" : "Retenu"} : {d.dateRetenue} à {d.heureRetenue}</div>}
+              {d.statut === "accepte_attente_paiement" && d.expireLibelle && <div style={{ color: C.roseGoldDeep }}>⏳ Créneau maintenu jusqu'au {d.expireLibelle}, sans paiement il est libéré</div>}
+              {d.supplement > 0 && <div>Supplément VIP : {d.supplement} €</div>}
+              <div style={{ color: C.espressoSoft }}>📞 {d.telephone}{d.email ? ` · ${d.email}` : ""}</div>
+              {d.message && <div style={{ marginTop: 4, fontStyle: "italic", color: C.espressoSoft }}>« {d.message} »</div>}
+              {d.reponse && <div style={{ marginTop: 4, color: C.espressoSoft }}>Ta réponse : {d.reponse}</div>}
+            </div>
+
+            {open && (
+              <div style={{ marginTop: 10 }}>
+                <label style={smallLabel}>Message pour la cliente (affiché sur son lien de suivi)</label>
+                <textarea rows={2} value={dr.reponse || ""} onChange={(e) => setDraft(d.id, { reponse: e.target.value })} style={{ ...fieldStyle, resize: "vertical" }} placeholder="Facultatif" />
+                {supplementOn && d.statut === "en_attente" && (<>
+                  <label style={smallLabel}>Supplément VIP (€) — laissé vide = {data.reglages.supplement} €</label>
+                  <input type="number" min="0" max="200" step="1" value={dr.supplement ?? ""} onChange={(e) => setDraft(d.id, { supplement: e.target.value })} style={fieldStyle} />
+                </>)}
+                <div style={{ display: "grid", gap: 8, marginTop: 10 }}>
+                  {d.statut === "en_attente" && (
+                    <PrimaryButton disabled={busy} onClick={() => run(d.id, "vipAccept", { reponse: dr.reponse, supplementEur: dr.supplement === "" ? undefined : dr.supplement }, `Créneau accepté et maintenu ${data.reglages.maintienHeures} h. Envoie-lui le lien (bouton WhatsApp) pour qu'elle confirme et paie l'acompte.`)}>
+                      {busy ? "Vérification de l'agenda…" : `Accepter · maintenir ${data.reglages.maintienHeures} h`}
+                    </PrimaryButton>
+                  )}
+                  <GhostButton onClick={() => setDraft(d.id, { open: !dr.open })}>Proposer un autre créneau</GhostButton>
+                  {dr.open && (
+                    <div style={{ padding: 10, borderRadius: 12, border: `1px dashed ${C.goldLine}` }}>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                        <div><label style={smallLabel}>Jour</label><input type="date" value={dr.date || ""} onChange={(e) => setDraft(d.id, { date: e.target.value })} style={fieldStyle} /></div>
+                        <div><label style={smallLabel}>Heure</label><input type="time" step="1800" value={dr.heure || ""} onChange={(e) => setDraft(d.id, { heure: e.target.value })} style={fieldStyle} /></div>
+                      </div>
+                      <div style={{ marginTop: 8 }}>
+                        <PrimaryButton disabled={busy || !dr.date || !dr.heure} onClick={() => run(d.id, "vipCounter", { dateRdv: dr.date, heureRdv: dr.heure, reponse: dr.reponse, supplementEur: dr.supplement === "" ? undefined : dr.supplement }, "Contre-proposition enregistrée (le créneau n'est PAS maintenu tant qu'elle n'a pas accepté). Envoie-lui le lien par WhatsApp.")}>Envoyer la contre-proposition</PrimaryButton>
+                      </div>
+                    </div>
+                  )}
+                  <GhostButton onClick={() => { if (window.confirm("Refuser cette demande ?")) run(d.id, "vipRefuse", { reponse: dr.reponse }, "Demande refusée."); }}>Refuser</GhostButton>
+                </div>
+              </div>
+            )}
+
+            {d.statut === "accepte_attente_paiement" && (
+              <div style={{ marginTop: 10 }}>
+                <GhostButton onClick={() => { if (window.confirm("Annuler et libérer le créneau ? (vérifié chez SumUp : impossible si un paiement a abouti)")) run(d.id, "vipCancel", {}, "Demande annulée, créneau libéré."); }}>Annuler et libérer le créneau</GhostButton>
+              </div>
+            )}
+
+            <div style={{ display: "grid", gap: 8, marginTop: 10 }}>
+              {d.whatsapp && (
+                <a href={d.whatsapp} target="_blank" rel="noopener noreferrer" className="missu-focusable" style={{ display: "block", textAlign: "center", padding: "11px 12px", borderRadius: 14, background: `linear-gradient(135deg, ${C.roseGold}, ${C.roseGoldDeep})`, color: "#14110D", fontFamily: FONT_BODY, fontWeight: 600, fontSize: 13, textDecoration: "none" }}>
+                  Écrire à la cliente sur WhatsApp (message pré-rempli)
+                </a>
+              )}
+              <div style={{ fontFamily: FONT_BODY, fontSize: 10.5, color: C.espressoSoft }}>Aucun message n'est envoyé automatiquement : c'est toi qui envoies depuis WhatsApp.</div>
+            </div>
+
+            <details style={{ marginTop: 8 }}>
+              <summary style={{ fontFamily: FONT_BODY, fontSize: 11.5, color: C.espressoSoft, cursor: "pointer" }}>Historique et note interne</summary>
+              <div style={{ fontFamily: FONT_BODY, fontSize: 12, color: C.espresso, marginTop: 6, lineHeight: 1.6 }}>
+                {(d.historique || []).map((h, i) => (
+                  <div key={i}>• {new Date(h.quand).toLocaleString("fr-FR", { timeZone: "America/Martinique", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })} — {h.texte}</div>
+                ))}
+              </div>
+              <label style={smallLabel}>Note interne (jamais visible par la cliente)</label>
+              <textarea rows={2} defaultValue={d.noteInterne} onChange={(e) => setDraft(d.id, { note: e.target.value })} style={{ ...fieldStyle, resize: "vertical" }} />
+              <div style={{ marginTop: 6 }}><GhostButton onClick={() => run(d.id, "vipSaveNote", { note: dr.note ?? d.noteInterne }, "Note enregistrée.")}>Enregistrer la note</GhostButton></div>
+            </details>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 function AdminMyuPanel({ adminToken }) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
@@ -4926,7 +5090,7 @@ export default function App() {
 
   const [space, setSpace] = useState("client"); // 'client' | 'admin-login' | 'admin' | 'account'
   const [adminToken, setAdminToken] = useState("");
-  const [adminTab, setAdminTab] = useState("demandes"); // 'demandes' | 'myu'
+  const [adminTab, setAdminTab] = useState("demandes"); // 'demandes' | 'agenda' | 'vip' | 'myu'
   const [submissions, setSubmissions] = useState([]);
   const [loadingSubs, setLoadingSubs] = useState(false);
   const [selectedSubId, setSelectedSubId] = useState(null);
@@ -5185,6 +5349,9 @@ export default function App() {
             <button onClick={() => setAdminTab("agenda")} className="missu-focusable" style={tabButtonStyle("agenda")}>
               Agenda
             </button>
+            <button onClick={() => setAdminTab("vip")} className="missu-focusable" style={tabButtonStyle("vip")}>
+              VIP
+            </button>
             <button onClick={() => setAdminTab("myu")} className="missu-focusable" style={tabButtonStyle("myu")}>
               Clientes
             </button>
@@ -5205,6 +5372,8 @@ export default function App() {
             />
           ) : adminTab === "agenda" ? (
             <AdminAgenda adminToken={adminToken} />
+          ) : adminTab === "vip" ? (
+            <AdminVip adminToken={adminToken} />
           ) : (
             <AdminMyuPanel adminToken={adminToken} />
           )}

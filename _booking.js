@@ -47,7 +47,8 @@ const SERVICE_LABELS = {
   taches_brunes_corps: "Correction taches brunes · corps", vergetures: "Correction vergetures",
   conseil: "Conseil personnalisé", microneedling: "Microneedling", bb_glow: "BB Glow",
   soins_corps_infrarouge: "Soins corps infrarouge",
-  freckles: "Taches de rousseur — Freckles",
+  freckles: "Freckles", soins_led: "Lumière rouge LED (30 min)",
+  consultation_camouflage: "Consultation camouflage (30 min)",
 };
 
 const STATUT_LABELS = {
@@ -388,6 +389,25 @@ async function remainingLimitedPlaces(admin, prestation) {
 }
 
 // ------------------------------------------------------------------
+// Plage libre ? (MYU VIP : l'heure demandée peut sortir des horaires habituels,
+// Astrid décide ; on vérifie seulement qu'aucun autre rendez-vous bloqué ni
+// événement de son agenda Google ne chevauche la plage.)
+// ------------------------------------------------------------------
+async function assertRangeFree(admin, { debut, fin, settings, excludeRdvId }) {
+  settings = settings || (await loadSettings(admin));
+  await releaseExpiredHolds(admin, { limit: 5 }).catch((e) => console.error("[booking] maintiens expirés :", e.message));
+  const [blocked, busy] = await Promise.all([
+    loadBlocked(admin, debut, fin, excludeRdvId),
+    fetchCalendarBusy(debut, fin, settings.agenda_mots_ignores), // lève 503 si l'agenda est injoignable
+  ]);
+  const all = [...blocked, ...busy.filter((b) => !excludeRdvId || b.myuRdv !== excludeRdvId)];
+  if (all.some((x) => overlaps(debut, fin, x.start, x.end))) {
+    throw httpError(409, "Ce créneau n'est plus libre (autre rendez-vous ou événement dans l'agenda).");
+  }
+  return true;
+}
+
+// ------------------------------------------------------------------
 // Création d'un créneau maintenu (avant paiement) ou confirmé (sans acompte)
 // ------------------------------------------------------------------
 function validateBookingInput({ typePrestation, lieu, dateRdv, heureRdv }) {
@@ -415,10 +435,16 @@ async function assertSlotBookable(admin, input, opts = {}) {
   return { settings, prestation };
 }
 
-async function createHold(admin, { clientId, input, contactEmail, settings, prestation }) {
+// Options (utilisées par MYU VIP, sans effet sur la réservation classique) :
+//   maintienMinutes : durée du maintien (20 min par défaut, 48 h pour un créneau VIP accepté)
+//   depositAmount   : acompte total à la place de celui de la prestation (acompte + supplément VIP)
+//   extra           : colonnes supplémentaires du rendez-vous (ex. vip_demande_id)
+async function createHold(admin, { clientId, input, contactEmail, settings, prestation, maintienMinutes, depositAmount, extra }) {
   const debut = localToDate(input.dateRdv, input.heureRdv);
   const fin = new Date(debut.getTime() + prestation.duree_minutes * 60000);
-  const needsPayment = prestation.deposit_amount > 0;
+  const deposit = depositAmount != null ? Number(depositAmount) : prestation.deposit_amount;
+  const needsPayment = deposit > 0;
+  const holdMinutes = Number(maintienMinutes) > 0 ? Number(maintienMinutes) : settings.maintien_minutes;
   const row = {
     client_id: clientId,
     type_prestation: input.typePrestation,
@@ -429,14 +455,15 @@ async function createHold(admin, { clientId, input, contactEmail, settings, pres
     fin: fin.toISOString(),
     duree_minutes: prestation.duree_minutes,
     bloque: true,
-    deposit_amount: prestation.deposit_amount,
+    deposit_amount: deposit,
     contact_email: contactEmail || null,
     statut: needsPayment ? "en_attente_paiement" : "confirme",
     payment_status: needsPayment ? "en_attente" : "non_requis",
-    maintien_expire_le: needsPayment ? new Date(Date.now() + settings.maintien_minutes * 60000).toISOString() : null,
+    maintien_expire_le: needsPayment ? new Date(Date.now() + holdMinutes * 60000).toISOString() : null,
     confirme_le: needsPayment ? null : new Date().toISOString(),
     agenda_statut: needsPayment ? "non_requis" : "a_synchroniser",
     feuille_statut: needsPayment ? "non_requis" : "a_synchroniser",
+    ...(extra || {}),
   };
   const { data, error } = await admin.from("rendez_vous").insert(row).select().single();
   if (error) {
@@ -448,7 +475,9 @@ async function createHold(admin, { clientId, input, contactEmail, settings, pres
   return data;
 }
 
-async function startPayment(admin, rdv, { redirectUrl }) {
+// keepHoldOnFailure : pour un créneau VIP déjà accepté, une panne passagère de SumUp
+// ne doit pas faire perdre le créneau à la cliente (elle pourra réessayer pendant les 48 h).
+async function startPayment(admin, rdv, { redirectUrl, keepHoldOnFailure = false }) {
   const merchant = process.env.SUMUP_MERCHANT_CODE;
   if (!merchant) throw httpError(500, "Paiement en ligne non configuré.");
   let checkout;
@@ -472,13 +501,14 @@ async function startPayment(admin, rdv, { redirectUrl }) {
     if (!res.ok || !checkout?.id) throw new Error(checkout?.message || `SumUp a répondu ${res.status}`);
   } catch (e) {
     console.error("[booking] création checkout SumUp :", e.message);
+    if (keepHoldOnFailure) throw httpError(502, "Le paiement n'a pas pu être initié. Votre créneau reste réservé, merci de réessayer dans quelques minutes.");
     await rpc(admin, "myu_liberer_maintien", { p_rdv: rdv.id, p_motif: "Paiement non initié (SumUp indisponible)" }).catch(() => {});
     throw httpError(502, "Le paiement n'a pas pu être initié. Le créneau a été libéré, merci de réessayer.");
   }
   const { error } = await admin.from("rendez_vous").update({ payment_reference: checkout.id }).eq("id", rdv.id);
   if (error) {
     await sumupDeactivate(checkout.id);
-    await rpc(admin, "myu_liberer_maintien", { p_rdv: rdv.id, p_motif: "Paiement non initié (enregistrement impossible)" }).catch(() => {});
+    if (!keepHoldOnFailure) await rpc(admin, "myu_liberer_maintien", { p_rdv: rdv.id, p_motif: "Paiement non initié (enregistrement impossible)" }).catch(() => {});
     throw httpError(500, "Le paiement n'a pas pu être initié. Merci de réessayer.");
   }
   return checkout.hosted_checkout_url || null;
@@ -629,6 +659,6 @@ module.exports = {
   httpError, serviceLabel, zoned, localToDate, addDaysStr, todayLocal, longDateFmt, DATE_RE, TIME_RE,
   loadSettings, loadPrestation, fetchCalendarBusy, sumupGetCheckout, sumupDeactivate, checkoutIsPaid, checkoutMatches,
   loadBlocked, getRdv, rpc, reconcilePayment, releaseHoldSafely, releaseExpiredHolds,
-  computeSlots, remainingLimitedPlaces, validateBookingInput, assertSlotBookable, createHold, startPayment,
+  computeSlots, remainingLimitedPlaces, validateBookingInput, assertSlotBookable, assertRangeFree, createHold, startPayment,
   bookingView, loadProfile, syncBookingExternal, retryPendingSyncs, requestBody, clean, overlaps,
 };

@@ -16,6 +16,7 @@
 const crypto = require("crypto");
 const { getAdminClient } = require("./_supabaseAdmin");
 const B = require("./_booking");
+const V = require("./_vip");
 
 const PRESTATION_STATUTS = ["a_venir", "realisee", "en_cicatrisation", "suivi_necessaire", "retouche_a_prevoir", "terminee"];
 const RDV_STATUTS = ["demande", "en_attente_paiement", "confirme", "modifie", "annule", "terminee"];
@@ -545,11 +546,96 @@ async function updateBookingSettings(admin, { lieux, horaires, pasMinutes, delai
   return getBookingSettings(admin);
 }
 
+// ------------------------------------------------------------------
+// MYU VIP — demandes de créneau prioritaire
+// ------------------------------------------------------------------
+async function vipList(admin, { statut } = {}) {
+  let q = admin.from("myu_demandes_vip").select("*").order("created_at", { ascending: false }).limit(100);
+  if (statut) q = q.eq("statut", statut);
+  const { data, error } = await q;
+  if (error) throw error;
+  const out = [];
+  for (const d of data || []) {
+    // Rapproche les créneaux en attente de paiement avec SumUp (confirmé / expiré).
+    const fresh = d.statut === "accepte_attente_paiement" ? await V.syncDemande(admin, d).catch(() => d) : d;
+    out.push(V.adminView(fresh));
+  }
+  const { settings, supplement, maintienHeures } = await V.loadVipSettings(admin);
+  return { demandes: out, reglages: { supplement, maintienHeures, lieux: settings.lieux } };
+}
+
+function vipSupplement(v, fallback) {
+  const n = v === undefined || v === null || v === "" ? fallback : Number(v);
+  if (!Number.isFinite(n) || n < 0 || n > 200) throw Object.assign(new Error("Supplément invalide (0 à 200 €)."), { status: 400 });
+  return Math.round(n * 100) / 100;
+}
+
+async function vipAccept(admin, { id, supplementEur, reponse }) {
+  const d = await V.getDemandeById(admin, id);
+  if (d.statut !== "en_attente") throw Object.assign(new Error("Cette demande n'est plus en attente."), { status: 409 });
+  const { supplement } = await V.loadVipSettings(admin);
+  const updated = await V.acceptDemande(admin, d, { supplement: vipSupplement(supplementEur, supplement), reponse: B.clean(reponse, 500) });
+  return V.adminView(updated);
+}
+
+async function vipCounter(admin, { id, dateRdv, heureRdv, supplementEur, reponse }) {
+  const d = await V.getDemandeById(admin, id);
+  if (!["en_attente", "contre_proposition"].includes(d.statut)) throw Object.assign(new Error("Cette demande n'est plus modifiable."), { status: 409 });
+  const date = B.clean(dateRdv, 10), heure = B.clean(heureRdv, 5);
+  B.validateBookingInput({ typePrestation: d.type_prestation, lieu: d.lieu, dateRdv: date, heureRdv: heure });
+  const prestation = await B.loadPrestation(admin, d.type_prestation);
+  const debut = B.localToDate(date, heure);
+  if (debut.getTime() < Date.now()) throw Object.assign(new Error("Ce créneau est déjà passé."), { status: 400 });
+  // Vérifie que la proposition est libre maintenant (elle n'est PAS maintenue avant l'accord de la cliente).
+  await B.assertRangeFree(admin, { debut, fin: new Date(debut.getTime() + prestation.duree_minutes * 60000) });
+  const { supplement } = await V.loadVipSettings(admin);
+  const updated = await V.updateDemande(admin, d.id, {
+    statut: "contre_proposition", date_retenue: date, heure_retenue: heure,
+    supplement_eur: vipSupplement(supplementEur, supplement), reponse_admin: B.clean(reponse, 500) || null,
+    traite_le: new Date().toISOString(),
+  });
+  return V.adminView(updated);
+}
+
+async function vipRefuse(admin, { id, reponse }) {
+  const d = await V.getDemandeById(admin, id);
+  if (!["en_attente", "contre_proposition"].includes(d.statut)) throw Object.assign(new Error("Cette demande n'est plus modifiable."), { status: 409 });
+  const updated = await V.updateDemande(admin, d.id, { statut: "refuse", reponse_admin: B.clean(reponse, 500) || null, traite_le: new Date().toISOString() });
+  return V.adminView(updated);
+}
+
+async function vipCancel(admin, { id, reponse }) {
+  const d = await V.getDemandeById(admin, id);
+  const updated = await V.cancelDemande(admin, d, { statut: "annule", reponse: B.clean(reponse, 500) || undefined });
+  return V.adminView(updated);
+}
+
+async function vipSaveNote(admin, { id, note }) {
+  const d = await V.getDemandeById(admin, id);
+  const updated = await V.updateDemande(admin, d.id, { note_interne: B.clean(note, 1000) || null });
+  return V.adminView(updated);
+}
+
+async function vipUpdateSettings(admin, { supplementEur, maintienHeures }) {
+  const patch = { updated_at: new Date().toISOString() };
+  if (supplementEur !== undefined) patch.vip_supplement_eur = vipSupplement(supplementEur, 0);
+  if (maintienHeures !== undefined) {
+    const h = Number(maintienHeures);
+    if (!Number.isInteger(h) || h < 1 || h > 168) throw Object.assign(new Error("Durée de maintien invalide (1 à 168 h)."), { status: 400 });
+    patch.vip_maintien_heures = h;
+  }
+  const { error } = await admin.from("myu_reglages_reservation").update(patch).eq("id", 1);
+  if (error) throw error;
+  const { supplement, maintienHeures: mh } = await V.loadVipSettings(admin);
+  return { supplement, maintienHeures: mh };
+}
+
 const ACTIONS = {
   searchClients, getClient, addTampon, resetTampons, validateParrainage, markAvantageUsed,
   listConsignes, upsertConsigne, addNoteInterne, createPrestation, updatePrestationStatus, upsertEtapeParcours, updateRendezVous,
   listPrestationsReservation, upsertPrestationReservation, releaseModeleSlot, listModeleBookings,
   listAgenda, createManualRendezVous, retryBookingSync, getBookingSettings, updateBookingSettings,
+  vipList, vipAccept, vipCounter, vipRefuse, vipCancel, vipSaveNote, vipUpdateSettings,
 };
 
 module.exports = async function handler(req, res) {
