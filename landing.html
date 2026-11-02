@@ -116,38 +116,57 @@ h1,h2,.serif{font-family:'Cormorant Garamond',Georgia,serif}
 .rose .note{color:#cdbfa8;opacity:1}
 .rose .note a{color:#e8a9bd}
 .rose-slide.jeu[hidden]{display:none}
+
+/* --- MYU VIP offre phare --- */
+.cta-gold{background:linear-gradient(135deg,#ecd5ab,#c9a26b 55%,#b98f57);color:#14110d;box-shadow:0 14px 28px -8px rgba(201,162,107,.55)}
+.cta-ghost{display:block;text-align:center;margin:12px 0 0;padding:12px 16px;color:#f3e3da;font-size:12.5px;text-decoration:none;border:1px solid rgba(246,229,223,.3);border-radius:999px;opacity:.92}
+.cta-ghost:focus-visible,.cta-gold:focus-visible{outline:3px solid #fff;outline-offset:3px}
+.vip{background:linear-gradient(160deg,#0d0b09,#1d160f);border:1px solid #c9a26b;color:#f6efe4}
+.vip .eyebrow-sm{color:#c9a26b}
+.vip h2{color:#f6efe4;font-size:27px;letter-spacing:.5px}
+.vip-quote{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:21px;line-height:1.3;color:#e8cfa4;margin:2px 0 14px}
+.vip .lead{color:#e2d8c8}
+.vip-formules{display:grid;gap:8px;margin:0 0 14px}
+.vf{padding:12px 14px;border:1px solid rgba(201,162,107,.55);border-radius:14px;background:rgba(255,255,255,.03)}
+.vf-top{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.vf-top b{font-family:'Cormorant Garamond',serif;font-size:19px;font-weight:600;color:#f6efe4}
+.vf-top span{font-size:14px;font-weight:700;color:#e8cfa4;white-space:nowrap}
+.vf small{display:block;margin-top:2px;font-size:11.5px;color:#cdbfa8;line-height:1.4}
+.vip-note{font-size:11.5px;line-height:1.55;color:#cdbfa8;margin:0 0 16px}
+.sticky{display:flex;gap:8px}
+.sticky .cta{flex:1.6;padding:14px 10px;font-size:12.5px}
+.sticky .cta-out{flex:1;display:flex;align-items:center;justify-content:center;text-align:center;text-decoration:none;border:1px solid var(--rose-gold);border-radius:999px;color:var(--rose-gold-deep);font-weight:600;font-size:12px;padding:0 8px}
 </style><script defer src="/myu-tracking.js"></script><script defer src="/myu-catalog.js"></script></head>
 <body><main class="wrap">
-
 <section class="hero">
 <canvas id="glowCanvas" aria-hidden="true"></canvas>
 <div class="hero-content">
 <div class="crown">♕</div>
 <div class="eyebrow">MYU BY MISS'U · DUCOS &amp; LAMENTIN</div>
 <div class="logo">MYU</div>
-<div class="tag">THE ART OF GLOW</div>
+<div class="tag">THE ART OF GLOW · YOU ARE UNIC</div>
 <h1>Votre beauté naturelle, sublimée en permanence.</h1>
 <p>Venez vivre l'expérience MYU : maquillage permanent et dermopigmentation pensés pour votre visage, votre carnation et le résultat que vous recherchez — à Ducos et au Lamentin, en Martinique.</p>
-<a class="cta" href="/book.html">RÉSERVER MON RENDEZ-VOUS →</a>
-<p class="micro">Choix de la prestation · Acompte sécurisé via SumUp · Pré-diagnostic après réservation</p>
-<a class="men-pill" href="#hommes"><span><small>Pour les hommes · ouvert</small>Tricopigmentation (SMP) · dès 150 €</span><span aria-hidden="true">→</span></a>
+<a class="cta cta-gold" href="/vip.html">DÉCOUVRIR MYU VIP</a>
+<a class="cta-ghost" href="#expertises">Explorer les prestations</a>
+<p class="micro">Ducos &amp; Lamentin · Martinique · Acompte sécurisé via SumUp</p>
 <a class="jump" href="#contact">Une question ? Contactez MYU</a>
 </div>
 </section>
 
-<section class="section men" id="hommes" aria-labelledby="men-title">
-<p class="eyebrow-sm">Pour les hommes · Disponible chez MYU</p>
-<h2 id="men-title">Tricopigmentation (SMP)</h2>
-<p class="lead">Effet rasé net ou illusion de densité : de fins points de pigment déposés sur le cuir chevelu. Pour les hommes comme pour les femmes. La SMP ne fait pas repousser les cheveux : elle redessine visuellement la densité. Première étape : un diagnostic personnalisé, sans paiement ni engagement.</p>
-<ol class="men-steps">
-<li><b>1</b><span>Vous écrivez « SMP » sur WhatsApp, ou vous remplissez la demande (30 secondes).</span></li>
-<li><b>2</b><span>MYU vous recontacte pour un diagnostic personnalisé.</span></li>
-<li><b>3</b><span>On fixe votre rendez-vous ensemble. Le tarif exact vous est confirmé lors de l'échange.</span></li>
-</ol>
-<p class="price"><b>À partir de 150 €</b> — le tarif dépend de l'étendue de la zone. Un acompte sécurisé via SumUp confirme votre rendez-vous, le solde se règle lors de la séance.</p>
-<a class="cta" href="https://wa.me/596696178587?text=SMP" target="_blank" rel="noopener noreferrer">ÉCRIRE « SMP » SUR WHATSAPP →</a>
-<a class="cta2" href="/smp.html">Ou remplir ma demande de diagnostic</a>
-<p class="note">Besoin d'un accompagnement du cuir chevelu, des sourcils ou de la barbe ? Pas de miracle, un processus : un bilan d'abord, puis une approche progressive, sans promesse de repousse. <a href="https://wa.me/596696178587?text=BILAN" target="_blank" rel="noopener noreferrer">Écrivez « BILAN »</a>.</p>
+<section class="section vip" id="vip" aria-labelledby="vip-title">
+<p class="eyebrow-sm">L'offre phare</p>
+<h2 id="vip-title">MYU VIP — PRIVATE EXPERIENCE</h2>
+<p class="vip-quote">« Votre temps est précieux. Le nôtre vous est consacré. »</p>
+<p class="lead">Découvrez une expérience beauté privée, imaginée pour celles et ceux qui souhaitent s'affranchir des horaires traditionnels. En soirée, le dimanche ou les jours fériés, MYU s'adapte à votre rythme, sous réserve de disponibilité.</p>
+<div class="vip-formules" id="vipFormules">
+<div class="vf"><div class="vf-top"><b>Signature</b><span>+ 60 €</span></div><small>Début de prestation entre 18 h et 19 h 59</small></div>
+<div class="vf"><div class="vf-top"><b>Prestige</b><span>+ 100 €</span></div><small>Début de prestation entre 20 h et 21 h 59</small></div>
+<div class="vf"><div class="vf-top"><b>Exclusive</b><span>+ 150 €</span></div><small>Début de prestation à partir de 22 h</small></div>
+<div class="vf"><div class="vf-top"><b>Sur mesure</b><span>Sur devis</span></div><small>Horaires très matinaux ou demandes particulières</small></div>
+</div>
+<p class="vip-note">Le supplément s'ajoute au prix de la prestation ; le total est affiché avant l'envoi de votre demande. Chaque demande est étudiée personnellement par Miss'U, au Lamentin. Aucun paiement avant son accord. Demandes ouvertes à partir du 7 novembre.</p>
+<a class="cta cta-gold" href="/vip.html">DEMANDER MON RENDEZ-VOUS PRIVÉ</a>
 </section>
 
 <section class="section rose" id="octobre-rose" aria-labelledby="rose-title" hidden>
@@ -170,20 +189,59 @@ h1,h2,.serif{font-family:'Cormorant Garamond',Georgia,serif}
 <p class="note">L'offre Candy Lips à -50 % se demande par message (« ROSE ») : la réservation en ligne affiche le tarif habituel. Jeu gratuit, sans obligation d'achat. Ce jeu n'est ni organisé ni parrainé par Instagram. <a href="/concours.html">Règlement</a>.</p>
 </section>
 
-<section class="section">
-<p class="eyebrow-sm">Votre univers</p>
+<section class="section" id="expertises">
+<p class="eyebrow-sm">Les expertises MYU</p>
 <h2>Révélez votre Glow</h2>
-<p class="lead">Lèvres, sourcils ou regard : entrez directement dans l'univers qui vous correspond.</p>
+<p class="lead">Lèvres, sourcils ou regard : entrez directement dans l'univers qui vous correspond. Retrouvez ci-dessous toutes les prestations MYU et leurs tarifs.</p>
 <div class="categories">
 <a class="cat" href="/book.html?service=candy_lips"><img class="cat-icon" src="/assets/myu/brand/myu_cover_levres.webp" alt="" loading="lazy"><b>Lèvres</b><span>Couleur · équilibre · éclat</span></a>
 <a class="cat" href="/book.html?service=powder_brows"><img class="cat-icon" src="/assets/myu/brand/myu_cover_sourcils.webp" alt="" loading="lazy"><b>Sourcils</b><span>Structure · douceur · naturel</span></a>
 <a class="cat" href="/book.html?service=eyeliner_poudre"><b>Regard</b><span>Intensité · élégance</span></a>
 </div>
-<a class="soon" href="/vip.html"><small>MYU VIP · Private Experience</small><b>Votre temps est précieux. Le nôtre vous est consacré.</b><span>Une expérience beauté privée au Lamentin, en soirée ou à un horaire exceptionnel, dès le 7 novembre. Chaque demande est étudiée personnellement par Miss'U ; aucun paiement avant son accord. Réserver mon expérience privée →</span></a>
 <a class="soon soin" href="/camouflage.html"><small>Camouflage pigmentaire</small><b>Cicatrices dès 150 € la zone · vergetures dès 100 €</b><span>Un camouflage pigmentaire étudié selon ta peau. Consultation en ligne pour les cicatrices, réservation directe pour les vergetures. Découvrir →</span></a>
 <a class="soon soin" href="/led.html"><small>Soins beauté · nouveau</small><b>Lumière rouge LED · 40 € par zone</b><span>30 minutes de lumière rouge par zone, accueil et installation compris. Acompte de 20 € sécurisé via SumUp, solde lors de la séance. Découvrir et réserver en ligne →</span></a>
 <a class="soon soin" href="/hydralips.html"><small>Soin des lèvres</small><b>Hydralips</b><span>Un soin des lèvres, pas du maquillage permanent. Demander mon diagnostic →</span></a>
 <a class="soon" href="/freckles.html"><small>Nouveau chez MYU</small><b>Taches de rousseur — Freckles · 160 €</b><span>Des taches de rousseur pigmentées, selon tes envies. Découvrir et réserver en ligne →</span></a>
+</section>
+
+<section class="section" id="services">
+<p class="eyebrow-sm">Les tarifs MYU</p>
+<h2>Choisissez votre prestation</h2>
+<p class="lead">Pas de compte à créer avant de réserver. Choisissez, renseignez votre créneau et accédez au paiement de l'acompte lorsqu'il est requis.</p>
+<div class="services" id="servicesList"></div>
+</section>
+
+<section class="section men" id="hommes" aria-labelledby="men-title">
+<p class="eyebrow-sm">Pour les hommes · Disponible chez MYU</p>
+<h2 id="men-title">Tricopigmentation (SMP)</h2>
+<p class="lead">Effet rasé net ou illusion de densité : de fins points de pigment déposés sur le cuir chevelu. Pour les hommes comme pour les femmes. La SMP ne fait pas repousser les cheveux : elle redessine visuellement la densité. Première étape : un diagnostic personnalisé, sans paiement ni engagement.</p>
+<ol class="men-steps">
+<li><b>1</b><span>Vous écrivez « SMP » sur WhatsApp, ou vous remplissez la demande (30 secondes).</span></li>
+<li><b>2</b><span>MYU vous recontacte pour un diagnostic personnalisé.</span></li>
+<li><b>3</b><span>On fixe votre rendez-vous ensemble. Le tarif exact vous est confirmé lors de l'échange.</span></li>
+</ol>
+<p class="price"><b>À partir de 150 €</b> — le tarif dépend de l'étendue de la zone. Un acompte sécurisé via SumUp confirme votre rendez-vous, le solde se règle lors de la séance.</p>
+<a class="cta" href="https://wa.me/596696178587?text=SMP" target="_blank" rel="noopener noreferrer">ÉCRIRE « SMP » SUR WHATSAPP →</a>
+<a class="cta2" href="/smp.html">Ou remplir ma demande de diagnostic</a>
+<p class="note">Besoin d'un accompagnement du cuir chevelu, des sourcils ou de la barbe ? Pas de miracle, un processus : un bilan d'abord, puis une approche progressive, sans promesse de repousse. <a href="https://wa.me/596696178587?text=BILAN" target="_blank" rel="noopener noreferrer">Écrivez « BILAN »</a>.</p>
+</section>
+
+<section class="section tech">
+<p class="eyebrow-sm">L'accompagnement MYU · Notre approche</p>
+<h2>Chaque peau est unique.</h2>
+<p class="lead">C'est pour cela que MYU ne propose pas un résultat standard.</p>
+<div class="techbox">Analyse du projet · choix de la technique et de la teinte · adaptation à la carnation · conseils de préparation et de cicatrisation. Pour les lèvres pigmentées ou les anciennes dermopigmentations, la stratégie est adaptée au cas présenté.</div>
+</section>
+
+<section class="section">
+<p class="eyebrow-sm">L'accompagnement MYU · Personnalisation et suivi</p>
+<h2>Votre expérience MYU</h2>
+<div class="trust">
+<div>✨ <b>Résultat personnalisé</b><br>Un projet adapté à vos traits et à vos attentes.</div>
+<div>🤎 <b>Accompagnement</b><br>Préparation et suivi expliqués clairement.</div>
+<div>🔒 <b>Acompte sécurisé</b><br>Paiement en ligne via SumUp lorsqu'il est requis.</div>
+<div>📍 <b>Ducos &amp; Lamentin · Martinique</b><br>Venez vivre l'expérience MYU by Miss'U.</div>
+</div>
 </section>
 
 <section class="section">
@@ -207,35 +265,10 @@ h1,h2,.serif{font-family:'Cormorant Garamond',Georgia,serif}
 <p class="note">Les visuels ci-dessus illustrent le travail de précision MYU sur support d'entraînement synthétique — ce ne sont pas des résultats clients. Les réalisations réelles sont partagées sur Instagram. Les visuels immédiatement après prestation peuvent paraître plus intenses que le résultat cicatrisé : la couleur et le rendu évoluent pendant la cicatrisation.</p>
 </section>
 
-<section class="section" id="services">
-<p class="eyebrow-sm">Le menu MYU</p>
-<h2>Choisissez votre prestation</h2>
-<p class="lead">Pas de compte à créer avant de réserver. Choisissez, renseignez votre créneau et accédez au paiement de l'acompte lorsqu'il est requis.</p>
-<div class="services" id="servicesList"></div>
-</section>
-
-<section class="section tech">
-<p class="eyebrow-sm">Notre approche</p>
-<h2>Chaque peau est unique.</h2>
-<p class="lead">C'est pour cela que MYU ne propose pas un résultat standard.</p>
-<div class="techbox">Analyse du projet · choix de la technique et de la teinte · adaptation à la carnation · conseils de préparation et de cicatrisation. Pour les lèvres pigmentées ou les anciennes dermopigmentations, la stratégie est adaptée au cas présenté.</div>
-</section>
-
-<section class="section">
-<p class="eyebrow-sm">L'expérience</p>
-<h2>Votre expérience MYU</h2>
-<div class="trust">
-<div>✨ <b>Résultat personnalisé</b><br>Un projet adapté à vos traits et à vos attentes.</div>
-<div>🤎 <b>Accompagnement</b><br>Préparation et suivi expliqués clairement.</div>
-<div>🔒 <b>Acompte sécurisé</b><br>Paiement en ligne via SumUp lorsqu'il est requis.</div>
-<div>📍 <b>Ducos &amp; Lamentin · Martinique</b><br>Venez vivre l'expérience MYU by Miss'U.</div>
-</div>
-</section>
-
-<section class="section">
-<p class="eyebrow-sm">Prête ?</p>
+<section class="section" id="reservation">
+<p class="eyebrow-sm">Réservation classique</p>
 <h2>Réservez votre moment Glow</h2>
-<p class="lead">Votre pré-diagnostic personnalisé intervient après la réservation et le paiement de l'acompte. Les photos y sont facultatives.</p>
+<p class="lead">Accédez au catalogue et aux créneaux habituels. Votre pré-diagnostic personnalisé intervient après la réservation et le paiement de l'acompte. Les photos y sont facultatives.</p>
 <a class="cta" href="/book.html">CHOISIR MA PRESTATION ✨</a>
 <div class="after">Réservation → acompte → pré-diagnostic personnalisé → rendez-vous MYU</div>
 </section>
@@ -250,10 +283,11 @@ h1,h2,.serif{font-family:'Cormorant Garamond',Georgia,serif}
 </address>
 </section>
 
+
 <div class="account">Déjà cliente ? <a href="/index.html">Accéder à Mon Espace MYU</a></div>
 </main>
 
-<div class="sticky"><a class="cta" href="/book.html">RÉSERVER MAINTENANT ✨</a></div>
+<div class="sticky"><a class="cta cta-gold" href="/vip.html">MYU VIP</a><a class="cta-out" href="/book.html">Réserver</a></div>
 
 <script>
 (function(){
@@ -268,6 +302,23 @@ h1,h2,.serif{font-family:'Cormorant Garamond',Georgia,serif}
   if (now >= endGame) {
     Array.prototype.forEach.call(sec.querySelectorAll('.jeu, .jeu-link'), function(el){ el.hidden = true; el.style.display = 'none'; });
   }
+})();
+</script>
+
+<script>
+(function(){
+  // Formules VIP : lues depuis le catalogue (admin). En cas d'échec, les valeurs affichées ci-dessus restent.
+  function esc(t){return String(t==null?'':t).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+  function eur(n){var v=Math.round((Number(n)||0)*100)/100;return (Number.isInteger(v)?String(v):v.toFixed(2).replace('.',','))+' €'}
+  fetch('/api/vip?action=catalogue',{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
+    var f=j&&j.success&&j.data&&j.data.formules; if(!f||!f.length) return;
+    var box=document.getElementById('vipFormules'); if(!box) return;
+    box.innerHTML=f.map(function(x){
+      var px=x.surDevis?'Sur devis':'+ '+eur(x.supplement);
+      var sub=x.plagesLibelle?'Début de prestation : '+x.plagesLibelle.replace(/ · /g,' ou '):(x.description||'');
+      return '<div class="vf"><div class="vf-top"><b>'+esc(x.nom)+'</b><span>'+esc(px)+'</span></div><small>'+esc(sub)+'</small></div>';
+    }).join('');
+  }).catch(function(){});
 })();
 </script>
 
