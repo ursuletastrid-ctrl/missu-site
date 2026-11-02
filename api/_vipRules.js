@@ -9,11 +9,13 @@ const B = require("./_booking");
 const ACOMPTE_TAUX = 0.5; // acompte = 50 % du prix total accepté (système existant)
 const MIN_HEURE = "05:00";
 const MAX_HEURE = "23:30";
+// Lieu(x) des expériences privées (distinct de la réservation classique, qui reste inchangée).
+const VIP_LIEUX = ["Lamentin"];
 const DEFAULT_COMPLET = "Les expériences privées de cette période sont actuellement complètes.";
 const DATE_PREMIERE_DISPO = "2026-11-07"; // samedi 7 novembre 2026
 // Prestations affichées « à partir de » sur le site : le prix dépend des zones,
 // donc Miss'U confirme le montant exact (devis) avant tout paiement.
-const A_PARTIR_DE = new Set(["taches_brunes_corps", "vergetures", "soins_corps_infrarouge"]);
+const A_PARTIR_DE = new Set(["taches_brunes_corps", "vergetures", "soins_corps_infrarouge", "tricopigmentation"]);
 
 const FORMULES_PAR_DEFAUT = [
   { code: "signature", nom: "VIP SIGNATURE", description: "Rendez-vous privé en soirée, dès 18 h.", supplement_eur: 60, sur_devis: false, plages: [{ de: "18:00", a: "19:59" }], plages_validees: true, actif: true, ordre: 1 },
@@ -206,6 +208,7 @@ function assertSlotRules(params, dateStr, heure, dureeMin) {
 }
 
 module.exports = {
+  VIP_LIEUX,
   ACOMPTE_TAUX, MIN_HEURE, MAX_HEURE, DEFAULT_COMPLET, DATE_PREMIERE_DISPO, A_PARTIR_DE, FORMULES_PAR_DEFAUT,
   round2, toMin, dayLabel, normPlages, normFormule, loadFormules, loadFormule, normParams, loadParams,
   prixPrestation, quote, estimation, formuleForHeure, heureFin, weekday, dateProblem, heureProblem, plageLibelle, periodBounds, quotaState, assertQuotaOpen, assertSlotRules,

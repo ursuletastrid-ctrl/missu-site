@@ -32,7 +32,7 @@ const STATUT_VIP_LABELS = {
   annule: "Demande annulée",
   expire: "Délai dépassé — créneau libéré",
 };
-const CONSENTEMENT_TEXTE = "J'accepte d'être recontactée au sujet de cette demande d'expérience privée. Je comprends que ma demande est soumise à confirmation de disponibilité et qu'aucun paiement n'est demandé avant son acceptation par Miss'U.";
+const CONSENTEMENT_TEXTE = "J'accepte d'être recontacté(e) au sujet de cette demande d'expérience privée. Je comprends que ma demande est soumise à confirmation de disponibilité et qu'aucun paiement n'est demandé avant son acceptation par Miss'U.";
 
 const fullDateFmt = new Intl.DateTimeFormat("fr-FR", {
   timeZone: B.TZ, weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit",
@@ -325,7 +325,7 @@ async function catalogue(admin) {
       // Les plages ne sont montrées (et appliquées) qu'une fois validées par Astrid.
       plages: f.plages_validees ? f.plages : [], plagesLibelle: f.plages_validees ? R.plageLibelle(f.plages) : "",
     })),
-    prestations, lieux: settings.lieux, horizonJours: settings.horizon_jours, fuseau: B.TZ,
+    prestations, lieux: R.VIP_LIEUX, horizonJours: settings.horizon_jours, fuseau: B.TZ,
   };
 }
 
@@ -381,7 +381,7 @@ async function createDemande(admin, req, body) {
   if (!prenom || !telephone) throw B.httpError(400, "Prénom et téléphone sont requis.");
   if (!/^[+\d][\d\s.-]{5,}$/.test(telephone) || phoneNorm(telephone).length < 8) throw B.httpError(400, "Numéro de téléphone invalide.");
   if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw B.httpError(400, "Email invalide.");
-  if (body.consent !== true) throw B.httpError(400, "Votre accord est requis pour envoyer la demande et être recontactée.");
+  if (body.consent !== true) throw B.httpError(400, "Votre accord est requis pour envoyer la demande et être recontacté(e).");
   if (!type) throw B.httpError(400, "Choisissez une prestation.");
   if (!B.DATE_RE.test(dateRdv)) throw B.httpError(400, "Choisissez un jour.");
   if (!B.TIME_RE.test(heureRdv)) throw B.httpError(400, "Choisissez une heure.");
@@ -396,8 +396,8 @@ async function createDemande(admin, req, body) {
   const prestation = await B.loadPrestation(admin, type); // lève 400 si inactive
   if (prestation.is_limited_offer) throw B.httpError(400, "Cette offre ne se réserve pas en expérience privée.");
   if (!(Number(prestation.deposit_amount) > 0)) throw B.httpError(400, "Cette prestation ne se réserve pas en expérience privée.");
-  const lieu = lieuBody || settings.lieux[0];
-  if (!settings.lieux.includes(lieu)) throw B.httpError(400, "Ce lieu n'est pas proposé.");
+  const lieu = lieuBody || R.VIP_LIEUX[0];
+  if (!R.VIP_LIEUX.includes(lieu)) throw B.httpError(400, "Ce lieu n'est pas proposé.");
 
   // Dates ouvertes (à partir du 7 novembre), jours ouverts, dates indisponibles, plages, créneaux bloqués.
   R.assertSlotRules(params, dateRdv, heureRdv, prestation.duree_minutes);
