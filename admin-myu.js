@@ -547,87 +547,205 @@ async function updateBookingSettings(admin, { lieux, horaires, pasMinutes, delai
 }
 
 // ------------------------------------------------------------------
-// MYU VIP — demandes de créneau prioritaire
+// MYU VIP — Private Experience : demandes, formules, quota, paramètres
 // ------------------------------------------------------------------
+const R = require("./_vipRules");
+const bad = (m) => Object.assign(new Error(m), { status: 400 });
+
 async function vipList(admin, { statut } = {}) {
   let q = admin.from("myu_demandes_vip").select("*").order("created_at", { ascending: false }).limit(100);
   if (statut) q = q.eq("statut", statut);
   const { data, error } = await q;
   if (error) throw error;
-  const out = [];
+  const rows = [];
   for (const d of data || []) {
     // Rapproche les créneaux en attente de paiement avec SumUp (confirmé / expiré).
-    const fresh = d.statut === "accepte_attente_paiement" ? await V.syncDemande(admin, d).catch(() => d) : d;
-    out.push(V.adminView(fresh));
+    rows.push(d.statut === "accepte_attente_paiement" ? await V.syncDemande(admin, d).catch(() => d) : d);
   }
-  const { settings, supplement, maintienHeures } = await V.loadVipSettings(admin);
-  return { demandes: out, reglages: { supplement, maintienHeures, lieux: settings.lieux } };
+  const ids = rows.map((d) => d.id);
+  let histo = [];
+  if (ids.length) {
+    const h = await admin.from("myu_vip_historique").select("*").in("demande_id", ids).order("created_at", { ascending: true });
+    if (!h.error) histo = h.data || [];
+  }
+  const demandes = [];
+  for (const d of rows) {
+    const rdv = d.rdv_id ? await B.getRdv(admin, d.rdv_id).catch(() => null) : null;
+    demandes.push(V.adminView(d, { rdv, histo: histo.filter((x) => x.demande_id === d.id) }));
+  }
+  const { maintienHeures } = await V.loadVipSettings(admin);
+  return { demandes, maintienHeures, vigie: await vipVigie(admin) };
 }
 
-function vipSupplement(v, fallback) {
-  const n = v === undefined || v === null || v === "" ? fallback : Number(v);
-  if (!Number.isFinite(n) || n < 0 || n > 200) throw Object.assign(new Error("Supplément invalide (0 à 200 €)."), { status: 400 });
-  return Math.round(n * 100) / 100;
+// Vigie MYU VIP : ce qui attend Astrid MAINTENANT (calculé en direct, rien n'est envoyé à personne).
+async function vipVigie(admin) {
+  const { data, error } = await admin.from("myu_demandes_vip")
+    .select("id,prenom,statut,created_at,expire_le,date_souhaitee,heure_souhaitee").in("statut", V.OPEN_STATUTS);
+  if (error) throw error;
+  const now = Date.now(), H = 3600000;
+  const rows = data || [];
+  const attente = rows.filter((d) => d.statut === "en_attente").sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+  const aPayer = rows.filter((d) => d.statut === "accepte_attente_paiement");
+  const bientot = aPayer.filter((d) => d.expire_le && new Date(d.expire_le).getTime() - now < 12 * H && new Date(d.expire_le).getTime() > now);
+  return {
+    enAttente: attente.length,
+    plusAncienneHeures: attente.length ? Math.floor((now - new Date(attente[0].created_at).getTime()) / H) : 0,
+    nouvelles24h: attente.filter((d) => now - new Date(d.created_at).getTime() < 24 * H).length,
+    enRetard: attente.filter((d) => now - new Date(d.created_at).getTime() > 24 * H).length,
+    propositionsEnCours: rows.filter((d) => d.statut === "contre_proposition").length,
+    attentePaiement: aPayer.length,
+    expirentBientot: bientot.map((d) => ({ prenom: d.prenom, expireLe: d.expire_le })),
+    prochainesPrenoms: attente.slice(0, 3).map((d) => d.prenom),
+  };
 }
 
-async function vipAccept(admin, { id, supplementEur, reponse }) {
+function paramsView(p) {
+  return {
+    demandesActives: p.demandes_actives, datePremiereDispo: p.date_premiere_dispo, quotaMax: p.quota_max, quotaPeriode: p.quota_periode,
+    joursOuverts: p.jours_ouverts, datesIndisponibles: p.dates_indisponibles, creneauxBloques: p.creneaux_bloques, messageComplet: p.message_complet,
+  };
+}
+
+async function vipConfig(admin) {
+  const params = await R.loadParams(admin);
+  const formules = await R.loadFormules(admin);
+  const { maintienHeures } = await V.loadVipSettings(admin);
+  const ref = B.todayLocal() > params.date_premiere_dispo ? B.todayLocal() : params.date_premiere_dispo;
+  const quota = await R.quotaState(admin, params, ref);
+  return {
+    parametres: paramsView(params), maintienHeures, quota,
+    formules: formules.map((f) => ({ code: f.code, nom: f.nom, description: f.description, supplement: f.supplement_eur, surDevis: f.sur_devis, plages: f.plages, plagesValidees: f.plages_validees, actif: f.actif })),
+  };
+}
+
+async function vipAccept(admin, { id, reponse }) {
   const d = await V.getDemandeById(admin, id);
-  if (d.statut !== "en_attente") throw Object.assign(new Error("Cette demande n'est plus en attente."), { status: 409 });
-  const { supplement } = await V.loadVipSettings(admin);
-  const updated = await V.acceptDemande(admin, d, { supplement: vipSupplement(supplementEur, supplement), reponse: B.clean(reponse, 500) });
-  return V.adminView(updated);
+  return V.adminView(await V.acceptDemande(admin, d, { reponse: B.clean(reponse, 500) }));
 }
 
-async function vipCounter(admin, { id, dateRdv, heureRdv, supplementEur, reponse }) {
+// « Proposer un devis / un autre créneau » : la cliente devra accepter créneau ET montant avant de payer.
+async function vipCounter(admin, { id, dateRdv, heureRdv, totalEur, reponse }) {
   const d = await V.getDemandeById(admin, id);
-  if (!["en_attente", "contre_proposition"].includes(d.statut)) throw Object.assign(new Error("Cette demande n'est plus modifiable."), { status: 409 });
-  const date = B.clean(dateRdv, 10), heure = B.clean(heureRdv, 5);
-  B.validateBookingInput({ typePrestation: d.type_prestation, lieu: d.lieu, dateRdv: date, heureRdv: heure });
-  const prestation = await B.loadPrestation(admin, d.type_prestation);
-  const debut = B.localToDate(date, heure);
-  if (debut.getTime() < Date.now()) throw Object.assign(new Error("Ce créneau est déjà passé."), { status: 400 });
-  // Vérifie que la proposition est libre maintenant (elle n'est PAS maintenue avant l'accord de la cliente).
-  await B.assertRangeFree(admin, { debut, fin: new Date(debut.getTime() + prestation.duree_minutes * 60000) });
-  const { supplement } = await V.loadVipSettings(admin);
-  const updated = await V.updateDemande(admin, d.id, {
-    statut: "contre_proposition", date_retenue: date, heure_retenue: heure,
-    supplement_eur: vipSupplement(supplementEur, supplement), reponse_admin: B.clean(reponse, 500) || null,
-    traite_le: new Date().toISOString(),
-  });
-  return V.adminView(updated);
+  return V.adminView(await V.proposeDemande(admin, d, { dateRdv, heureRdv, total: totalEur, reponse: B.clean(reponse, 500) || null }));
 }
 
 async function vipRefuse(admin, { id, reponse }) {
   const d = await V.getDemandeById(admin, id);
-  if (!["en_attente", "contre_proposition"].includes(d.statut)) throw Object.assign(new Error("Cette demande n'est plus modifiable."), { status: 409 });
-  const updated = await V.updateDemande(admin, d.id, { statut: "refuse", reponse_admin: B.clean(reponse, 500) || null, traite_le: new Date().toISOString() });
-  return V.adminView(updated);
+  return V.adminView(await V.refuseDemande(admin, d, { reponse: B.clean(reponse, 500) || null }));
 }
 
 async function vipCancel(admin, { id, reponse }) {
   const d = await V.getDemandeById(admin, id);
-  const updated = await V.cancelDemande(admin, d, { statut: "annule", reponse: B.clean(reponse, 500) || undefined });
-  return V.adminView(updated);
+  return V.adminView(await V.cancelDemande(admin, d, { statut: "annule", reponse: B.clean(reponse, 500) || undefined, acteur: "admin" }));
 }
 
 async function vipSaveNote(admin, { id, note }) {
   const d = await V.getDemandeById(admin, id);
   const updated = await V.updateDemande(admin, d.id, { note_interne: B.clean(note, 1000) || null });
+  await V.logHist(admin, { demandeId: d.id, acteur: "admin", action: "Note interne modifiée" });
   return V.adminView(updated);
 }
 
-async function vipUpdateSettings(admin, { supplementEur, maintienHeures }) {
-  const patch = { updated_at: new Date().toISOString() };
-  if (supplementEur !== undefined) patch.vip_supplement_eur = vipSupplement(supplementEur, 0);
-  if (maintienHeures !== undefined) {
-    const h = Number(maintienHeures);
-    if (!Number.isInteger(h) || h < 1 || h > 168) throw Object.assign(new Error("Durée de maintien invalide (1 à 168 h)."), { status: 400 });
-    patch.vip_maintien_heures = h;
+async function vipSaveParams(admin, p = {}) {
+  const patch = {};
+  const changes = [];
+  if (p.demandesActives !== undefined) { patch.demandes_actives = !!p.demandesActives; changes.push(`demandes ${patch.demandes_actives ? "activées" : "désactivées"}`); }
+  if (p.datePremiereDispo !== undefined) {
+    const d = B.clean(p.datePremiereDispo, 10);
+    if (!B.DATE_RE.test(d)) throw bad("Date de début invalide.");
+    if (d < R.DATE_PREMIERE_DISPO) throw bad(`Les expériences privées ne peuvent pas commencer avant le ${R.dayLabel(R.DATE_PREMIERE_DISPO)}.`);
+    patch.date_premiere_dispo = d; changes.push(`première date ${d}`);
   }
-  const { error } = await admin.from("myu_reglages_reservation").update(patch).eq("id", 1);
+  if (p.quotaMax !== undefined) {
+    if (p.quotaMax === null || p.quotaMax === "") { patch.quota_max = null; changes.push("quota : sans limite"); }
+    else {
+      const n = Number(p.quotaMax);
+      if (!Number.isInteger(n) || n < 0 || n > 200) throw bad("Quota invalide (0 à 200).");
+      patch.quota_max = n; changes.push(`quota ${n}`);
+    }
+  }
+  if (p.quotaPeriode !== undefined) {
+    if (!["semaine", "mois"].includes(p.quotaPeriode)) throw bad("Période du quota invalide.");
+    patch.quota_periode = p.quotaPeriode; changes.push(`par ${p.quotaPeriode}`);
+  }
+  if (p.joursOuverts !== undefined) {
+    const j = (Array.isArray(p.joursOuverts) ? p.joursOuverts : []).map(Number);
+    if (!j.length || j.some((n) => !Number.isInteger(n) || n < 0 || n > 6)) throw bad("Choisissez au moins un jour ouvert.");
+    patch.jours_ouverts = [...new Set(j)].sort(); changes.push(`jours ouverts ${patch.jours_ouverts.join(",")}`);
+  }
+  if (p.datesIndisponibles !== undefined) {
+    const arr = (Array.isArray(p.datesIndisponibles) ? p.datesIndisponibles : []).map((x) => B.clean(x, 10));
+    if (arr.some((x) => !B.DATE_RE.test(x))) throw bad("Une date indisponible est invalide.");
+    if (arr.length > 200) throw bad("Trop de dates indisponibles.");
+    patch.dates_indisponibles = [...new Set(arr)].sort(); changes.push(`${arr.length} date(s) indisponible(s)`);
+  }
+  if (p.creneauxBloques !== undefined) {
+    const arr = (Array.isArray(p.creneauxBloques) ? p.creneauxBloques : []).map((c) => ({
+      date: B.clean(c.date, 10), de: B.clean(c.de, 5), a: B.clean(c.a, 5), note: B.clean(c.note, 80),
+    }));
+    for (const c of arr) {
+      if (!B.DATE_RE.test(c.date)) throw bad("Un créneau bloqué a une date invalide.");
+      if (Boolean(c.de) !== Boolean(c.a)) throw bad("Créneau bloqué : indiquez l'heure de début ET de fin (ou laissez les deux vides pour bloquer la journée).");
+      if (c.de && (!B.TIME_RE.test(c.de) || !B.TIME_RE.test(c.a) || c.de >= c.a)) throw bad("Créneau bloqué : l'heure de fin doit suivre l'heure de début.");
+    }
+    if (arr.length > 200) throw bad("Trop de créneaux bloqués.");
+    patch.creneaux_bloques = arr; changes.push(`${arr.length} créneau(x) bloqué(s)`);
+  }
+  if (p.messageComplet !== undefined) {
+    const m = B.clean(p.messageComplet, 200);
+    patch.message_complet = m || R.DEFAULT_COMPLET; changes.push("message « complet » modifié");
+  }
+  if (p.maintienHeures !== undefined) {
+    const h = Number(p.maintienHeures);
+    if (!Number.isInteger(h) || h < 1 || h > 168) throw bad("Durée de maintien invalide (1 à 168 h).");
+    const { error } = await admin.from("myu_reglages_reservation").update({ vip_maintien_heures: h, updated_at: new Date().toISOString() }).eq("id", 1);
+    if (error) throw error;
+    changes.push(`maintien ${h} h`);
+  }
+  if (Object.keys(patch).length) {
+    const { error } = await admin.from("myu_vip_parametres").upsert({ id: 1, ...patch, updated_at: new Date().toISOString() }, { onConflict: "id" });
+    if (error) throw error;
+  }
+  if (changes.length) await V.logHist(admin, { cible: "parametres", acteur: "admin", action: "Paramètres VIP modifiés", detail: changes.join(" · ") });
+  return vipConfig(admin);
+}
+
+async function vipSaveFormule(admin, p = {}) {
+  const formules = await R.loadFormules(admin);
+  const f = formules.find((x) => x.code === p.code);
+  if (!f) throw bad("Formule inconnue.");
+  const patch = { updated_at: new Date().toISOString() };
+  const changes = [];
+  if (p.nom !== undefined) {
+    const n = B.clean(p.nom, 40);
+    if (n.length < 2) throw bad("Nom de formule trop court.");
+    patch.nom = n; changes.push(`nom « ${n} »`);
+  }
+  if (p.description !== undefined) { patch.description = B.clean(p.description, 200); }
+  if (p.supplementEur !== undefined && !f.sur_devis) {
+    const n = Number(p.supplementEur);
+    if (!Number.isFinite(n) || n < 0 || n > 200) throw bad("Supplément invalide (0 à 200 €).");
+    patch.supplement_eur = R.round2(n); changes.push(`supplément ${patch.supplement_eur} €`);
+  }
+  if (p.plages !== undefined) {
+    const arr = Array.isArray(p.plages) ? p.plages : [];
+    const clean = arr.map((r) => ({ de: B.clean(r.de, 5), a: B.clean(r.a, 5) }));
+    if (clean.some((r) => !B.TIME_RE.test(r.de) || !B.TIME_RE.test(r.a) || r.de === r.a)) throw bad("Plage horaire invalide (heures de début et de fin différentes).");
+    if (clean.length > 6) throw bad("Trop de plages horaires.");
+    patch.plages = f.sur_devis ? [] : clean; changes.push(`plages : ${R.plageLibelle(patch.plages) || "aucune"}`);
+  }
+  if (p.plagesValidees !== undefined) {
+    const nextPlages = patch.plages !== undefined ? patch.plages : f.plages;
+    if (p.plagesValidees && !f.sur_devis && !nextPlages.length) throw bad("Ajoutez au moins une plage horaire avant de la valider.");
+    patch.plages_validees = f.sur_devis ? false : !!p.plagesValidees; changes.push(patch.plages_validees ? "plages VALIDÉES" : "plages non validées");
+  } else if (patch.plages !== undefined) {
+    patch.plages_validees = false; // modifier les plages annule la validation précédente
+  }
+  if (p.actif !== undefined) { patch.actif = !!p.actif; changes.push(patch.actif ? "formule activée" : "formule désactivée"); }
+  const { error } = await admin.from("myu_vip_formules").update(patch).eq("code", f.code);
   if (error) throw error;
-  const { supplement, maintienHeures: mh } = await V.loadVipSettings(admin);
-  return { supplement, maintienHeures: mh };
+  await V.logHist(admin, { cible: "formule", acteur: "admin", action: `Formule ${f.nom} modifiée`, detail: changes.join(" · ") });
+  return vipConfig(admin);
 }
 
 const ACTIONS = {
@@ -635,7 +753,7 @@ const ACTIONS = {
   listConsignes, upsertConsigne, addNoteInterne, createPrestation, updatePrestationStatus, upsertEtapeParcours, updateRendezVous,
   listPrestationsReservation, upsertPrestationReservation, releaseModeleSlot, listModeleBookings,
   listAgenda, createManualRendezVous, retryBookingSync, getBookingSettings, updateBookingSettings,
-  vipList, vipAccept, vipCounter, vipRefuse, vipCancel, vipSaveNote, vipUpdateSettings,
+  vipList, vipConfig, vipAccept, vipCounter, vipRefuse, vipCancel, vipSaveNote, vipSaveParams, vipSaveFormule,
 };
 
 module.exports = async function handler(req, res) {

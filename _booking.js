@@ -46,7 +46,7 @@ const SERVICE_LABELS = {
   modele_myu: "Offre modèle MYU", taches_brunes_visage: "Correction taches brunes · visage",
   taches_brunes_corps: "Correction taches brunes · corps", vergetures: "Correction vergetures",
   conseil: "Conseil personnalisé", microneedling: "Microneedling", bb_glow: "BB Glow",
-  soins_corps_infrarouge: "Soins corps infrarouge",
+  soins_corps_infrarouge: "Soins corps infrarouge", tricopigmentation: "Tricopigmentation",
   freckles: "Freckles", soins_led: "Lumière rouge LED (30 min)",
   consultation_camouflage: "Consultation camouflage (30 min)",
 };
