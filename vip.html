@@ -1,4 +1,4 @@
-<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>MYU VIP — Private Experience</title><meta name="description" content="MYU VIP — Private Experience : une expérience beauté privée, personnalisée et volontairement limitée. Votre temps est précieux. Le nôtre vous est consacré."><meta name="theme-color" content="#0A0907"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet"><style>
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>MYU VIP — Private Experience</title><meta property="og:title" content="MYU VIP — Rendez-vous privés"><meta property="og:description" content="En soirée à partir de 18 h, les dimanches et jours fériés, selon les disponibilités."><meta property="og:image" content="https://missu-two.vercel.app/myu-social-preview.png"><meta property="og:url" content="https://missu-two.vercel.app/vip"><meta name="description" content="MYU VIP — Private Experience : une expérience beauté privée, personnalisée et volontairement limitée. Votre temps est précieux. Le nôtre vous est consacré."><meta name="theme-color" content="#0A0907"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet"><style>
 :root{--ink:#0A0907;--ink2:#14110D;--ink3:#1D1812;--line:#3A3023;--gold:#C9A45C;--gold-soft:#E3C38D;--ivory:#F5EDE0;--muted:#A89B86;--danger:#E0877B}
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
@@ -13,6 +13,7 @@ h1,h2,h3{font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;margin:0
 .hero h1{font-size:46px;line-height:1.05;color:var(--ivory)}
 .hero h1 em{display:block;font-size:24px;letter-spacing:5px;font-style:normal;color:var(--gold);margin-top:10px;font-family:'Jost',sans-serif;font-weight:300;text-transform:uppercase}
 .signature{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:22px;color:var(--gold-soft);margin:22px auto 0;max-width:420px;line-height:1.35}
+.dispo{margin:22px auto 0;max-width:440px;padding:14px 16px;border:1px solid var(--gold);border-radius:16px;font-size:16px;line-height:1.4;color:var(--ivory)}
 .lead{color:var(--muted);font-size:14.5px;margin:18px auto 0;max-width:440px}
 .cta{display:block;width:100%;border:0;border-radius:999px;padding:17px 18px;background:linear-gradient(135deg,#E3C38D,#B88F45);color:#14110D;font-weight:600;font-size:13.5px;letter-spacing:1.6px;cursor:pointer;font-family:'Jost',sans-serif;text-align:center;text-decoration:none;margin-top:26px;box-shadow:0 14px 30px -12px rgba(201,164,92,.55)}
 .cta:disabled{opacity:.45;box-shadow:none;cursor:not-allowed}
@@ -67,6 +68,7 @@ textarea{min-height:84px;resize:vertical}
 .row{display:flex;justify-content:space-between;gap:12px;padding:6px 0;font-size:14.5px;border-bottom:1px solid rgba(58,48,35,.7)}
 .row:last-of-type{border-bottom:0}
 .row span:first-child{color:var(--muted)}
+.row span:last-child{white-space:nowrap}
 .row.total{font-size:17px;margin-top:4px;padding-top:10px;border-top:1px solid var(--gold);border-bottom:0}
 .row.total span:last-child{font-family:'Cormorant Garamond',serif;font-size:26px;color:var(--gold);font-weight:600}
 .recap .small{font-size:12.5px;color:var(--muted);margin:8px 0 0}
@@ -95,6 +97,7 @@ textarea{min-height:84px;resize:vertical}
   <div class="eyebrow">MYU by Miss'U</div>
   <div class="badge">MYU VIP</div>
   <h1>Private<em>Experience</em></h1>
+  <p class="dispo" id="dispoVip">Rendez-vous privés en soirée à partir de 18&nbsp;h, ainsi que les dimanches et jours fériés, selon les disponibilités.</p>
   <p class="signature">« Votre temps est précieux. Le nôtre vous est consacré. »</p>
   <p class="lead">Une expérience beauté privée, personnalisée et volontairement limitée, pensée pour toutes les personnes dont l'agenda ne s'arrête pas aux horaires habituels.</p>
   <a class="cta" href="#reserver" id="ctaTop">RÉSERVER MON EXPÉRIENCE PRIVÉE</a>
@@ -113,8 +116,8 @@ textarea{min-height:84px;resize:vertical}
 
 <section class="rev" id="formulesSection">
   <div class="eyebrow">Les formules</div>
-  <h2>Un supplément selon l'heure de début</h2>
-  <p class="sub">La formule est déterminée automatiquement par l'heure à laquelle votre prestation commence.</p>
+  <h2>Un supplément selon le jour et l'heure</h2>
+  <p class="sub">En soirée, le supplément dépend de l'heure de début. Le dimanche et les jours fériés, 120 € s'appliquent, et le supplément de soirée s'y ajoute dès 18 h.</p>
   <div class="formules" id="formules"><div class="empty">Chargement des formules…</div></div>
   <p class="note">Les montants ci-dessus s'ajoutent au tarif de la prestation : ils ne le remplacent pas.</p>
   <div class="example hidden" id="example"></div>
@@ -136,7 +139,7 @@ textarea{min-height:84px;resize:vertical}
 <section id="reserver" class="rev">
   <div class="eyebrow">Réservation</div>
   <h2>Réserver mon expérience privée</h2>
-  <p class="sub">Dès le <strong id="dateLancement">samedi 7 novembre 2026</strong>, sous réserve de validation de Miss'U.</p>
+  <p class="sub">Selon les disponibilités, sous réserve de validation de Miss'U.</p>
 
   <div class="card" id="formCard">
     <div class="msg" id="closed" role="status"></div>
@@ -219,8 +222,8 @@ function renderPicks(){
   $('picks').innerHTML=list.map(p=>'<button type="button" class="pick" data-t="'+esc(p.type)+'" aria-pressed="'+(sel&&sel.type===p.type)+'"><span>'+esc(p.label)+'</span><small>'+(p.aPartirDe?'dès ':'')+eur(p.prix)+(p.type==='tricopigmentation'?' par zone':'')+' · '+esc(fmtDur(p.dureeMinutes))+'</small></button>').join('');
   $('picks').querySelectorAll('.pick').forEach(b=>b.addEventListener('click',()=>{sel=cat.prestations.find(p=>p.type===b.dataset.t);$('serviceHint').textContent='Prestation choisie : '+sel.label+' · durée '+fmtDur(sel.dureeMinutes)+'.';renderPicks();refresh()}));
 }
-async function estimate(heure){if(!sel||!heure)return null;try{return await api('/api/vip?action=estimation&type='+encodeURIComponent(sel.type)+'&heure='+encodeURIComponent(heure))}catch(e){return {erreur:e.message}}}
-async function checkDate(id,hintId){const d=$(id).value;const h=$(hintId);h.className='hint';h.textContent='';if(!d)return {ouvert:true};try{const r=await api('/api/vip?action=disponibilite&date='+encodeURIComponent(d));if(!r.ouvert){h.className='hint ko';h.textContent=r.message}return r}catch(e){return {ouvert:true}}}
+async function estimate(heure,date){if(!sel||!heure)return null;try{return await api('/api/vip?action=estimation&type='+encodeURIComponent(sel.type)+'&heure='+encodeURIComponent(heure)+(date?'&date='+encodeURIComponent(date):''))}catch(e){return {erreur:e.message}}}
+async function checkDate(id,hintId,heure){const d=$(id).value;const h=$(hintId);h.className='hint';h.textContent='';if(!d)return {ouvert:true};try{const r=await api('/api/vip?action=disponibilite&date='+encodeURIComponent(d)+(sel&&heure?'&type='+encodeURIComponent(sel.type)+'&heure='+encodeURIComponent(heure):''));if(!r.ouvert){h.className='hint ko';h.textContent=r.message}return r}catch(e){return {ouvert:true}}}
 function formuleLine(e,label){if(!e)return '';if(e.erreur)return esc(e.erreur);return label+' <b>'+esc(e.formule.nom)+'</b> · début '+hh(e.heureDebut)+' · fin estimée '+hh(e.heureFin)+(e.finLendemain?' (lendemain)':'')+' · durée '+esc(fmtDur(e.dureeMinutes))}
 function renderRecap(){
   const rows=$('recapRows');$('recapEmpty').style.display=estMain&&!estMain.erreur?'none':'block';
@@ -228,13 +231,13 @@ function renderRecap(){
   const e=estMain;let h='';
   h+='<div class="row"><span>Tarif de la prestation'+(e.aPartirDe?' (à partir de)':'')+'</span><span>'+eur(e.prixPrestation)+'</span></div>';
   if(e.surDevis){h+='<div class="row"><span>Supplément '+esc(e.formule.nom)+'</span><span>sur devis</span></div><div class="row total"><span>Prix total</span><span>Sur devis</span></div><p class="small">Votre demande nécessite une étude individuelle : Miss\'U vous proposera un montant que vous pourrez accepter ou non, avant tout paiement.</p>'}
-  else{h+='<div class="row"><span>Supplément '+esc(e.formule.nom)+'</span><span>+ '+eur(e.supplement)+'</span></div><div class="row total"><span>Prix total'+(e.aPartirDe?' estimé':'')+'</span><span>'+(e.aPartirDe?'dès ':'')+eur(e.total)+'</span></div><p class="small">Acompte de 50 % ('+eur(e.acompte)+') à régler uniquement après acceptation de Miss\'U.'+(e.aPartirDe?' Cette prestation est facturée « à partir de » : Miss\'U vous confirme le montant exact avant tout paiement.':'')+'</p>'}
+  else{h+='<div class="row"><span>Supplément '+esc(e.formule.nom)+'</span><span>+ '+eur(e.supplement)+'</span></div><div class="row total"><span>Prix total'+(e.aPartirDe?' estimé':'')+'</span><span>'+(e.aPartirDe?'dès ':'')+eur(e.total)+'</span></div><div class="row"><span>Acompte (50 %)</span><span>'+(e.aPartirDe?'dès ':'')+eur(e.acompte)+'</span></div><p class="small">L\'acompte se règle uniquement après acceptation de Miss\'U, par paiement sécurisé SumUp.'+(e.aPartirDe?' Cette prestation est facturée « à partir de » : Miss\'U vous confirme le montant exact avant tout paiement.':'')+'</p>'}
   if(estAlt&&!estAlt.erreur&&estAlt.formule.code!==e.formule.code){h+='<p class="small" style="margin-top:12px;border-top:1px solid var(--line);padding-top:10px">Pour votre second créneau ('+esc(estAlt.formule.nom)+') : '+(estAlt.surDevis?'sur devis':'total '+eur(estAlt.total)+' (supplément '+eur(estAlt.supplement)+')')+'.</p>'}
   rows.innerHTML=h;
 }
 async function refresh(){
   const seq=(refresh.n=(refresh.n||0)+1);
-  const [em,ea,dm,da]=await Promise.all([estimate($('heureRdv').value),$('dateAlt').value&&$('heureAlt').value?estimate($('heureAlt').value):null,checkDate('dateRdv','dateHint'),checkDate('dateAlt','altHint')]);
+  const [em,ea,dm,da]=await Promise.all([estimate($('heureRdv').value,$('dateRdv').value),$('dateAlt').value&&$('heureAlt').value?estimate($('heureAlt').value,$('dateAlt').value):null,checkDate('dateRdv','dateHint',$('heureRdv').value),checkDate('dateAlt','altHint',$('heureAlt').value)]);
   if(seq!==refresh.n)return;
   estMain=em;estAlt=ea;dispoMain=dm;dispoAlt=da;
   $('formuleNow').className='formule-now'+(em?' show':'');$('formuleNow').innerHTML=em?formuleLine(em,'Formule appliquée :'):'';
@@ -244,7 +247,6 @@ function lieuxEtDates(){
   $('lieu').innerHTML=cat.lieux.map(l=>'<option>'+esc(l)+'</option>').join('');
   const min=(cat.dateMin>martiniqueDate(0))?cat.dateMin:martiniqueDate(0);
   for(const id of ['dateRdv','dateAlt']){const d=$(id);d.min=min;d.max=martiniqueDate(cat.horizonJours||60)}
-  $('dateLancement').textContent=cat.dateMinLongue||'le samedi 7 novembre 2026';
 }
 function renderFormules(){
   $('formules').innerHTML=cat.formules.map(f=>'<div class="formule"><div class="top"><h3>'+esc(f.nom)+'</h3><span class="px">'+(f.surDevis?'Sur devis':'+ '+eur(f.supplement))+'</span></div><p>'+esc(f.description)+'</p>'+(f.plagesLibelle?'<span class="plage">Début de prestation : '+esc(f.plagesLibelle.replace(/ · /g,' ou '))+'</span>':'')+'</div>').join('');

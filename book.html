@@ -34,6 +34,8 @@ button:disabled{opacity:.5;box-shadow:none}
 .slot-day{flex:0 0 auto;width:auto;min-width:74px;padding:9px 10px;border-radius:14px;border:1px solid var(--blush-deep);background:var(--cream-soft);color:var(--espresso);font-size:12px;font-weight:500;box-shadow:none;scroll-snap-align:start;line-height:1.25}
 .slot-day b{display:block;font-size:17px;font-family:'Cormorant Garamond',serif}
 .slot-day.full{opacity:.45}
+.first-slot{display:block;width:100%;margin:10px 0;padding:13px 14px;border-radius:14px;border:1.5px solid var(--espresso);background:#fff;color:var(--espresso);font-size:15px;font-weight:600;line-height:1.35;text-align:left;box-shadow:none}
+.first-slot small{display:block;font-size:11px;font-weight:500;letter-spacing:.8px;text-transform:uppercase;opacity:.75}
 .slot-day.sel{background:var(--espresso);border-color:var(--espresso);color:#fff}
 .slot-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:8px;margin-top:6px}
 .slot{width:100%;padding:11px 4px;border-radius:12px;border:1px solid var(--blush-deep);background:#fff;color:var(--espresso);font-size:14px;font-weight:600;box-shadow:none}
@@ -74,7 +76,7 @@ button:disabled{opacity:.5;box-shadow:none}
 <label for="lieu">Lieu</label>
 <select id="lieu" required></select>
 <label id="slotsLabel">Jour et horaire</label>
-<div id="slotPicker"><p class="slot-note" id="slotNote">Choisissez d'abord une prestation pour voir les créneaux disponibles.</p><div class="slot-days" id="slotDays" role="listbox" aria-label="Jours disponibles"></div><div class="slot-grid" id="slotGrid" role="listbox" aria-label="Horaires disponibles"></div></div>
+<div id="slotPicker"><p class="slot-note" id="slotNote">Choisissez d'abord une prestation pour voir les créneaux disponibles.</p><button type="button" class="first-slot hidden" id="firstSlot"></button><div class="slot-days" id="slotDays" role="listbox" aria-label="Jours disponibles"></div><div class="slot-grid" id="slotGrid" role="listbox" aria-label="Horaires disponibles"></div></div>
 <div class="slot-summary" id="slotSummary" aria-live="polite"></div>
 <div class="hidden" id="engagements"></div>
 <label class="consent"><input id="consent" type="checkbox" required><span>J'accepte que mes coordonnées soient utilisées uniquement pour traiter cette demande, organiser le rendez-vous et le paiement éventuel. Le pré-diagnostic et les informations de santé nécessaires à la prestation pourront être complétés séparément.</span></label>
@@ -205,7 +207,7 @@ function updateSubmit(){
 
 async function loadSlots(){
   resetSelection();
-  $('slotDays').replaceChildren(); $('slotGrid').replaceChildren();
+  $('slotDays').replaceChildren(); $('slotGrid').replaceChildren(); $('firstSlot').classList.add('hidden');
   const service=$('service').value, lieu=$('lieu').value;
   if(!service){ $('slotNote').textContent="Choisissez d'abord une prestation pour voir les créneaux disponibles."; return; }
   $('slotNote').textContent='Recherche des créneaux disponibles…';
@@ -217,7 +219,11 @@ async function loadSlots(){
     const daysWith=slotData.jours.filter(d=>d.creneaux.length);
     if(!daysWith.length){ $('slotNote').textContent='Aucun créneau disponible sur les 3 prochaines semaines. Écrivez-nous sur WhatsApp, nous trouverons une solution.'; return; }
     $('slotNote').textContent=`Durée : ${fmtDur(slotData.dureeMinutes)} · heure de Martinique. Choisissez un jour puis un horaire.`;
-    slotData.jours.forEach(d=>{
+    const first=daysWith[0];
+    $('firstSlot').innerHTML=`<small>Premier créneau disponible</small>${esc(first.libelle)} à ${esc(first.creneaux[0])}`;
+    $('firstSlot').classList.remove('hidden');
+    $('firstSlot').onclick=()=>{pickDay(first.date);pickSlot(first.creneaux[0]);};
+    slotData.jours.filter(d=>d.date>=first.date).forEach(d=>{
       const b=document.createElement('button');
       b.type='button'; b.className='slot-day'+(d.creneaux.length?'':' full'); b.disabled=!d.creneaux.length;
       const parts=dayFmt.format(new Date(d.date+'T12:00:00Z')).replace('.','').split(' ');
