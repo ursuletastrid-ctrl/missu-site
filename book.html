@@ -95,7 +95,7 @@ button:disabled{opacity:.5;box-shadow:none}
 
 <section class="card" id="contact" aria-labelledby="contact-title" style="margin-top:20px">
 <h2 id="contact-title">Besoin d'un conseil ?</h2>
-<p class="sub" style="margin-bottom:0">Pour préparer votre rendez-vous à Ducos, privilégiez un message écrit ou vocal sur WhatsApp.</p>
+<p class="sub" style="margin-bottom:0">Pour préparer votre rendez-vous au Lamentin, privilégiez un message écrit ou vocal sur WhatsApp.</p>
 <address class="contact-links">
 <a class="contact-link contact-whatsapp" href="https://wa.me/596696178587" target="_blank" rel="noopener noreferrer"><small>WhatsApp · Contact privilégié</small><span>+596 696 17 85 87</span><span class="contact-detail">Messages et vocaux de préférence →</span></a>
 <a class="contact-link" href="mailto:missustudio.contact@gmail.com"><small>Écrire à MYU</small><span>missustudio.contact@gmail.com</span></a>
@@ -128,7 +128,7 @@ async function load(){
     if(!r.ok)throw Error(j.error);
     catalog=j.data||[];
     bientot=j.bientot||[];
-    lieux=j.lieux&&j.lieux.length?j.lieux:['Ducos'];
+    lieux=j.lieux&&j.lieux.length?j.lieux:['Lamentin'];
     $('lieu').replaceChildren(...lieux.map(l=>new Option(l,l)));
     $('service').replaceChildren(new Option('Choisir une prestation',''));
     catalog.forEach(x=>{
