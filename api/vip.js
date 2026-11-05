@@ -67,7 +67,7 @@ module.exports = async function handler(req, res) {
     let data;
     if (action === "catalogue" && req.method === "GET") data = await V.catalogue(admin);
     else if (action === "estimation" && req.method === "GET") data = await V.estimationPublique(admin, q);
-    else if (action === "disponibilite" && req.method === "GET") data = await V.disponibilite(admin, q.date);
+    else if (action === "disponibilite" && req.method === "GET") data = await V.disponibilite(admin, q.date, { type: q.type, heure: q.heure });
     else if (action === "status" && req.method === "GET") data = await status(admin, q);
     else if (action === "create" && req.method === "POST") data = await create(admin, req);
     else if (action === "pay" && req.method === "POST") data = await pay(admin, req, q);

@@ -124,6 +124,27 @@ function isoDowOf(dateStr) {
   return js === 0 ? 7 : js;
 }
 
+// Jours fériés légaux de Martinique (dates fixes + lundi de Pâques, Ascension, lundi de Pentecôte).
+function easterUtc(y) {
+  const a = y % 19, b = Math.floor(y / 100), c = y % 100, d = Math.floor(b / 4), e = b % 4;
+  const f = Math.floor((b + 8) / 25), g = Math.floor((b - f + 1) / 3), h = (19 * a + b - d - g + 15) % 30;
+  const i = Math.floor(c / 4), k = c % 4, l = (32 + 2 * e + 2 * i - h - k) % 7, m = Math.floor((a + 11 * h + 22 * l) / 451);
+  const month = Math.floor((h + l - 7 * m + 114) / 31), day = ((h + l - 7 * m + 114) % 31) + 1;
+  return `${y}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+
+function isPublicHoliday(dateStr) {
+  const y = Number(dateStr.slice(0, 4));
+  if (["01-01", "05-01", "05-08", "05-22", "07-14", "08-15", "11-01", "11-11", "12-25"].includes(dateStr.slice(5))) return true;
+  const easter = easterUtc(y);
+  return [1, 39, 50].some((n) => addDaysStr(easter, n) === dateStr);
+}
+
+// Dimanches et jours fériés : réservés à MYU VIP, jamais proposés en réservation standard.
+function isVipOnlyDay(dateStr) {
+  return isoDowOf(dateStr) === 7 || isPublicHoliday(dateStr);
+}
+
 function toMinutes(hhmm) {
   const [h, m] = String(hhmm).split(":").map(Number);
   return h * 60 + m;
@@ -364,7 +385,7 @@ async function computeSlots(admin, { typePrestation, lieu, from, days, excludeRd
   const step = settings.pas_minutes;
 
   const jours = dates.map((date) => {
-    const windows = settings.horaires[String(isoDowOf(date))] || settings.horaires[isoDowOf(date)] || [];
+    const windows = isVipOnlyDay(date) ? [] : (settings.horaires[String(isoDowOf(date))] || settings.horaires[isoDowOf(date)] || []);
     const creneaux = [];
     for (const [a, b] of windows) {
       for (let m = toMinutes(a); m + dur <= toMinutes(b); m += step) {
@@ -655,7 +676,7 @@ function clean(v, max = 120) {
 }
 
 module.exports = {
-  TZ, SITE_ORIGIN, APPS_SCRIPT_URL, DEFAULT_SETTINGS, SERVICE_LABELS, STATUT_LABELS, PAYMENT_LABELS,
+  isPublicHoliday, isVipOnlyDay, TZ, SITE_ORIGIN, APPS_SCRIPT_URL, DEFAULT_SETTINGS, SERVICE_LABELS, STATUT_LABELS, PAYMENT_LABELS,
   httpError, serviceLabel, zoned, localToDate, addDaysStr, todayLocal, longDateFmt, DATE_RE, TIME_RE,
   loadSettings, loadPrestation, fetchCalendarBusy, sumupGetCheckout, sumupDeactivate, checkoutIsPaid, checkoutMatches,
   loadBlocked, getRdv, rpc, reconcilePayment, releaseHoldSafely, releaseExpiredHolds,

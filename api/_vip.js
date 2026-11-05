@@ -194,7 +194,7 @@ async function publicView(admin, d) {
     prenom: d.prenom,
     prestation: B.serviceLabel(d.type_prestation),
     lieu: d.lieu,
-    formule: d.formule_code ? { code: d.formule_code, nom: d.formule_nom } : null,
+    formule: d.formule_nom ? { code: d.formule_code || "", nom: d.formule_nom } : null,
     statut: d.statut,
     statutLibelle: STATUT_VIP_LABELS[d.statut] || d.statut,
     souhait: { date: d.date_souhaitee, dateLongue: dayLabel(d.date_souhaitee), heure: d.heure_souhaitee },
@@ -319,7 +319,7 @@ async function catalogue(admin) {
     datesIndisponibles: params.dates_indisponibles,
     messageComplet: params.message_complet,
     acompteTaux: R.ACOMPTE_TAUX,
-    formules: formules.filter((f) => f.actif).map((f) => ({
+    formules: [...formules.filter((f) => f.actif), R.FORMULE_DIMANCHE_FERIE].map((f) => ({
       code: f.code, nom: f.nom, description: f.description,
       supplement: f.sur_devis ? null : f.supplement_eur, surDevis: f.sur_devis,
       // Les plages ne sont montrées (et appliquées) qu'une fois validées par Astrid.
@@ -330,15 +330,15 @@ async function catalogue(admin) {
 }
 
 // Estimation affichée avant l'envoi : prestation + supplément + total, formule déterminée par l'heure de début.
-async function estimationPublique(admin, { type, heure }) {
-  const t = B.clean(type, 80), h = B.clean(heure, 5);
+async function estimationPublique(admin, { type, heure, date }) {
+  const t = B.clean(type, 80), h = B.clean(heure, 5), jour = B.clean(date, 10);
   if (!t) throw B.httpError(400, "Choisissez une prestation.");
   if (!B.TIME_RE.test(h)) throw B.httpError(400, "Choisissez une heure.");
   const prestation = await B.loadPrestation(admin, t);
   if (prestation.is_limited_offer || !(Number(prestation.deposit_amount) > 0)) throw B.httpError(400, "Cette prestation ne se réserve pas en expérience privée.");
   const hp = R.heureProblem({ creneaux_bloques: [] }, "1970-01-01", h, prestation.duree_minutes);
   if (hp) throw B.httpError(400, hp);
-  const e = R.estimation({ prestation, formules: await R.loadFormules(admin), heure: h });
+  const e = R.estimation({ prestation, formules: await R.loadFormules(admin), heure: h, date: B.DATE_RE.test(jour) ? jour : null });
   return {
     formule: { code: e.formule.code, nom: e.formule.nom },
     prixPrestation: e.prixPrestation, supplement: e.supplement, total: e.total, acompte: e.acompte,
@@ -347,7 +347,28 @@ async function estimationPublique(admin, { type, heure }) {
   };
 }
 
-async function disponibilite(admin, date) {
+// Bloqué ? Avec une heure : la plage exacte. Sans heure : la journée entière dans l'agenda.
+// Agenda injoignable : pas de refus ici, le serveur revérifie avant tout maintien de créneau.
+async function agendaProblem(admin, d, { type, heure }) {
+  const h = B.clean(heure, 5), t = B.clean(type, 80);
+  try {
+    if (h && t && B.TIME_RE.test(h)) {
+      const prestation = await B.loadPrestation(admin, t);
+      const debut = B.localToDate(d, h);
+      await B.assertRangeFree(admin, { debut, fin: new Date(debut.getTime() + prestation.duree_minutes * 60000) });
+      return null;
+    }
+    const { settings } = await loadVipSettings(admin);
+    const from = B.localToDate(d, "00:00"), to = B.localToDate(B.addDaysStr(d, 1), "00:00");
+    const busy = await B.fetchCalendarBusy(from, to, settings.agenda_mots_ignores);
+    return busy.some((b) => b.start <= from && b.end >= to) ? "Cette date n'est pas disponible. Choisissez un autre jour." : null;
+  } catch (e) {
+    if (e.status === 409) return "Ce créneau n'est pas disponible. Choisissez un autre horaire.";
+    return null;
+  }
+}
+
+async function disponibilite(admin, date, opts = {}) {
   const d = B.clean(date, 10);
   if (!B.DATE_RE.test(d)) throw B.httpError(400, "Date invalide.");
   const params = await R.loadParams(admin);
@@ -356,6 +377,8 @@ async function disponibilite(admin, date) {
   if (dp) return { date: d, ouvert: false, complet: false, message: dp };
   const q = await R.quotaState(admin, params, d);
   if (q.complet) return { date: d, ouvert: false, complet: true, message: params.message_complet };
+  const bloque = await agendaProblem(admin, d, opts);
+  if (bloque) return { date: d, ouvert: false, complet: false, message: bloque };
   return { date: d, ouvert: true, complet: false, message: "" };
 }
 
@@ -438,10 +461,10 @@ async function createDemande(admin, req, body) {
 
   // Formule et prix : déterminés ICI par l'heure de DÉBUT de la prestation (jamais reçus du navigateur).
   const formules = await R.loadFormules(admin);
-  const est = R.estimation({ prestation, formules, heure: heureRdv });
+  const est = R.estimation({ prestation, formules, heure: heureRdv, date: dateRdv });
   const formule = est.formule, q = est;
 
-  const { data, error } = await admin.from("myu_demandes_vip").insert({
+  const insertRow = {
     prenom, nom, telephone, telephone_norm: norm, email: email || null,
     type_prestation: type, lieu, date_souhaitee: dateRdv, heure_souhaitee: heureRdv, date_alt: dateAlt || null, heure_alt: heureAlt || null, message: message || null,
     formule_code: formule.code, formule_nom: formule.nom,
@@ -450,7 +473,12 @@ async function createDemande(admin, req, body) {
     consentement_le: now.toISOString(), consentement_texte: CONSENTEMENT_TEXTE,
     ...cleanAttribution(body.attribution),
     ip_hash: hash,
-  }).select().single();
+  };
+  let { data, error } = await admin.from("myu_demandes_vip").insert(insertRow).select().single();
+  // Base qui ne connaîtrait pas encore ce code de formule : le nom et les montants restent enregistrés.
+  if (error && (error.code === "23503" || error.code === "23514")) {
+    ({ data, error } = await admin.from("myu_demandes_vip").insert({ ...insertRow, formule_code: null }).select().single());
+  }
   if (error) {
     if (error.code === "23505") throw B.httpError(409, "Une demande identique (même téléphone, même prestation, même jour) est déjà en cours. Miss'U vous répondra.");
     throw error;
@@ -550,7 +578,7 @@ async function proposeDemande(admin, d, { dateRdv, heureRdv, total, reponse }) {
 
   // La formule (donc le supplément) suit l'heure de DÉBUT du créneau proposé.
   const formules = await R.loadFormules(admin);
-  const est = R.estimation({ prestation, formules, heure });
+  const est = R.estimation({ prestation, formules, heure, date });
   const formule = est.formule;
   let totalFinal;
   if (total !== undefined && total !== null && total !== "") {

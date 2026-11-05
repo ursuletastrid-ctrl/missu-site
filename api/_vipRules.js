@@ -24,6 +24,9 @@ const FORMULES_PAR_DEFAUT = [
   { code: "sur_mesure", nom: "VIP SUR MESURE", description: "Horaires très matinaux ou demandes particulières : sur devis.", supplement_eur: null, sur_devis: true, plages: [], plages_validees: false, actif: true, ordre: 4 },
 ];
 
+// Dimanche ou jour férié : 120 €, auxquels s'ajoute le supplément de soirée si la prestation commence dès 18 h.
+const FORMULE_DIMANCHE_FERIE = { code: "dimanche_ferie", nom: "VIP DIMANCHE & JOUR FÉRIÉ", description: "Rendez-vous privé un dimanche ou un jour férié. En soirée, le supplément de soirée s'ajoute.", supplement_eur: 120, sur_devis: false, plages: [], plages_validees: true, actif: true, ordre: 0 };
+
 const round2 = (n) => Math.round((Number(n) + Number.EPSILON) * 100) / 100;
 const toMin = (t) => { const [h, m] = String(t).split(":").map(Number); return h * 60 + m; };
 const fmtHeure = (t) => String(t).replace(":", "h");
@@ -159,9 +162,16 @@ function heureFin(heure, dureeMin) {
   return { fin: `${String(Math.floor((t % 1440) / 60)).padStart(2, "0")}:${String(t % 60).padStart(2, "0")}`, lendemain: t >= 1440 };
 }
 
+// Dimanche ou férié : 120 € + supplément de la formule de soirée qui correspond à l'heure de début, s'il y en a une.
+function formuleDimancheFerie(formules, heure) {
+  const soir = formules.find((f) => f.actif && !f.sur_devis && f.plages_validees && f.plages.some((r) => inPlage(heure, r)));
+  if (!soir) return FORMULE_DIMANCHE_FERIE;
+  return { ...FORMULE_DIMANCHE_FERIE, nom: `${FORMULE_DIMANCHE_FERIE.nom} + ${soir.nom}`, supplement_eur: round2(FORMULE_DIMANCHE_FERIE.supplement_eur + Number(soir.supplement_eur || 0)) };
+}
+
 // Estimation complète (utilisée par la page ET par l'enregistrement de la demande).
-function estimation({ prestation, formules, heure }) {
-  const formule = formuleForHeure(formules, heure);
+function estimation({ prestation, formules, heure, date }) {
+  const formule = date && B.isVipOnlyDay(date) ? formuleDimancheFerie(formules, heure) : formuleForHeure(formules, heure);
   const q = quote({ prestation, formule });
   return { formule, ...q, dureeMinutes: Number(prestation.duree_minutes) || 180, ...heureFin(heure, prestation.duree_minutes) };
 }
@@ -208,7 +218,7 @@ function assertSlotRules(params, dateStr, heure, dureeMin) {
 }
 
 module.exports = {
-  VIP_LIEUX,
+  VIP_LIEUX, FORMULE_DIMANCHE_FERIE,
   ACOMPTE_TAUX, MIN_HEURE, MAX_HEURE, DEFAULT_COMPLET, DATE_PREMIERE_DISPO, A_PARTIR_DE, FORMULES_PAR_DEFAUT,
   round2, toMin, dayLabel, normPlages, normFormule, loadFormules, loadFormule, normParams, loadParams,
   prixPrestation, quote, estimation, formuleForHeure, heureFin, weekday, dateProblem, heureProblem, plageLibelle, periodBounds, quotaState, assertQuotaOpen, assertSlotRules,
