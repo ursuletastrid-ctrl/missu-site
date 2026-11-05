@@ -28,14 +28,11 @@ async function availability(admin, q) {
   const settings = await B.loadSettings(admin);
   const lieu = B.clean(q.lieu, 80) || settings.lieux[0];
   if (!typePrestation) throw B.httpError(400, "Prestation requise.");
-  await B.releaseExpiredHolds(admin, { limit: 5 }).catch((e) => console.error("[booking] maintiens expirés :", e.message));
   const prestation = await B.loadPrestation(admin, typePrestation);
   const places = await B.remainingLimitedPlaces(admin, prestation);
   const slots = await B.computeSlots(admin, {
     typePrestation, lieu, from: B.clean(q.from, 10), days: Number(q.days) || 14, settings, prestation,
   });
-  // Rattrapage opportuniste d'une synchronisation en échec (borné à 1, sans bloquer la réponse en cas d'erreur).
-  await B.retryPendingSyncs(admin, { limit: 1, minDelayMs: 5 * 60000 }).catch(() => {});
   return {
     prestation: B.serviceLabel(typePrestation),
     lieux: settings.lieux,

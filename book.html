@@ -76,7 +76,7 @@ button:disabled{opacity:.5;box-shadow:none}
 <label for="lieu">Lieu</label>
 <select id="lieu" required></select>
 <label id="slotsLabel">Jour et horaire</label>
-<div id="slotPicker"><p class="slot-note" id="slotNote">Choisissez d'abord une prestation pour voir les créneaux disponibles.</p><button type="button" class="first-slot hidden" id="firstSlot"></button><div class="slot-days" id="slotDays" role="listbox" aria-label="Jours disponibles"></div><div class="slot-grid" id="slotGrid" role="listbox" aria-label="Horaires disponibles"></div></div>
+<div id="slotPicker"><p class="slot-note" id="slotNote" role="status">Choisissez d'abord une prestation pour voir les créneaux disponibles.</p><p class="slot-note hidden" id="slotHelp"><button type="button" id="slotRetry">Réessayer</button> <a href="https://wa.me/596696178587" target="_blank" rel="noopener noreferrer">Écrire à MYU sur WhatsApp</a></p><button type="button" class="first-slot hidden" id="firstSlot"></button><div class="slot-days" id="slotDays" role="listbox" aria-label="Jours disponibles"></div><div class="slot-grid" id="slotGrid" role="listbox" aria-label="Horaires disponibles"></div></div>
 <div class="slot-summary" id="slotSummary" aria-live="polite"></div>
 <div class="hidden" id="engagements"></div>
 <label class="consent"><input id="consent" type="checkbox" required><span>J'accepte que mes coordonnées soient utilisées uniquement pour traiter cette demande, organiser le rendez-vous et le paiement éventuel. Le pré-diagnostic et les informations de santé nécessaires à la prestation pourront être complétés séparément.</span></label>
@@ -110,6 +110,7 @@ let bientot=[];
 const eur=n=>{const v=Math.round((Number(n)||0)*100)/100;return (Number.isInteger(v)?String(v):v.toFixed(2).replace('.',','))+' €'};
 let lieux=[];
 let slotData=null;
+let slotRequest;
 const sel={date:null,heure:null};
 const $=id=>document.getElementById(id);
 const qs=new URLSearchParams(location.search);
@@ -206,18 +207,23 @@ function updateSubmit(){
 }
 
 async function loadSlots(){
+  slotRequest?.abort();
+  const request=slotRequest=new AbortController();
+  $('slotHelp').classList.add('hidden');
   resetSelection();
   $('slotDays').replaceChildren(); $('slotGrid').replaceChildren(); $('firstSlot').classList.add('hidden');
   const service=$('service').value, lieu=$('lieu').value;
   if(!service){ $('slotNote').textContent="Choisissez d'abord une prestation pour voir les créneaux disponibles."; return; }
   $('slotNote').textContent='Recherche des créneaux disponibles…';
+  const timeout=setTimeout(()=>request.abort(),20000);
   try{
-    const r=await fetch('/api/booking?'+new URLSearchParams({action:'availability',service,lieu,days:'21'}));
+    const r=await fetch('/api/booking?'+new URLSearchParams({action:'availability',service,lieu,days:'21'}),{signal:request.signal});
     const j=await r.json();
     if(!r.ok||!j.success)throw Error(j.error||'Créneaux indisponibles.');
+    if(request!==slotRequest)return;
     slotData=j.data;
     const daysWith=slotData.jours.filter(d=>d.creneaux.length);
-    if(!daysWith.length){ $('slotNote').textContent='Aucun créneau disponible sur les 3 prochaines semaines. Écrivez-nous sur WhatsApp, nous trouverons une solution.'; return; }
+    if(!daysWith.length){ $('slotNote').textContent='Aucun créneau disponible sur les 3 prochaines semaines.'; $('slotHelp').classList.remove('hidden'); return; }
     $('slotNote').textContent=`Durée : ${fmtDur(slotData.dureeMinutes)} · heure de Martinique. Choisissez un jour puis un horaire.`;
     const first=daysWith[0];
     $('firstSlot').innerHTML=`<small>Premier créneau disponible</small>${esc(first.libelle)} à ${esc(first.creneaux[0])}`;
@@ -235,7 +241,11 @@ async function loadSlots(){
     });
     pickDay(daysWith[0].date);
   }catch(e){
-    $('slotNote').textContent=e.message||'Créneaux momentanément indisponibles. Merci de réessayer.';
+    if(request!==slotRequest)return;
+    $('slotNote').textContent='Impossible de charger les créneaux pour le moment.';
+    $('slotHelp').classList.remove('hidden');
+  }finally{
+    clearTimeout(timeout);
   }
 }
 
@@ -264,6 +274,7 @@ function pickSlot(h){
 function onServiceChange(){ showPrice(); loadSlots(); }
 $('service').addEventListener('change',onServiceChange);
 $('lieu').addEventListener('change',loadSlots);
+$('slotRetry').addEventListener('click',loadSlots);
 
 $('booking').addEventListener('submit',async e=>{
   e.preventDefault();

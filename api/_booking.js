@@ -320,9 +320,9 @@ async function releaseHoldSafely(admin, rdv, motif) {
   if (rdv.payment_reference) {
     const first = await reconcilePayment(admin, rdv);
     if (first.etat !== "en_attente") return first;
-    await sumupDeactivate(rdv.payment_reference);
+    const deactivated = await sumupDeactivate(rdv.payment_reference);
     const second = await reconcilePayment(admin, rdv);
-    if (second.etat !== "en_attente") return second;
+    if (second.etat !== "en_attente" || !deactivated) return second;
   }
   const r = await rpc(admin, "myu_liberer_maintien", { p_rdv: rdv.id, p_motif: motif });
   return { etat: r === "libere" ? "libere" : r, rdv: await getRdv(admin, rdv.id) };
