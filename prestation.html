@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Les prestations MYU by Miss’U</title>
+<meta name="description" content="Découvrez les prestations MYU by Miss’U au Lamentin, leur tarif et les créneaux disponibles.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Instrument+Serif&display=swap">
+<style>
+:root {color-scheme:dark;--cream:#f9eedc;--muted:#d4c2a8;--gold:#ebca86;--line:#5e4c34}
+* {box-sizing:border-box}
+body {margin:0;background:#191512;color:var(--cream);font:16px/1.6 "DM Sans",sans-serif}
+main {max-width:1000px;margin:auto;padding:24px 22px 60px}
+a {color:var(--gold)}
+header {display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:36px}
+header a:first-child {font-weight:700;text-decoration:none}
+article {background:#231c16;border:1px solid var(--line);border-radius:20px;padding:clamp(22px,5vw,55px)}
+.intro {display:grid;grid-template-columns:1fr minmax(130px,215px);gap:clamp(18px,5vw,55px);align-items:center}
+h1,h2 {font-family:"Instrument Serif",Georgia,serif;font-weight:400;line-height:1.02;margin:0 0 15px}
+h1 {font-size:clamp(42px,7vw,76px)}
+h2 {font-size:clamp(27px,5vw,38px)}
+p {margin:0 0 18px;color:var(--muted)}
+.price {font-size:1.25rem;font-weight:700;color:var(--gold);margin-bottom:16px}
+figure {margin:0}
+.mark {display:block;width:100%;aspect-ratio:1;object-fit:cover;border-radius:50%;border:1px solid var(--line)}
+section {border-top:1px solid var(--line);margin-top:24px;padding-top:24px}
+.cta {display:inline-block;border-radius:30px;background:var(--gold);color:#22170b;padding:12px 21px;font-weight:700;text-decoration:none}
+.media {display:grid;grid-template-columns:minmax(130px,230px) 1fr;gap:20px;align-items:center}
+.media img,.media video {width:100%;max-height:400px;display:block;object-fit:cover;border-radius:12px;border:1px solid var(--line)}
+.media video {object-fit:contain;background:#100d0b}
+a:focus-visible {outline:2px solid var(--gold);outline-offset:4px}
+@media(max-width:560px) {.intro {display:flex;flex-direction:column-reverse;align-items:flex-start}.mark {width:95px}.media {grid-template-columns:1fr}.media img,.media video {max-width:300px}}
+</style>
+<script src="/myu-catalog.js" defer></script>
+<script defer src="/prestation.js"></script>
+</head>
+<body>
+<main>
+  <header><a href="/">MYU by Miss’U</a><a href="/#servicesList">Toutes les prestations</a></header>
+  <article id="sheet" hidden>
+    <div class="intro">
+      <div>
+        <h1 id="service-title"></h1>
+        <p id="service-description"></p>
+        <p class="price" id="service-price"></p>
+        <a id="book" class="cta" href="/book.html">Voir les créneaux</a>
+      </div>
+      <img id="mark" class="mark" alt="" width="215" height="215">
+    </div>
+    <section aria-labelledby="details-title">
+      <h2 id="details-title">Comment se passe le rendez-vous ?</h2>
+      <p id="service-details"></p>
+    </section>
+    <section class="media" aria-labelledby="studio-title">
+      <figure id="visual"></figure>
+      <div>
+        <h2 id="studio-title">MYU Beauty Studio</h2>
+        <p id="visual-caption">Les rendez-vous ont lieu au studio MYU, au Lamentin.</p>
+      </div>
+    </section>
+  </article>
+  <p id="unavailable">Retrouvez les prestations et les créneaux sur <a href="/book.html">la page de réservation</a>.</p>
+</main>
+</body>
+</html>
