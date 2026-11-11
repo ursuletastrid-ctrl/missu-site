@@ -8,6 +8,16 @@ h1,h2,.serif{font-family:'Cormorant Garamond',Georgia,serif}
 #glowCanvas{position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:none;z-index:0;opacity:0;transition:opacity 1.2s ease}
 #glowCanvas.ready{opacity:1}
 .hero-content{position:relative;z-index:1}
+.hero-previews{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:16px}
+.hero-preview{display:flex;align-items:center;gap:9px;padding:6px;min-width:0;border:1px solid rgba(242,213,176,.45);border-radius:13px;background:rgba(37,21,16,.75);color:#fff;text-decoration:none}
+.hero-preview:focus-visible{outline:3px solid #f7e5df;outline-offset:3px}
+.hero-preview-image{position:relative;display:block;overflow:hidden;flex:0 0 clamp(42px,10vw,62px);aspect-ratio:1;border-radius:8px;background:#4a2c21}
+.hero-preview-image img{display:block;width:100%;height:100%;object-fit:cover}
+.hero-preview-image .eclat-closeup{position:absolute;inset:-54% auto auto -20%;width:140%;height:auto}
+.hero-preview-label{display:grid;gap:3px;min-width:0}
+.hero-preview-label strong{font:600 clamp(15px,4vw,20px)/1.1 'Cormorant Garamond',Georgia,serif}
+.hero-preview-price{font-size:12px;color:#f2d5b0;white-space:nowrap}
+
 @media(prefers-reduced-motion:reduce){#glowCanvas{display:none}}
 .crown{font-size:24px;opacity:.9}
 .eyebrow{font-size:10.5px;letter-spacing:3.5px;color:var(--blush-deep);font-weight:600;text-transform:uppercase}
@@ -116,25 +126,25 @@ h1,h2,.serif{font-family:'Cormorant Garamond',Georgia,serif}
 .sticky .cta-out{flex:1;display:flex;align-items:center;justify-content:center;text-align:center;text-decoration:none;border:1px solid var(--rose-gold);border-radius:999px;color:var(--rose-gold-deep);font-weight:600;font-size:12px;padding:0 8px}
 
 .feature-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:0 0 16px}
-.feature-card{display:block;overflow:hidden;background:var(--cream-soft);color:var(--espresso);border:1px solid var(--blush-deep);border-radius:18px;text-decoration:none}
+.feature-card{display:flex;align-items:center;gap:12px;min-width:0;padding:9px;background:var(--cream-soft);color:var(--espresso);border:1px solid var(--blush-deep);border-radius:16px;text-decoration:none}
 .feature-card:focus-visible{outline:3px solid var(--rose-gold-deep);outline-offset:3px}
-.feature-image{aspect-ratio:5/4;position:relative;overflow:hidden;background:var(--choc)}
+.feature-image{flex:0 0 clamp(66px,19vw,82px);aspect-ratio:1;position:relative;overflow:hidden;border-radius:10px;background:var(--choc)}
 .feature-image img{display:block;width:100%;height:100%;object-fit:cover}
-.feature-eclat img,.feature-freckles img{height:auto;position:absolute;left:0}
-.feature-eclat img{top:-43%}
-.feature-freckles img{top:-43%}
+.feature-eclat img,.feature-freckles img{width:130%;height:auto;position:absolute;left:-15%}
+.feature-eclat img{top:-47%}
+.feature-freckles img{top:-48%}
 .catalog-nav{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 18px}
 .catalog-nav a{padding:6px 12px;border:1px solid var(--blush-deep);border-radius:999px;color:var(--espresso);text-decoration:none;font-size:13px}
 .catalog-nav a:hover,.catalog-nav a:focus-visible{background:var(--blush)}
 .catalog-group{margin-top:20px;scroll-margin-top:14px}
 .catalog-group h3{font:600 25px 'Cormorant Garamond',Georgia,serif;margin:0 0 8px}
-.feature-copy{display:grid;gap:3px;padding:12px 14px 14px}
-.feature-name{font-family:'Cormorant Garamond',Georgia,serif;font-size:clamp(21px,4.5vw,27px);font-weight:600;line-height:1.1}
+.feature-copy{display:grid;gap:3px;min-width:0;padding:2px 3px 2px 0}
+.feature-name{font-family:'Cormorant Garamond',Georgia,serif;font-size:clamp(18px,4.5vw,22px);font-weight:600;line-height:1.1}
 .feature-price{font-size:14px;font-weight:600}
 .feature-details{margin-top:3px;font-size:12px;text-decoration:underline;text-underline-offset:3px}
-.studio-photo{display:block;width:100%;aspect-ratio:16/9;object-fit:cover;object-position:center 38%;border-radius:18px;margin-top:14px}
+.studio-photo{display:block;width:100%;max-height:180px;aspect-ratio:16/9;object-fit:cover;object-position:center 38%;border-radius:18px;margin-top:14px}
 .studio-caption{font-size:12px;margin:6px 0 0;color:var(--espresso)}
-@media(max-width:440px){.feature-grid{grid-template-columns:1fr}.feature-image{aspect-ratio:16/10}}
+@media(max-width:500px){.feature-grid{grid-template-columns:1fr}}
 </style><script defer src="/myu-tracking.js"></script><script defer src="/myu-catalog.js"></script></head>
 <body><main class="wrap">
 <section class="hero">
@@ -145,8 +155,18 @@ h1,h2,.serif{font-family:'Cormorant Garamond',Georgia,serif}
 <div class="logo">MYU</div>
 <div class="tag">THE ART OF GLOW · YOU ARE UNIC</div>
 <h1>Votre beauté naturelle, sublimée en permanence.</h1>
-<p>Venez vivre l'expérience MYU : maquillage permanent et dermopigmentation pensés pour votre visage, votre carnation et le résultat que vous recherchez — à Ducos et au Lamentin, en Martinique.</p>
+<p>Maquillage permanent et soins du visage à Ducos et au Lamentin, en Martinique.</p>
 <a class="cta cta-gold" href="/vip.html">DÉCOUVRIR MYU VIP</a>
+<div class="hero-previews">
+  <a class="hero-preview" href="/book.html?service=candy_lips">
+    <span class="hero-preview-image"><img src="/assets/myu/catalogue/candy-lips.webp" alt="" fetchpriority="high" decoding="async"></span>
+    <span class="hero-preview-label"><strong>Candy Lips</strong><span class="hero-preview-price" data-catalogue-price="candy_lips"></span></span>
+  </a>
+  <a class="hero-preview" href="/soin-visage.html">
+    <span class="hero-preview-image"><img class="eclat-closeup" src="/assets/myu/soins/eclat-aqua-hydro.webp" alt="" decoding="async"></span>
+    <span class="hero-preview-label"><strong>Soin visage Éclat MYU</strong><span class="hero-preview-price">120 €</span></span>
+  </a>
+</div>
 <a class="cta-ghost" href="#expertises">Explorer les prestations</a>
 <p class="micro">Ducos &amp; Lamentin · Martinique · Acompte sécurisé via SumUp</p>
 <a class="jump" href="#contact">Une question ? Contactez MYU</a>
@@ -339,6 +359,10 @@ h1,h2,.serif{font-family:'Cormorant Garamond',Georgia,serif}
 <script>
 document.addEventListener('DOMContentLoaded', function () {
   const catalogue = window.MYU_CATALOG || [];
+  document.querySelectorAll('[data-catalogue-price]').forEach((element) => {
+    const service = window.myuFindService?.(element.dataset.cataloguePrice);
+    if (service) element.textContent = window.myuFormatPrice(service);
+  });
   const list = document.getElementById('servicesList');
   const photo = (name) => '/assets/myu/catalogue/' + name + '.webp';
   const images = {
