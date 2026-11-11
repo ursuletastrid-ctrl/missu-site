@@ -211,7 +211,7 @@ h1,h2,.serif{font-family:'Cormorant Garamond',Georgia,serif}
   <div>
     <h2 id="lip-result-title">Neutralisation des lèvres</h2>
     <p class="lead">Avant / après sur cliente MYU.</p>
-    <a class="lip-result-link" href="/book.html?service=neutralisation">Réserver <span aria-hidden="true">→</span></a>
+    <a class="lip-result-link" href="/prestation.html?service=neutralisation">Voir la fiche <span aria-hidden="true">→</span></a>
   </div>
   <video controls playsinline preload="none" width="360" height="640" aria-label="Avant et après d’une neutralisation des lèvres sur cliente MYU" poster="/assets/myu/realisations/neutralisation-avant-apres.webp">
     <source src="/assets/myu/realisations/neutralisation-avant-apres.mp4" type="video/mp4">
@@ -437,7 +437,7 @@ document.addEventListener('DOMContentLoaded', function () {
   function makeCard(service) {
     const card = document.createElement('a');
     card.className = 'feature-card';
-    card.href = service.href || '/book.html?service=' + encodeURIComponent(service.key);
+    card.href = service.href || '/prestation.html?service=' + encodeURIComponent(service.key);
     card.innerHTML = '<div class="feature-image"><img alt="" loading="lazy" decoding="async"></div>' +
       '<div class="feature-copy"><strong class="feature-name"></strong><span class="feature-price"></span>' +
       '<span class="feature-details">Renseignements <span aria-hidden="true">→</span></span></div>';
