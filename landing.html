@@ -112,6 +112,13 @@ h1,h2,.serif{font-family:'Cormorant Garamond',Georgia,serif}
 .vip{background:linear-gradient(160deg,#0d0b09,#1d160f);border:1px solid #c9a26b;color:#f6efe4}
 .vip .eyebrow-sm{color:#c9a26b}
 .vip h2{color:#f6efe4;font-size:27px;letter-spacing:.5px}
+.vip-intro{display:grid;grid-template-columns:minmax(0,1fr) clamp(100px,33%,164px);gap:14px;align-items:center;margin-bottom:12px}
+.vip-intro h2{margin-bottom:0}
+.vip-intro h2 span{display:block;font-size:.7em;color:#e8cfa4}
+.vip-image{display:block;border:1px solid #8e6a42;border-radius:12px;overflow:hidden}
+.vip-image:focus-visible{outline:2px solid #f6efe4;outline-offset:3px}
+.vip-image img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover}
+
 .vip-quote{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:21px;line-height:1.3;color:#e8cfa4;margin:2px 0 14px}
 .vip .lead{color:#e2d8c8}
 .vip-formules{display:grid;gap:8px;margin:0 0 14px}
@@ -174,8 +181,15 @@ h1,h2,.serif{font-family:'Cormorant Garamond',Georgia,serif}
 </section>
 
 <section class="section vip" id="vip" aria-labelledby="vip-title">
-<p class="eyebrow-sm">L'offre phare</p>
-<h2 id="vip-title">MYU VIP — PRIVATE EXPERIENCE</h2>
+<div class="vip-intro">
+  <div>
+    <p class="eyebrow-sm">L'offre phare</p>
+    <h2 id="vip-title">MYU VIP <span>Private Experience</span></h2>
+  </div>
+  <a class="vip-image" href="/vip.html" aria-label="Découvrir MYU VIP Private Experience">
+    <img src="/assets/myu/studio/vip-fauteuil.webp" alt="Illustration d’un fauteuil de soin dans une pièce à la lumière tamisée" loading="lazy" decoding="async">
+  </a>
+</div>
 <p class="vip-quote">« Votre temps est précieux. Le nôtre vous est consacré. »</p>
 <p class="lead">Découvrez une expérience beauté privée, imaginée pour celles et ceux qui souhaitent s'affranchir des horaires traditionnels. En soirée, le dimanche ou les jours fériés, MYU s'adapte à votre rythme, sous réserve de disponibilité.</p>
 <div class="vip-formules" id="vipFormules">
@@ -395,7 +409,7 @@ document.addEventListener('DOMContentLoaded', function () {
   const extra = [
     { category: 'levres', label: 'Hydralips', price: 150, href: '/hydralips.html', image: photo('aqualips') },
     { category: 'regard', label: 'Tricopigmentation (SMP)', price: 150, priceFrom: true, href: '/smp.html', image: photo('smp') },
-    { category: 'offre', label: 'MYU VIP', priceLabel: 'Supplément à partir de 60 €', href: '/vip.html', image: '/assets/myu/brand/myu-fond-ecran.webp' }
+    { category: 'offre', label: 'MYU VIP', priceLabel: 'Supplément à partir de 60 €', href: '/vip.html', image: '/assets/myu/studio/vip-fauteuil.webp' }
   ];
   const categories = {
     levres: 'Lèvres',
