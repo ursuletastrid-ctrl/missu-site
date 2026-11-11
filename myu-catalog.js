@@ -25,6 +25,7 @@ window.MYU_CATALOG = [
   { key: "freckles", label: "Taches de rousseur — Freckles", category: "regard", price: 160, desc: "Taches de rousseur pigmentées, placement et intensité personnalisés." },
   { key: "soins_led", label: "Lumière rouge LED · 30 min par zone", category: "soins", price: 40, desc: "30 minutes de lumière rouge par zone, accueil et installation compris." },
   { key: "consultation_camouflage", label: "RDV camouflage cicatrices & vergetures", category: "soins", price: 0, desc: "Un rendez-vous de 30 minutes pour étudier ta cicatrice ou tes vergetures." },
+  { key: "conseil", label: "Conseil personnalisé", category: "offre", price: null, desc: "Miss’U vous accompagne pour choisir la prestation adaptée à votre projet." },
   { key: "modele_myu", label: "Offre modèle MYU", category: "offre", price: 160, desc: "Tarif spécial modèle MYU — places limitées." },
 ];
 

@@ -20,7 +20,7 @@ button:disabled{opacity:.5;box-shadow:none}
 .trust{text-align:center;font-size:11px;color:var(--espresso-soft);margin:12px 0 0}
 .msg{margin:12px 0;padding:11px;border-radius:12px;background:var(--blush);font-size:13px;display:none;color:var(--espresso)}
 .back{display:block;text-align:center;color:var(--rose-gold-deep);font-size:12px;margin-top:18px;text-decoration:none}
-.price-box{display:flex;justify-content:space-between;align-items:baseline;margin-top:8px;padding:10px 12px;border-radius:12px;background:var(--blush);display:none}
+.price-box{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;margin-top:8px;padding:10px 12px;border-radius:12px;background:var(--blush);display:none}
 .price-box.show{display:flex}
 .price-box .full{font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--espresso);font-weight:600}
 .price-box .deposit{font-size:11px;color:var(--rose-gold-deep);font-weight:600;text-align:right}
@@ -59,6 +59,7 @@ button:disabled{opacity:.5;box-shadow:none}
 .contact-whatsapp:hover{background:#5c483d}
 .contact-link .contact-detail{font-size:12px;font-weight:400;opacity:.85}
 .prediag-cta{display:block;text-align:center;text-decoration:none;background:linear-gradient(135deg,var(--rose-gold),var(--rose-gold-deep));color:#fff;padding:15px 17px;border-radius:999px;font-weight:600;font-size:14px;margin-top:16px}
+.service-description{flex-basis:100%;margin:.5rem 0 0;font-size:.875rem;line-height:1.45}
 </style><script defer src="/myu-tracking.js"></script><script defer src="/myu-catalog.js"></script></head>
 <body><main class="wrap">
 <div class="brand"><small>MYU BY MISS'U</small><h1>The Art of Glow</h1><p>Votre naturel sublimé en permanence ✨</p></div>
@@ -69,7 +70,7 @@ button:disabled{opacity:.5;box-shadow:none}
 <form id="booking">
 <label for="service">Prestation</label>
 <select id="service" required><option value="">Chargement…</option></select>
-<div class="price-box" id="priceBox"><span class="full" id="priceFull"></span><span class="deposit" id="priceDeposit"></span></div>
+<div class="price-box" id="priceBox"><span class="full" id="priceFull"></span><span class="deposit" id="priceDeposit"></span><p class="service-description" id="serviceDescription" hidden></p></div>
 <div class="grid"><div><label for="firstName">Prénom</label><input id="firstName" autocomplete="given-name" required></div><div><label for="lastName">Nom <span style="font-weight:normal">(facultatif)</span></label><input id="lastName" autocomplete="family-name"></div></div>
 <label for="phone">Téléphone</label><input id="phone" type="tel" autocomplete="tel" inputmode="tel" required placeholder="Votre numéro">
 <label for="email">Email <span style="font-weight:normal">(facultatif)</span></label><input id="email" type="email" autocomplete="email" placeholder="Pour faciliter le suivi">
@@ -162,6 +163,9 @@ function showPrice(){
   if(!x){ box.classList.remove('show'); return; }
   const full = window.myuFindService ? window.myuFindService(x.type_prestation) : null;
   $('priceFull').textContent = x.type_prestation==='consultation_camouflage' ? 'RDV de 30 min' : (x.prix_total!=null ? eur(x.prix_total) : (full ? (window.myuFormatPrice(full)) : ''));
+  const description = $('serviceDescription');
+  description.textContent = full?.desc || '';
+  description.hidden = !description.textContent;
   $('priceDeposit').textContent = Number(x.deposit_amount)>0
     ? `Acompte en ligne : ${eur(x.deposit_amount)}`+(x.solde!=null?` · solde sur place : ${eur(x.solde)}`:'')
     : 'Aucun acompte requis en ligne';

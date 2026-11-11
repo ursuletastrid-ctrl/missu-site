@@ -22,14 +22,6 @@ h1,h2,.serif{font-family:'Cormorant Garamond',Georgia,serif}
 .section h2{font-size:29px;font-weight:500;margin:0 0 8px;color:var(--espresso)}
 .eyebrow-sm{font-size:10px;letter-spacing:2.5px;color:var(--rose-gold-deep);font-weight:700;text-transform:uppercase;margin:0 0 6px}
 .lead{font-size:13.5px;color:var(--espresso-soft);line-height:1.6;margin:0 0 18px}
-.categories{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
-.cat{position:relative;min-height:150px;border-radius:20px;padding:16px 12px;display:flex;flex-direction:column;justify-content:flex-end;color:#fff;text-decoration:none;background:linear-gradient(165deg,var(--choc-soft),var(--rose-gold) 130%);box-shadow:inset 0 -80px 60px rgba(43,23,17,.35),0 10px 24px rgba(74,55,47,.14);overflow:hidden}
-.cat::before{content:"";position:absolute;top:-30%;right:-30%;width:80%;height:80%;background:radial-gradient(circle,rgba(255,255,255,.22),transparent 65%)}
-.cat:nth-child(2){background:linear-gradient(165deg,#7c5240,var(--rose-gold-deep) 130%)}
-.cat:nth-child(3){background:linear-gradient(165deg,var(--choc),#8c5d4a 130%)}
-.cat b{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500}
-.cat span{font-size:9px;margin-top:4px;line-height:1.3;color:var(--blush)}
-.cat-icon{position:absolute;top:10px;right:10px;width:30px;height:30px;object-fit:contain;opacity:.92;filter:drop-shadow(0 2px 4px rgba(0,0,0,.35))}
 .artist{display:flex;gap:16px;align-items:center}
 .artist img{width:112px;height:136px;object-fit:cover;border-radius:18px;flex:none;box-shadow:0 10px 24px rgba(74,55,47,.25);border:2px solid var(--cream)}
 .artist .txt{flex:1}
@@ -40,12 +32,6 @@ h1,h2,.serif{font-family:'Cormorant Garamond',Georgia,serif}
 .techcard .tclabel{position:relative;z-index:1;margin-top:auto;padding:10px 12px;background:linear-gradient(0deg,rgba(43,23,17,.92),transparent);color:#fff;font-size:10px;letter-spacing:.3px;line-height:1.4}
 .techcard .tclabel b{display:block;font-family:'Cormorant Garamond',serif;font-size:14.5px;font-weight:500}
 .techcard{display:flex;flex-direction:column;justify-content:flex-end}
-.services{display:grid;gap:10px}
-.service{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:14px 15px;border-radius:18px;background:var(--cream-soft);border:1px solid var(--blush-deep)}
-.service .info b{font-size:13.5px;font-family:'Jost',sans-serif;font-weight:600;color:var(--espresso)}
-.service .info span{display:block;font-size:11px;color:var(--espresso-soft);margin-top:2px}
-.service .price{display:block;font-size:12px;color:var(--rose-gold-deep);font-weight:700;margin-top:4px}
-.service a{white-space:nowrap;text-decoration:none;color:#fff;background:linear-gradient(135deg,var(--rose-gold),var(--rose-gold-deep));padding:9px 14px;border-radius:999px;font-size:10.5px;font-weight:700;letter-spacing:.3px}
 .proof{background:linear-gradient(160deg,var(--cream),var(--blush))}
 .proofgrid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
 .proofcard{position:relative;min-height:118px;border-radius:18px;padding:15px;background:linear-gradient(150deg,var(--rose-gold),var(--rose-gold-deep) 120%);color:#fff;display:flex;flex-direction:column;justify-content:flex-end;overflow:hidden}
@@ -64,15 +50,7 @@ h1,h2,.serif{font-family:'Cormorant Garamond',Georgia,serif}
 .sticky{position:fixed;z-index:20;left:50%;transform:translateX(-50%);bottom:12px;width:min(600px,calc(100% - 20px));background:rgba(255,252,248,.95);backdrop-filter:blur(10px);padding:9px;border:1px solid var(--blush-deep);border-radius:999px;box-shadow:0 12px 34px rgba(43,23,17,.22)}
 .sticky .cta{padding:14px}
 .after{font-size:11px;text-align:center;color:var(--espresso-soft);margin-top:14px;letter-spacing:.2px}
-@media(max-width:420px){.hero h1{font-size:34px}.categories{grid-template-columns:1fr 1fr}.cat:last-child{grid-column:1/-1;min-height:110px}.trust{grid-template-columns:1fr}}
-.soon{display:block;margin-top:12px;padding:16px 18px;border-radius:18px;background:#14110d;color:#f6efe4;text-decoration:none;border:1px solid #c9a26b}
-.soon small{display:block;font-size:10.5px;letter-spacing:2px;text-transform:uppercase;color:#c9a26b;margin-bottom:4px}
-.soon b{display:block;font-family:"Cormorant Garamond",serif;font-size:22px;font-weight:600;margin-bottom:4px}
-.soon span{font-size:12.5px;line-height:1.5;color:#e2d8c8}
-.soon.soin{background:var(--cream-soft);color:var(--espresso);border-color:var(--blush-deep)}
-.soon.soin small{color:var(--rose-gold-deep)}
-.soon.soin span{color:var(--espresso-soft)}
-.soon:focus-visible{outline:3px solid var(--rose-gold-deep);outline-offset:3px}
+@media(max-width:420px){.hero h1{font-size:34px}.trust{grid-template-columns:1fr}}
 .contact-links{display:grid;gap:10px;margin:14px 0 0;font-style:normal}
 .contact-link{display:flex;flex-direction:column;gap:5px;min-height:64px;padding:14px 16px;background:var(--cream-soft);border:1px solid var(--blush-deep);border-radius:16px;text-decoration:none;color:var(--espresso);overflow-wrap:anywhere}
 .contact-link small{font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--rose-gold-deep)}
@@ -141,9 +119,15 @@ h1,h2,.serif{font-family:'Cormorant Garamond',Georgia,serif}
 .feature-card{display:block;overflow:hidden;background:var(--cream-soft);color:var(--espresso);border:1px solid var(--blush-deep);border-radius:18px;text-decoration:none}
 .feature-card:focus-visible{outline:3px solid var(--rose-gold-deep);outline-offset:3px}
 .feature-image{aspect-ratio:5/4;position:relative;overflow:hidden;background:var(--choc)}
-.feature-image img{display:block;width:100%;height:auto;position:absolute;left:0}
+.feature-image img{display:block;width:100%;height:100%;object-fit:cover}
+.feature-eclat img,.feature-freckles img{height:auto;position:absolute;left:0}
 .feature-eclat img{top:-43%}
 .feature-freckles img{top:-43%}
+.catalog-nav{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 18px}
+.catalog-nav a{padding:6px 12px;border:1px solid var(--blush-deep);border-radius:999px;color:var(--espresso);text-decoration:none;font-size:13px}
+.catalog-nav a:hover,.catalog-nav a:focus-visible{background:var(--blush)}
+.catalog-group{margin-top:20px;scroll-margin-top:14px}
+.catalog-group h3{font:600 25px 'Cormorant Garamond',Georgia,serif;margin:0 0 8px}
 .feature-copy{display:grid;gap:3px;padding:12px 14px 14px}
 .feature-name{font-family:'Cormorant Garamond',Georgia,serif;font-size:clamp(21px,4.5vw,27px);font-weight:600;line-height:1.1}
 .feature-price{font-size:14px;font-weight:600}
@@ -208,7 +192,13 @@ h1,h2,.serif{font-family:'Cormorant Garamond',Georgia,serif}
 <section class="section" id="expertises">
 <p class="eyebrow-sm">Les expertises MYU</p>
 <h2>Révélez votre Glow</h2>
-<p class="lead">Lèvres, sourcils ou regard : entrez directement dans l'univers qui vous correspond. Retrouvez ci-dessous toutes les prestations MYU et leurs tarifs.</p>
+<p class="lead">Choisissez une prestation pour voir les détails. Certaines images illustrent les techniques.</p>
+<nav class="catalog-nav" aria-label="Catégories de prestations">
+  <a href="#catalogue-levres">Lèvres</a>
+  <a href="#catalogue-regard">Sourcils et regard</a>
+  <a href="#catalogue-soins">Soins du visage et du corps</a>
+  <a href="#catalogue-offre">Offres MYU</a>
+</nav>
 <div class="feature-grid">
   <a class="feature-card" href="/soin-visage.html">
     <div class="feature-image feature-eclat"><img src="/assets/myu/soins/eclat-aqua-hydro.webp" alt="" loading="lazy" decoding="async"></div>
@@ -227,21 +217,10 @@ h1,h2,.serif{font-family:'Cormorant Garamond',Georgia,serif}
     </div>
   </a>
 </div>
-<div class="categories">
-<a class="cat" href="/book.html?service=candy_lips"><img class="cat-icon" src="/assets/myu/brand/myu_cover_levres.webp" alt="" loading="lazy"><b>Lèvres</b><span>Couleur · équilibre · éclat</span></a>
-<a class="cat" href="/book.html?service=powder_brows"><img class="cat-icon" src="/assets/myu/brand/myu_cover_sourcils.webp" alt="" loading="lazy"><b>Sourcils</b><span>Structure · douceur · naturel</span></a>
-<a class="cat" href="/book.html?service=eyeliner_poudre"><b>Regard</b><span>Intensité · élégance</span></a>
+<div id="services">
+  <div id="servicesList"></div>
+  <noscript><p><a href="/book.html">Voir le catalogue et les tarifs</a></p></noscript>
 </div>
-<a class="soon soin" href="/camouflage.html"><small>Camouflage pigmentaire</small><b>Cicatrices dès 150 € la zone · vergetures dès 100 €</b><span>Un camouflage pigmentaire étudié selon ta peau. RDV en ligne pour les cicatrices, réservation directe pour les vergetures. Découvrir →</span></a>
-<a class="soon soin" href="/led.html"><small>Soins beauté · nouveau</small><b>Lumière rouge LED · 40 € par zone</b><span>30 minutes de lumière rouge par zone, accueil et installation compris. Acompte de 20 € sécurisé via SumUp, solde lors de la séance. Découvrir et réserver en ligne →</span></a>
-<a class="soon soin" href="/hydralips.html"><small>Soin des lèvres</small><b>Hydralips</b><span>Un soin des lèvres, pas du maquillage permanent. Demander mon diagnostic →</span></a>
-</section>
-
-<section class="section" id="services">
-<p class="eyebrow-sm">Les tarifs MYU</p>
-<h2>Choisissez votre prestation</h2>
-<p class="lead">Pas de compte à créer avant de réserver. Choisissez, renseignez votre créneau et accédez au paiement de l'acompte lorsqu'il est requis.</p>
-<div class="services" id="servicesList"></div>
 </section>
 
 <section class="section men" id="hommes" aria-labelledby="men-title">
@@ -358,21 +337,80 @@ h1,h2,.serif{font-family:'Cormorant Garamond',Georgia,serif}
 </script>
 
 <script>
-(function(){
-  function labelCat(c){ return (window.MYU_CATEGORY_LABELS||{})[c] || c; }
-  function render(){
-    var list = document.getElementById('servicesList');
-    var catalog = window.MYU_CATALOG || [];
-    var featured = ['modele_myu','powder_brows','neutralisation','candy_lips','eyeliner_poudre'];
-    var rows = featured.map(function(k){ return catalog.find(function(s){ return s.key === k; }); }).filter(Boolean);
-    if (!rows.length) { return; }
-    list.innerHTML = rows.map(function(s){
-      var price = window.myuFormatPrice ? window.myuFormatPrice(s) : (s.price + ' €');
-      return '<div class="service"><div class="info"><b>'+s.label+'</b><span>'+s.desc+'</span><span class="price">'+price+'</span></div><a href="/book.html?service='+encodeURIComponent(s.key)+'">Réserver</a></div>';
-    }).join('');
+document.addEventListener('DOMContentLoaded', function () {
+  const catalogue = window.MYU_CATALOG || [];
+  const list = document.getElementById('servicesList');
+  const photo = (name) => '/assets/myu/catalogue/' + name + '.webp';
+  const images = {
+    candy_lips: 'candy-lips',
+    velvet_lips: 'velvet-lips',
+    aqualips_blush: 'aqualips',
+    neutralisation: 'neutralisation',
+    powder_brows: 'powder-brows',
+    eyeliner_classique: 'eyeliner-classique',
+    eyeliner_poudre: 'eyeliner-poudre',
+    taches_brunes_visage: 'taches-visage',
+    taches_brunes_corps: 'taches-corps',
+    vergetures: 'vergetures',
+    microneedling: 'microneedling',
+    bb_glow: 'bb-glow',
+    soins_corps_infrarouge: 'infrarouge',
+    soins_led: 'led',
+    consultation_camouflage: 'vergetures'
+  };
+  const overrides = {
+    soins_led: { href: '/led.html', priceLabel: '40 € par zone' },
+    consultation_camouflage: {
+      href: '/camouflage.html',
+      label: 'Camouflage des cicatrices',
+      priceLabel: 'À partir de 150 € la zone'
+    },
+    conseil: { image: '/assets/myu/artiste/astrid-portrait.webp' },
+    modele_myu: { image: '/assets/myu/studio/myu-beauty-studio-lamentin.webp' }
+  };
+  const extra = [
+    { category: 'levres', label: 'Hydralips', price: 150, href: '/hydralips.html', image: photo('aqualips') },
+    { category: 'regard', label: 'Tricopigmentation (SMP)', price: 150, priceFrom: true, href: '/smp.html', image: photo('smp') },
+    { category: 'offre', label: 'MYU VIP', priceLabel: 'Supplément à partir de 60 €', href: '/vip.html', image: '/assets/myu/brand/myu-fond-ecran.webp' }
+  ];
+  const categories = {
+    levres: 'Lèvres',
+    regard: 'Sourcils, regard et cuir chevelu',
+    soins: 'Soins du visage et du corps',
+    offre: 'Offres MYU'
+  };
+
+  function makeCard(service) {
+    const card = document.createElement('a');
+    card.className = 'feature-card';
+    card.href = service.href || '/book.html?service=' + encodeURIComponent(service.key);
+    card.innerHTML = '<div class="feature-image"><img alt="" loading="lazy" decoding="async"></div>' +
+      '<div class="feature-copy"><strong class="feature-name"></strong><span class="feature-price"></span>' +
+      '<span class="feature-details">Renseignements <span aria-hidden="true">→</span></span></div>';
+    card.querySelector('img').src = service.image || (images[service.key] ? photo(images[service.key]) : '/assets/myu/brand/myu-fond-ecran.webp');
+    card.querySelector('.feature-name').textContent = service.label;
+    card.querySelector('.feature-price').textContent = service.priceLabel || window.myuFormatPrice(service);
+    return card;
   }
-  if (window.MYU_CATALOG) render(); else document.addEventListener('DOMContentLoaded', function(){ setTimeout(render, 30); });
-})();
+
+  const services = catalogue
+    .filter((service) => service.key !== 'freckles')
+    .map((service) => ({ ...service, ...overrides[service.key] }))
+    .concat(extra);
+
+  Object.entries(categories).forEach(([key, title]) => {
+    const group = document.createElement('section');
+    group.className = 'catalog-group';
+    group.id = 'catalogue-' + key;
+    const heading = document.createElement('h3');
+    heading.textContent = title;
+    const grid = document.createElement('div');
+    grid.className = 'feature-grid';
+    services.filter((service) => service.category === key).forEach((service) => grid.append(makeCard(service)));
+    group.append(heading, grid);
+    list.append(group);
+  });
+});
 </script>
 
 <script>
