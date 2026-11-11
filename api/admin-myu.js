@@ -276,6 +276,9 @@ async function updateRendezVous(admin, { rdvId, statut, dateRdv, heureRdv, lieu,
   } else if ((patch.debut || current.debut) && ["confirme", "modifie", "demande"].includes(finalStatut)) {
     patch.bloque = true;
   }
+  if (patch.bloque && patch.debut && (+new Date(patch.debut) !== +new Date(current.debut) || +new Date(patch.fin) !== +new Date(current.fin))) {
+    await B.assertRangeFree(admin, { debut: new Date(patch.debut), fin: new Date(patch.fin), excludeRdvId: rdvId });
+  }
   // Toute modification d'un rendez-vous confirmé est répercutée sur l'agenda et la feuille.
   if (patch.bloque === false && current.agenda_evenement_id) patch.agenda_statut = "a_retirer";
   else if (patch.bloque === true && (patch.debut || !current.bloque || current.agenda_statut !== "ok")) patch.agenda_statut = "a_synchroniser";
