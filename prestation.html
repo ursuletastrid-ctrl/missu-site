@@ -6,58 +6,81 @@
 <title>Les prestations MYU by Miss’U</title>
 <meta name="description" content="Découvrez les prestations MYU by Miss’U au Lamentin, leur tarif et les créneaux disponibles.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Instrument+Serif&display=swap">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Jost:wght@400;500;600&display=swap">
 <style>
-:root {color-scheme:dark;--cream:#f9eedc;--muted:#d4c2a8;--gold:#ebca86;--line:#5e4c34}
-* {box-sizing:border-box}
-body {margin:0;background:#191512;color:var(--cream);font:16px/1.6 "DM Sans",sans-serif}
-main {max-width:1000px;margin:auto;padding:24px 22px 60px}
-a {color:var(--gold)}
-header {display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:36px}
-header a:first-child {font-weight:700;text-decoration:none}
-article {background:#231c16;border:1px solid var(--line);border-radius:20px;padding:clamp(22px,5vw,55px)}
-.intro {display:grid;grid-template-columns:1fr minmax(130px,215px);gap:clamp(18px,5vw,55px);align-items:center}
-h1,h2 {font-family:"Instrument Serif",Georgia,serif;font-weight:400;line-height:1.02;margin:0 0 15px}
-h1 {font-size:clamp(42px,7vw,76px)}
-h2 {font-size:clamp(27px,5vw,38px)}
-p {margin:0 0 18px;color:var(--muted)}
-.price {font-size:1.25rem;font-weight:700;color:var(--gold);margin-bottom:16px}
-figure {margin:0}
-.mark {display:block;width:100%;aspect-ratio:1;object-fit:cover;border-radius:50%;border:1px solid var(--line)}
-section {border-top:1px solid var(--line);margin-top:24px;padding-top:24px}
-.cta {display:inline-block;border-radius:30px;background:var(--gold);color:#22170b;padding:12px 21px;font-weight:700;text-decoration:none}
-.media {display:grid;grid-template-columns:minmax(130px,230px) 1fr;gap:20px;align-items:center}
-.media img,.media video {width:100%;max-height:400px;display:block;object-fit:cover;border-radius:12px;border:1px solid var(--line)}
-.media video {object-fit:contain;background:#100d0b}
-a:focus-visible {outline:2px solid var(--gold);outline-offset:4px}
-@media(max-width:560px) {.intro {display:flex;flex-direction:column-reverse;align-items:flex-start}.mark {width:95px}.media {grid-template-columns:1fr}.media img,.media video {max-width:300px}}
+:root {
+  color-scheme: dark;
+  --black: #0d0b09;
+  --panel: #18130e;
+  --gold: #dfbf84;
+  --text: #f6efe4;
+  --muted: #ddd0bd;
+  --border: #715733;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--black); color: var(--text); font: 1rem/1.65 Jost, Arial, sans-serif; }
+main { width: min(100% - 2rem, 46rem); margin: auto; padding-block: 2rem 3rem; }
+a { color: var(--gold); text-underline-offset: .22em; }
+a:focus-visible, video:focus-visible { outline: 2px solid var(--gold); outline-offset: 5px; }
+.intro, section { padding: clamp(1.25rem, 4vw, 2.5rem); border: 1px solid var(--border); border-radius: 1.25rem; }
+.intro {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) clamp(5rem, 16vw, 8.5rem);
+  align-items: center;
+  gap: clamp(1rem, 4vw, 2.5rem);
+  margin-top: 1rem;
+  background: radial-gradient(ellipse at top right, #3a2917, var(--panel) 68%);
+}
+section { margin-top: 1rem; background: var(--panel); }
+h1, h2 { font-family: "Cormorant Garamond", Georgia, serif; font-weight: 600; line-height: 1; margin: 0 0 .75rem; }
+h1 { font-size: clamp(2.55rem, 7vw, 4.5rem); overflow-wrap: break-word; }
+h2 { font-size: clamp(1.85rem, 5vw, 2.4rem); }
+p { margin: 0; color: var(--muted); }
+.brand { margin-bottom: .75rem; color: var(--gold); font-size: .8rem; letter-spacing: .12em; text-transform: uppercase; }
+.price { margin: .75rem 0 1rem; color: var(--gold); font-size: 1.25rem; font-weight: 600; }
+.cta { display: inline-block; padding: .65rem 1.25rem; border-radius: 99px; background: var(--gold); color: var(--black); font-weight: 600; text-decoration: none; }
+.cta:hover { background: #edcf96; }
+figure { margin: 0; }
+.mark { display: block; width: 100%; height: auto; border-radius: 50%; }
+.media { display: grid; grid-template-columns: minmax(0, 1fr) minmax(8rem, 12rem); gap: 1.25rem; align-items: center; }
+.media img, .media video { display: block; width: 100%; height: auto; border-radius: .85rem; border: 1px solid var(--border); }
+.media video { max-height: 20rem; object-fit: contain; background: var(--black); }
+#unavailable { margin-top: 1rem; }
+@media (max-width: 33rem) {
+  .intro { display: flex; flex-direction: column-reverse; align-items: flex-start; gap: .85rem; }
+  .mark { width: 4.25rem; }
+  .media { grid-template-columns: minmax(0, 1fr); gap: 1rem; }
+  .media figure { width: min(100%, 14rem); }
+}
 </style>
 <script src="/myu-catalog.js" defer></script>
 <script defer src="/prestation.js"></script>
 </head>
 <body>
 <main>
-  <header><a href="/">MYU by Miss’U</a><a href="/#servicesList">Toutes les prestations</a></header>
+  <a href="/landing.html#servicesList">← Toutes les prestations MYU</a>
   <article id="sheet" hidden>
-    <div class="intro">
+    <header class="intro">
       <div>
+        <p class="brand">MYU by Miss’U · Le Lamentin</p>
         <h1 id="service-title"></h1>
         <p id="service-description"></p>
         <p class="price" id="service-price"></p>
         <a id="book" class="cta" href="/book.html">Voir les créneaux</a>
       </div>
-      <img id="mark" class="mark" alt="" width="215" height="215">
-    </div>
+      <img id="mark" class="mark" alt="" width="136" height="136">
+    </header>
     <section aria-labelledby="details-title">
       <h2 id="details-title">Comment se passe le rendez-vous ?</h2>
       <p id="service-details"></p>
     </section>
     <section class="media" aria-labelledby="studio-title">
-      <figure id="visual"></figure>
       <div>
         <h2 id="studio-title">MYU Beauty Studio</h2>
         <p id="visual-caption">Les rendez-vous ont lieu au studio MYU, au Lamentin.</p>
       </div>
+      <figure id="visual"></figure>
     </section>
   </article>
   <p id="unavailable">Retrouvez les prestations et les créneaux sur <a href="/book.html">la page de réservation</a>.</p>
