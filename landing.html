@@ -136,6 +136,21 @@ h1,h2,.serif{font-family:'Cormorant Garamond',Georgia,serif}
 .sticky{display:flex;gap:8px}
 .sticky .cta{flex:1.6;padding:14px 10px;font-size:12.5px}
 .sticky .cta-out{flex:1;display:flex;align-items:center;justify-content:center;text-align:center;text-decoration:none;border:1px solid var(--rose-gold);border-radius:999px;color:var(--rose-gold-deep);font-weight:600;font-size:12px;padding:0 8px}
+
+.feature-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:0 0 16px}
+.feature-card{display:block;overflow:hidden;background:var(--cream-soft);color:var(--espresso);border:1px solid var(--blush-deep);border-radius:18px;text-decoration:none}
+.feature-card:focus-visible{outline:3px solid var(--rose-gold-deep);outline-offset:3px}
+.feature-image{aspect-ratio:5/4;position:relative;overflow:hidden;background:var(--choc)}
+.feature-image img{display:block;width:100%;height:auto;position:absolute;left:0}
+.feature-eclat img{top:-43%}
+.feature-freckles img{top:-43%}
+.feature-copy{display:grid;gap:3px;padding:12px 14px 14px}
+.feature-name{font-family:'Cormorant Garamond',Georgia,serif;font-size:clamp(21px,4.5vw,27px);font-weight:600;line-height:1.1}
+.feature-price{font-size:14px;font-weight:600}
+.feature-details{margin-top:3px;font-size:12px;text-decoration:underline;text-underline-offset:3px}
+.studio-photo{display:block;width:100%;aspect-ratio:16/9;object-fit:cover;object-position:center 38%;border-radius:18px;margin-top:14px}
+.studio-caption{font-size:12px;margin:6px 0 0;color:var(--espresso)}
+@media(max-width:440px){.feature-grid{grid-template-columns:1fr}.feature-image{aspect-ratio:16/10}}
 </style><script defer src="/myu-tracking.js"></script><script defer src="/myu-catalog.js"></script></head>
 <body><main class="wrap">
 <section class="hero">
@@ -194,6 +209,24 @@ h1,h2,.serif{font-family:'Cormorant Garamond',Georgia,serif}
 <p class="eyebrow-sm">Les expertises MYU</p>
 <h2>Révélez votre Glow</h2>
 <p class="lead">Lèvres, sourcils ou regard : entrez directement dans l'univers qui vous correspond. Retrouvez ci-dessous toutes les prestations MYU et leurs tarifs.</p>
+<div class="feature-grid">
+  <a class="feature-card" href="/soin-visage.html">
+    <div class="feature-image feature-eclat"><img src="/assets/myu/soins/eclat-aqua-hydro.webp" alt="" loading="lazy" decoding="async"></div>
+    <div class="feature-copy">
+      <strong class="feature-name">Soin visage Éclat MYU</strong>
+      <span class="feature-price">120 €</span>
+      <span class="feature-details">Renseignements <span aria-hidden="true">→</span></span>
+    </div>
+  </a>
+  <a class="feature-card" href="/freckles.html">
+    <div class="feature-image feature-freckles"><img src="/freckles-1-sur-5.webp" alt="" loading="lazy" decoding="async"></div>
+    <div class="feature-copy">
+      <strong class="feature-name">Freckles</strong>
+      <span class="feature-price">160 €</span>
+      <span class="feature-details">Renseignements <span aria-hidden="true">→</span></span>
+    </div>
+  </a>
+</div>
 <div class="categories">
 <a class="cat" href="/book.html?service=candy_lips"><img class="cat-icon" src="/assets/myu/brand/myu_cover_levres.webp" alt="" loading="lazy"><b>Lèvres</b><span>Couleur · équilibre · éclat</span></a>
 <a class="cat" href="/book.html?service=powder_brows"><img class="cat-icon" src="/assets/myu/brand/myu_cover_sourcils.webp" alt="" loading="lazy"><b>Sourcils</b><span>Structure · douceur · naturel</span></a>
@@ -202,12 +235,6 @@ h1,h2,.serif{font-family:'Cormorant Garamond',Georgia,serif}
 <a class="soon soin" href="/camouflage.html"><small>Camouflage pigmentaire</small><b>Cicatrices dès 150 € la zone · vergetures dès 100 €</b><span>Un camouflage pigmentaire étudié selon ta peau. RDV en ligne pour les cicatrices, réservation directe pour les vergetures. Découvrir →</span></a>
 <a class="soon soin" href="/led.html"><small>Soins beauté · nouveau</small><b>Lumière rouge LED · 40 € par zone</b><span>30 minutes de lumière rouge par zone, accueil et installation compris. Acompte de 20 € sécurisé via SumUp, solde lors de la séance. Découvrir et réserver en ligne →</span></a>
 <a class="soon soin" href="/hydralips.html"><small>Soin des lèvres</small><b>Hydralips</b><span>Un soin des lèvres, pas du maquillage permanent. Demander mon diagnostic →</span></a>
-<a class="soon" href="/soin-visage.html">
-  <small>Nouveau · Soin du visage</small>
-  <b>Soin visage Éclat MYU</b>
-  <span>Découvrez un soin pensé pour la douceur et la fraîcheur de la peau. Découvrir le soin visage →</span>
-</a>
-<a class="soon" href="/freckles.html"><small>Nouveau chez MYU</small><b>Taches de rousseur — Freckles · 160 €</b><span>Des taches de rousseur pigmentées, selon tes envies. Découvrir et réserver en ligne →</span></a>
 </section>
 
 <section class="section" id="services">
@@ -248,6 +275,8 @@ h1,h2,.serif{font-family:'Cormorant Garamond',Georgia,serif}
 <div>🔒 <b>Acompte sécurisé</b><br>Paiement en ligne via SumUp lorsqu'il est requis.</div>
 <div>📍 <b>Ducos &amp; Lamentin · Martinique</b><br>Venez vivre l'expérience MYU by Miss'U.</div>
 </div>
+<img class="studio-photo" src="/assets/myu/studio/myu-beauty-studio-lamentin.webp" alt="Intérieur du MYU Beauty Studio, avec l’espace d’accueil et le poste de manucure" loading="lazy" decoding="async">
+<p class="studio-caption">MYU Beauty Studio · Le Lamentin</p>
 </section>
 
 <section class="section">
