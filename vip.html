@@ -287,6 +287,7 @@ $('vipForm').addEventListener('submit',async ev=>{
     if(!r.ok||!j.success){show(j.error||'La demande n\'a pas pu être envoyée. Réessayez ou écrivez à Miss\'U sur WhatsApp.');return reset()}
     if(!j.data.enregistre){show('La demande n\'a pas pu être envoyée. Écrivez à Miss\'U sur WhatsApp.');return reset()}
     const url=j.data.suiviUrl;
+    try{window.MYUTracking?.bookingCreated('vip-'+Date.now().toString(36)+Math.random().toString(36).slice(2,8),false)}catch(_){}
     $('formCard').classList.add('hidden');$('success').classList.remove('hidden');
     $('suiviLink').textContent=url;$('followBtn').href=url;
     $('waAstrid').href='https://wa.me/596696178587?text='+encodeURIComponent('Bonjour Miss\'U, je viens d\'envoyer une demande MYU VIP. Mon lien de suivi : '+url);

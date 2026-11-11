@@ -1,7 +1,14 @@
 /* MYU public-site measurement. Never include this file in the client/health portal. */
 (function () {
   'use strict';
-  if (!['/', '/landing.html', '/book.html'].includes(location.pathname)) return;
+  // Public marketing pages only (ad landing pages included). Never add prediag.html
+  // (health questions) or vip-suivi.html (client follow-up) to this list.
+  const TRACKED_PAGES = [
+    '/', '/landing', '/landing.html', '/book', '/book.html',
+    '/vip', '/vip.html', '/freckles', '/freckles.html',
+    '/led', '/led.html', '/camouflage', '/camouflage.html'
+  ];
+  if (!TRACKED_PAGES.includes(location.pathname)) return;
   // Payment return URLs contain appointment identifiers; never instrument them.
   if (new URLSearchParams(location.search).has('rdv') || new URLSearchParams(location.search).has('paid')) return;
   const PIXEL = '1071187952558579';
