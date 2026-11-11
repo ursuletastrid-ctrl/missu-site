@@ -127,6 +127,10 @@ h1,h2,.serif{font-family:'Cormorant Garamond',Georgia,serif}
 .vf-top b{font-family:'Cormorant Garamond',serif;font-size:19px;font-weight:600;color:#f6efe4}
 .vf-top span{font-size:14px;font-weight:700;color:#e8cfa4;white-space:nowrap}
 .vf small{display:block;margin-top:2px;font-size:11.5px;color:#cdbfa8;line-height:1.4}
+.lip-result{display:grid;grid-template-columns:minmax(0,1fr) clamp(114px,40%,174px);align-items:center;gap:16px}
+.lip-result video{display:block;width:100%;height:auto;aspect-ratio:9/16;border-radius:12px;background:#1d1511}
+.lip-result-link{display:inline-block;color:var(--espresso);font-size:13px;font-weight:600;text-underline-offset:3px}
+@media(max-width:360px){.lip-result{gap:10px}.lip-result h2{font-size:23px}}
 .vip-note{font-size:11.5px;line-height:1.55;color:#cdbfa8;margin:0 0 16px}
 .sticky{display:flex;gap:8px}
 .sticky .cta{flex:1.6;padding:14px 10px;font-size:12.5px}
@@ -202,6 +206,18 @@ h1,h2,.serif{font-family:'Cormorant Garamond',Georgia,serif}
 <p class="vip-note">Le supplément s'ajoute au prix de la prestation ; le total est affiché avant l'envoi de votre demande. Chaque demande est étudiée personnellement par Miss'U, au Lamentin. Aucun paiement avant son accord.</p>
 <a class="cta cta-gold" href="/vip.html">DEMANDER MON RENDEZ-VOUS PRIVÉ</a>
 </section>
+
+<section class="section lip-result" aria-labelledby="lip-result-title">
+  <div>
+    <h2 id="lip-result-title">Neutralisation des lèvres</h2>
+    <p class="lead">Avant / après sur cliente MYU.</p>
+    <a class="lip-result-link" href="/book.html?service=neutralisation">Réserver <span aria-hidden="true">→</span></a>
+  </div>
+  <video controls playsinline preload="none" width="360" height="640" aria-label="Avant et après d’une neutralisation des lèvres sur cliente MYU" poster="/assets/myu/realisations/neutralisation-avant-apres.webp">
+    <source src="/assets/myu/realisations/neutralisation-avant-apres.mp4" type="video/mp4">
+  </video>
+</section>
+
 
 <section class="section rose" id="octobre-rose" aria-labelledby="rose-title" hidden>
 <p class="eyebrow-sm">Octobre Rose chez MYU</p>
