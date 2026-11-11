@@ -2771,6 +2771,29 @@ function AdminAgenda({ adminToken }) {
   });
   const [showSettings, setShowSettings] = useState(false);
   const [message, setMessage] = useState("");
+  const [moving, setMoving] = useState(null);
+  const [savingMove, setSavingMove] = useState(false);
+  useEffect(() => {
+    if (moving) document.getElementById("admin-move-booking")?.scrollIntoView({ block: "center" });
+  }, [moving?.rdvId]);
+  const syncOk = (status) => ["ok", "non_requis", "retire"].includes(status);
+
+  const moveBooking = async (event) => {
+    event.preventDefault();
+    setSavingMove(true);
+    try {
+      const updated = await callAdminMyu("updateRendezVous", { ...moving, statut: "modifie" }, adminToken);
+      setMoving(null);
+      await loadAgenda();
+      setMessage(updated.agenda_statut === "ok"
+        ? "Rendez-vous déplacé et synchronisé dans Google Agenda."
+        : "Rendez-vous déplacé. Synchronisation Google Agenda à vérifier.");
+    } catch (error) {
+      setMessage(error.message);
+    } finally {
+      setSavingMove(false);
+    }
+  };
 
   const endDate = toIsoDate(addDays(new Date(weekStart + "T12:00:00"), 6));
   const weekDays = Array.from({ length: 7 }, (_, n) => {
@@ -2804,15 +2827,17 @@ function AdminAgenda({ adminToken }) {
     if (!selectedClient) { setMessage("Choisis d'abord une cliente."); return; }
     setMessage("");
     try {
-      await callAdminMyu("createManualRendezVous", {
+      const created = await callAdminMyu("createManualRendezVous", {
         clientId: selectedClient.id,
         ...form,
         depositAmount: Number(form.depositAmount) || 0,
         statut: "confirme",
       }, adminToken);
       setShowAdd(false); setSelectedClient(null); setClients([]); setClientQuery("");
-      setMessage("Rendez-vous ajouté à l’agenda.");
       await loadAgenda();
+      setMessage(created.agenda_statut === "ok"
+        ? "Rendez-vous ajouté à Google Agenda."
+        : "Rendez-vous enregistré. Synchronisation Google Agenda à vérifier.");
     } catch (e) { setMessage(e.message); }
   };
 
@@ -2821,8 +2846,8 @@ function AdminAgenda({ adminToken }) {
     try {
       const r = await callAdminMyu("retryBookingSync", { rdvId }, adminToken);
       const a = r.affichage;
-      setMessage(a.agenda.statut === "ok" && a.feuille.statut === "ok" ? "Agenda et feuille synchronisés." : `Synchro incomplète — agenda : ${a.agenda.statut}${a.agenda.erreur ? " (" + a.agenda.erreur + ")" : ""} · feuille : ${a.feuille.statut}${a.feuille.erreur ? " (" + a.feuille.erreur + ")" : ""}`);
       await loadAgenda();
+      setMessage(syncOk(a.agenda.statut) && syncOk(a.feuille.statut) ? "Agenda et feuille synchronisés." : `Synchro incomplète — agenda : ${a.agenda.statut}${a.agenda.erreur ? " (" + a.agenda.erreur + ")" : ""} · feuille : ${a.feuille.statut}${a.feuille.erreur ? " (" + a.feuille.erreur + ")" : ""}`);
     } catch (e) { setMessage(e.message); }
   };
 
@@ -2912,6 +2937,21 @@ function AdminAgenda({ adminToken }) {
         </SectionCard>
       )}
 
+      {moving && (
+        <SectionCard title="Déplacer un rendez-vous">
+          <form id="admin-move-booking" onSubmit={moveBooking}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+              <label>Date<TextInput type="date" required value={moving.dateRdv} onChange={(e) => setMoving({ ...moving, dateRdv: e.target.value })} /></label>
+              <label>Heure en Martinique<TextInput type="time" required value={moving.heureRdv} onChange={(e) => setMoving({ ...moving, heureRdv: e.target.value })} /></label>
+            </div>
+            <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
+              <PrimaryButton type="submit" disabled={savingMove}>Enregistrer le déplacement</PrimaryButton>
+              {!savingMove && <GhostButton onClick={() => setMoving(null)}>Fermer</GhostButton>}
+            </div>
+          </form>
+        </SectionCard>
+      )}
+
       {message && <div style={{ margin: "10px 0", padding: 10, borderRadius: 12, background: C.creamSoft, fontFamily: FONT_BODY, fontSize: 12.5, color: C.espresso }}>{message}</div>}
 
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", margin: "12px 0" }}>
@@ -2921,7 +2961,7 @@ function AdminAgenda({ adminToken }) {
       </div>
 
       {loading ? <p style={{ fontFamily: FONT_BODY, color: C.espressoSoft }}>Chargement du planning…</p> : weekDays.map(({ iso, date }) => {
-        const dayBookings = bookings.filter((b) => b.date_rdv === iso && b.statut !== "annule");
+        const dayBookings = bookings.filter((b) => b.date_rdv === iso && (b.statut !== "annule" || (b.affichage?.agenda && !syncOk(b.affichage.agenda.statut))));
         return (
           <div key={iso} style={{ marginBottom: 12 }}>
             <div style={{ fontFamily: FONT_BODY, fontWeight: 600, fontSize: 12, color: C.roseGoldDeep, textTransform: "uppercase", marginBottom: 5 }}>
@@ -2931,7 +2971,6 @@ function AdminAgenda({ adminToken }) {
               <div style={{ padding: "9px 12px", borderRadius: 12, border: `1px dashed ${C.blushDeep}`, fontFamily: FONT_BODY, fontSize: 11.5, color: C.espressoSoft }}>Disponible</div>
             ) : dayBookings.map((rdv) => {
               const v = rdv.affichage || {};
-              const syncOk = (st) => st === "ok" || st === "non_requis" || st === "retire";
               const syncProblem = v.agenda && v.feuille && (!syncOk(v.agenda.statut) || !syncOk(v.feuille.statut));
               const syncLabel = (st) => ({ ok: "OK", non_requis: "—", a_synchroniser: "en attente", erreur: "ERREUR", a_retirer: "à retirer", retire: "retiré" }[st] || st);
               return (
@@ -2949,7 +2988,7 @@ function AdminAgenda({ adminToken }) {
                     Agenda Google : {syncLabel(v.agenda.statut)} · Feuille : {syncLabel(v.feuille.statut)}
                     {v.agenda.erreur ? <div>⚠️ Agenda : {v.agenda.erreur}</div> : null}
                     {v.feuille.erreur ? <div>⚠️ Feuille : {v.feuille.erreur}</div> : null}
-                    {syncProblem ? <div>Le créneau reste bloqué dans l’application ; nouvelle tentative automatique.</div> : null}
+                    {syncProblem ? <div>Une nouvelle tentative est prévue. Tu peux aussi relancer la synchronisation.</div> : null}
                   </div>
                 )}
                 {v.alerte && <div style={{ fontFamily: FONT_BODY, fontSize: 11, marginTop: 4, color: C.danger }}>⚠️ {v.alerte}</div>}
@@ -2960,8 +2999,11 @@ function AdminAgenda({ adminToken }) {
                 )}
                 <div style={{ display: "flex", gap: 6, marginTop: 8, flexWrap: "wrap" }}>
                   {syncProblem && <GhostButton onClick={() => retrySync(rdv.id)} icon={RefreshCw}>Resynchroniser</GhostButton>}
-                  {rdv.statut !== "terminee" && <GhostButton onClick={() => changeStatus(rdv.id, "terminee")}>Terminée</GhostButton>}
-                  <GhostButton onClick={() => changeStatus(rdv.id, "annule")}>Annuler</GhostButton>
+                  {["confirme", "modifie"].includes(rdv.statut) && <GhostButton onClick={() => setMoving({
+                    rdvId: rdv.id, dateRdv: rdv.date_rdv, heureRdv: String(rdv.heure_rdv || "").slice(0, 5),
+                  })}>Déplacer</GhostButton>}
+                  {!["terminee", "annule"].includes(rdv.statut) && <GhostButton onClick={() => changeStatus(rdv.id, "terminee")}>Terminée</GhostButton>}
+                  {rdv.statut !== "annule" && <GhostButton onClick={() => changeStatus(rdv.id, "annule")}>Annuler</GhostButton>}
                 </div>
               </div>
               );
@@ -5281,9 +5323,10 @@ export default function App() {
   const [showPrivacy, setShowPrivacy] = useState(false);
   const [majorConfirmed, setMajorConfirmed] = useState(false);
 
-  const [space, setSpace] = useState("client"); // 'client' | 'admin-login' | 'admin' | 'account'
+  const openAdminAgenda = new URLSearchParams(window.location.search).get("gestion") === "prestations";
+  const [space, setSpace] = useState(openAdminAgenda ? "admin-login" : "client"); // 'client' | 'admin-login' | 'admin' | 'account'
   const [adminToken, setAdminToken] = useState("");
-  const [adminTab, setAdminTab] = useState("demandes"); // 'demandes' | 'agenda' | 'vip' | 'myu'
+  const [adminTab, setAdminTab] = useState(openAdminAgenda ? "agenda" : "demandes"); // 'demandes' | 'agenda' | 'vip' | 'myu'
   const [submissions, setSubmissions] = useState([]);
   const [loadingSubs, setLoadingSubs] = useState(false);
   const [selectedSubId, setSelectedSubId] = useState(null);
