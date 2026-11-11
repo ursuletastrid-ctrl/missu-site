@@ -195,17 +195,22 @@ async function fetchWithTimeout(url, opts = {}, ms = 15000) {
   }
 }
 
+async function fetchAppsScript(url, options, timeoutMs) {
+  const signal = AbortSignal.timeout(timeoutMs);
+  const res = await fetch(url, { ...options, signal, redirect: "follow" });
+  return { res, text: await res.text() };
+}
+
 async function fetchCalendarBusy(from, to, ignore) {
   const qs = new URLSearchParams({
     action: "busy", from: from.toISOString(), to: to.toISOString(), ignore: (ignore || []).join("|"),
   });
-  let res;
+  let res, text;
   try {
-    res = await fetchWithTimeout(`${APPS_SCRIPT_URL}?${qs}`, {}, 15000);
+    ({ res, text } = await fetchAppsScript(`${APPS_SCRIPT_URL}?${qs}`, {}, 15000));
   } catch (e) {
-    throw httpError(503, "Agenda injoignable : " + (e.name === "AbortError" ? "délai dépassé" : e.message));
+    throw httpError(503, "Agenda injoignable : " + (e.name === "TimeoutError" ? "délai dépassé" : e.message));
   }
-  const text = await res.text();
   let body = null;
   try { body = JSON.parse(text); } catch { /* réponse non JSON */ }
   if (!res.ok || !body || body.ok !== true || !Array.isArray(body.busy)) {
@@ -599,44 +604,48 @@ async function syncBookingExternal(admin, rdvId) {
   let body = null;
   let transportError = null;
   try {
-    const res = await fetchWithTimeout(APPS_SCRIPT_URL, {
+    const { res, text } = await fetchAppsScript(APPS_SCRIPT_URL, {
       method: "POST",
       headers: { "Content-Type": "text/plain;charset=utf-8" },
       body: JSON.stringify({ action: "syncBooking", rdvId }),
     }, 25000);
-    const text = await res.text();
-    try { body = JSON.parse(text); } catch { transportError = `Réponse Apps Script illisible (${res.status})`; }
-    if (body && body.ok === false && !body.calendar && !body.sheet) transportError = body.error || "Apps Script : échec";
+    if (!res.ok) {
+      transportError = `Apps Script : réponse HTTP ${res.status}`;
+    } else {
+      try { body = JSON.parse(text); } catch { transportError = "Réponse Apps Script illisible"; }
+      if (!transportError && body?.ok !== true) {
+        transportError = String(body?.error || "Apps Script : échec").slice(0, 500);
+      }
+    }
   } catch (e) {
-    transportError = "Apps Script injoignable : " + (e.name === "AbortError" ? "délai dépassé" : e.message);
+    transportError = "Apps Script injoignable : " + (e.name === "TimeoutError" ? "délai dépassé" : e.message);
   }
 
   const patch = { agenda_derniere_tentative: now, agenda_tentatives: (rdv.agenda_tentatives || 0) + 1 };
-  if (transportError) {
-    if (rdv.agenda_statut !== "non_requis" && rdv.agenda_statut !== "ok" && rdv.agenda_statut !== "retire") {
-      patch.agenda_statut = "erreur"; patch.agenda_erreur = transportError;
-    }
-    if (rdv.feuille_statut !== "non_requis" && rdv.feuille_statut !== "ok") {
-      patch.feuille_statut = "erreur"; patch.feuille_erreur = transportError;
-    }
-  } else {
-    if (body.calendar) {
-      if (body.calendar.action === "removed" || body.calendar.action === "absent") {
-        patch.agenda_statut = rdv.agenda_statut === "non_requis" ? "non_requis" : "retire";
-        patch.agenda_evenement_id = null;
-      } else if (body.calendar.eventId) {
-        patch.agenda_statut = "ok"; patch.agenda_evenement_id = body.calendar.eventId;
-      }
-      patch.agenda_erreur = null;
-    } else if (body.calendarError) {
-      patch.agenda_statut = "erreur"; patch.agenda_erreur = String(body.calendarError).slice(0, 500);
-    }
-    if (body.sheet) {
-      patch.feuille_statut = "ok"; patch.feuille_erreur = null;
-      if (body.sheet.dossierId && !rdv.dossier_id) patch.dossier_id = body.sheet.dossierId;
-    } else if (body.sheetError) {
-      patch.feuille_statut = "erreur"; patch.feuille_erreur = String(body.sheetError).slice(0, 500);
-    }
+  const wantsEvent = rdv.bloque && rdv.statut !== "en_attente_paiement";
+  const wantsRemoval = !rdv.bloque && Boolean(rdv.agenda_evenement_id);
+  const calendar = transportError ? null : body?.calendar;
+  if (wantsEvent && calendar?.eventId) {
+    patch.agenda_statut = "ok";
+    patch.agenda_evenement_id = calendar.eventId;
+    patch.agenda_erreur = null;
+  } else if (wantsRemoval && ["removed", "absent"].includes(calendar?.action)) {
+    patch.agenda_statut = "retire";
+    patch.agenda_evenement_id = null;
+    patch.agenda_erreur = null;
+  } else if (wantsEvent || wantsRemoval) {
+    patch.agenda_statut = "erreur";
+    patch.agenda_erreur = String(transportError || body?.calendarError || "Confirmation Google Agenda manquante.").slice(0, 500);
+  }
+
+  const sheet = transportError ? null : body?.sheet;
+  if (sheet && sheet.action !== "ignored") {
+    patch.feuille_statut = "ok";
+    patch.feuille_erreur = null;
+    if (sheet.dossierId && !rdv.dossier_id) patch.dossier_id = sheet.dossierId;
+  } else if (["a_synchroniser", "erreur"].includes(rdv.feuille_statut)) {
+    patch.feuille_statut = "erreur";
+    patch.feuille_erreur = String(transportError || body?.sheetError || "Confirmation Google Sheets manquante.").slice(0, 500);
   }
   const { error } = await admin.from("rendez_vous").update(patch).eq("id", rdvId);
   if (error) console.error("[booking] enregistrement état synchro :", error.message);
