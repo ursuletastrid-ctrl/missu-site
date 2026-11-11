@@ -16,7 +16,7 @@ begin;
 -- ---------------------------------------------------------------------
 create table if not exists public.myu_reglages_reservation (
   id smallint primary key default 1 check (id = 1),
-  lieux text[] not null default array['Ducos'],
+  lieux text[] not null default array['Lamentin'],
   -- jour ISO (1 = lundi ... 7 = dimanche) -> liste de plages [début, fin]
   horaires jsonb not null default '{"1":[["09:00","17:00"]],"2":[["09:00","17:00"]],"3":[["09:00","17:00"]],"4":[["09:00","17:00"]],"5":[["09:00","17:00"]],"6":[["09:00","13:00"]]}'::jsonb,
   pas_minutes int not null default 30 check (pas_minutes between 5 and 240),

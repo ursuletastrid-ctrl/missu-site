@@ -27,7 +27,7 @@ const APPS_SCRIPT_URL =
 const SUMUP_API = process.env.MYU_SUMUP_API || "https://api.sumup.com";
 
 const DEFAULT_SETTINGS = {
-  lieux: ["Ducos"],
+  lieux: ["Lamentin"],
   horaires: {
     1: [["09:00", "17:00"]], 2: [["09:00", "17:00"]], 3: [["09:00", "17:00"]],
     4: [["09:00", "17:00"]], 5: [["09:00", "17:00"]], 6: [["09:00", "13:00"]],

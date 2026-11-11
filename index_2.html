@@ -1203,7 +1203,7 @@ function PrivacyModal({ onClose }) {
 
         <Section title="Qui traite vos données">
           Miss'U, entrepreneure individuelle exerçant sous le nom MYU by Miss'U (dermopigmentation et
-          soins esthétiques, Ducos, Martinique), est responsable du traitement des données
+          soins esthétiques, Le Lamentin, Martinique), est responsable du traitement des données
           collectées via ce formulaire de pré-diagnostic.
         </Section>
 
@@ -1382,7 +1382,7 @@ function PersonalStep({ data, onChange, onNext, onBack }) {
   );
 }
 
-const LOCATIONS = ["Ducos"];
+const LOCATIONS = ["Lamentin"];
 const PERIODS = ["Matin", "Après-midi"];
 const OPENING_DATE = "2026-07-20";
 
@@ -2759,7 +2759,7 @@ function AdminAgenda({ adminToken }) {
   const [clients, setClients] = useState([]);
   const [selectedClient, setSelectedClient] = useState(null);
   const [form, setForm] = useState({
-    typePrestation: "modele_myu", dateRdv: toIsoDate(today), heureRdv: "09:00", lieu: "Ducos",
+    typePrestation: "modele_myu", dateRdv: toIsoDate(today), heureRdv: "09:00", lieu: "Lamentin",
     paymentStatus: "non_requis", depositAmount: "", note: "",
   });
   const [showSettings, setShowSettings] = useState(false);
@@ -2884,7 +2884,7 @@ function AdminAgenda({ adminToken }) {
               </div>
               <div style={{ height: 10 }} />
               <FieldLabel required>Lieu</FieldLabel>
-              <TextInput value={form.lieu} onChange={(e) => setForm({ ...form, lieu: e.target.value })} placeholder="Ducos" />
+              <TextInput value={form.lieu} onChange={(e) => setForm({ ...form, lieu: e.target.value })} placeholder="Lamentin" />
               <div style={{ height: 10 }} />
               <FieldLabel>Paiement</FieldLabel>
               <select value={form.paymentStatus} onChange={(e) => setForm({ ...form, paymentStatus: e.target.value })} style={inputStyle}>
@@ -4907,7 +4907,7 @@ export default function App() {
 
   const [services, setServices] = useState([]);
   const [personal, setPersonal] = useState({});
-  // Lieu présélectionné : un seul lieu réel (Ducos) à ce jour, pas besoin de forcer le clic.
+  // Lieu présélectionné : un seul lieu réel (Lamentin) à ce jour, pas besoin de forcer le clic.
   const [planning, setPlanning] = useState({ lieu: LOCATIONS[0] });
   const [photos, setPhotos] = useState({});
   const [contraSelected, setContraSelected] = useState([]);
