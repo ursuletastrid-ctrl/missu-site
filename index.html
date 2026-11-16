@@ -17,13 +17,13 @@
 <meta name="twitter:title" content="MYU by Miss'U — The Art of Glow" />
 <meta name="twitter:description" content="Maquillage permanent en Martinique. Découvrez les prestations MYU et réservez votre rendez-vous." />
 <meta name="twitter:image" content="https://missu-two.vercel.app/myu-social-preview.png" />
-<meta name="theme-color" content="#0D0B09" />
-<meta name="color-scheme" content="dark" />
+<meta name="theme-color" content="#F4F0E9" />
+<meta name="color-scheme" content="light" />
 <style>
-  html, body { margin: 0; padding: 0; background: #0D0B09; color: #F6EFE4; color-scheme: dark; }
-  ::placeholder { color: #8A7F6E; opacity: 1; }
-  option { background: #17130E; color: #F6EFE4; }
-  ::selection { background: #C9A26B; color: #0D0B09; }
+  html, body { margin: 0; padding: 0; background: #F4F0E9; color: #211B15; color-scheme: light; }
+  ::placeholder { color: #9A8F82; opacity: 1; }
+  option { background: #FFFFFF; color: #211B15; }
+  ::selection { background: #D5C2A4; color: #211B15; }
   #root { min-height: 100vh; }
 </style>
 <script type="importmap">
@@ -105,19 +105,19 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
 });
 
 const C = {
-  // Thème noir & doré MYU (les noms de clés sont conservés pour tout le code existant)
-  blush: "#1D1812",
-  blushDeep: "#3A2F20",
-  cream: "#14110D",
-  creamSoft: "#19150F",
-  roseGold: "#C9A26B",
-  roseGoldDeep: "#E3C38D",
-  goldLine: "#6B5532",
-  espresso: "#F6EFE4",
-  espressoSoft: "#B5A998",
-  white: "#0F0C09",
-  danger: "#E0877B",
-  success: "#9DB38A",
+  // Thème clair éditorial MYU (nude, champagne, encre) — noms de clés conservés pour tout le code existant
+  blush: "#F4F0E9",
+  blushDeep: "#DED5C8",
+  cream: "#FBF8F3",
+  creamSoft: "#F7F3EC",
+  roseGold: "#B99668",
+  roseGoldDeep: "#8E6D42",
+  goldLine: "#D5C2A4",
+  espresso: "#211B15",
+  espressoSoft: "#6F655A",
+  white: "#FFFFFF",
+  danger: "#B2463A",
+  success: "#5E7A4A",
 };
 
 const FONT_DISPLAY = "'Cormorant Garamond', serif";
@@ -162,7 +162,7 @@ function MarblePanel({ children, style = {} }) {
         background: `
           radial-gradient(120% 80% at 15% 0%, rgba(201,162,107,0.14), transparent 55%),
           radial-gradient(90% 70% at 90% 100%, rgba(201,162,107,0.10), transparent 60%),
-          linear-gradient(155deg, #0D0B09 0%, #15110C 55%, #1D1812 100%)
+          linear-gradient(155deg, #FBF8F3 0%, #F4F0E9 55%, #EAE4DA 100%)
         `,
         ...style,
       }}
@@ -259,12 +259,12 @@ function GlobalStyle() {
     <style>{`
       @keyframes missuFadeUp {
         from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
+        to { opacity: 1; transform: none; }
       }
       @keyframes missuSpin {
         to { transform: rotate(360deg); }
       }
-      .missu-step { animation: missuFadeUp 0.45s ease both; }
+      .missu-step { animation: missuFadeUp 0.45s ease backwards; }
 
       /* MYU — nouvelle direction éditoriale */
       body { background: #f4f0e9 !important; color: #211b15 !important; color-scheme: light; }
@@ -360,7 +360,56 @@ function GlobalStyle() {
         .myu-footer-links { flex-wrap:wrap; }
         .myu-start-panel { margin:24px 0 0; padding:18px; }
       }
-      .missu-step:not(.myu-home) { max-width:720px; margin:0 auto; }
+      .myu-service-card { display:block; text-decoration:none; color:inherit; }
+      .myu-services-foot { display:flex; flex-direction:column; align-items:center; gap:12px; margin-top:28px; text-align:center; }
+      .myu-services-foot small { color:#7b7166; font-size:10px; }
+      a.myu-primary { text-decoration:none; }
+      .myu-home section h2 em { color:#a17d4d; font-style:italic; font-weight:400; }
+      .myu-proof,.myu-smp,.myu-artist { display:grid; grid-template-columns:minmax(0,.8fr) 1fr; gap:6%; align-items:center; padding:72px 5%; }
+      .myu-proof h2,.myu-smp h2,.myu-artist h2,.myu-vip h2,.myu-contact h2 { margin:12px 0; color:#211b15; font:400 clamp(30px,4vw,42px)/1.1 ${FONT_DISPLAY}; }
+      .myu-proof p,.myu-smp p,.myu-artist p,.myu-vip p,.myu-contact p { color:#756b60; font:300 14px/1.85 ${FONT_BODY}; }
+      .myu-proof-text { display:flex; flex-direction:column; align-items:flex-start; gap:14px; }
+      .myu-proof-media img { width:100%; max-width:320px; display:block; margin:0 auto; border-radius:2px 2px 60px 2px; }
+      .myu-smp-media img,.myu-artist-media img { width:100%; aspect-ratio:4/5; object-fit:cover; display:block; border-radius:2px 2px 60px 2px; filter:saturate(.9); }
+      .myu-smp { background:#eae4da; }
+      .myu-vip { background:#211b15; color:#f4f0e9; padding:64px 5%; text-align:center; }
+      .myu-vip h2 { color:#f4f0e9; }
+      .myu-vip h2 em { color:#d5b98a; }
+      .myu-vip p { color:#c2b6a5; max-width:560px; margin-left:auto; margin-right:auto; }
+      .myu-vip .myu-vip-quote { font:italic 21px/1.5 ${FONT_DISPLAY}; color:#e9dcc6; }
+      .myu-vip-list { list-style:none; padding:0; margin:26px auto; max-width:560px; text-align:left; }
+      .myu-vip-list li { display:grid; grid-template-columns:1fr auto; gap:2px 14px; padding:15px 4px; border-top:1px solid #4a3d2e; }
+      .myu-vip-list li:last-child { border-bottom:1px solid #4a3d2e; }
+      .myu-vip-list span { font:500 20px ${FONT_DISPLAY}; color:#f4f0e9; letter-spacing:.5px; }
+      .myu-vip-list small { grid-column:1; color:#a99c8a; font-size:11px; }
+      .myu-vip-list b { grid-column:2; grid-row:1 / span 2; align-self:center; color:#d5b98a; font:600 14px ${FONT_BODY}; }
+      .myu-vip .myu-vip-note { font-size:11px; }
+      .myu-vip .myu-outline-button { border-color:#a98959; color:#f4f0e9; text-decoration:none; margin-top:10px; }
+      .myu-start-panel { max-width:640px; margin:36px auto 0; padding:22px 24px; border:1px solid #ded5c8; background:#eee9e0; transition:border-color .3s, box-shadow .3s; }
+      .myu-start-panel--hint { border-color:#a17d4d; box-shadow:0 0 0 3px #a17d4d33; }
+      .myu-age-hint { margin:0 0 12px; color:#8e6d42; font:500 11px ${FONT_BODY}; }
+      .myu-contact { padding:60px 5% 40px; text-align:center; border-top:1px solid #ded5c8; }
+      .myu-contact-links { display:flex; flex-wrap:wrap; gap:12px; justify-content:center; margin-top:20px; }
+      .myu-contact-card { display:flex; flex-direction:column; gap:4px; min-width:250px; padding:16px 22px; border:1px solid #cbb99d; color:#211b15; text-decoration:none; text-align:left; }
+      .myu-contact-card small { color:#8e6d42; font-size:10px; letter-spacing:1.2px; text-transform:uppercase; }
+      .myu-contact-card span { font:500 15px ${FONT_BODY}; overflow-wrap:anywhere; }
+      .myu-contact-card--main { background:#211b15; border-color:#211b15; }
+      .myu-contact-card--main small { color:#d5b98a; }
+      .myu-contact-card--main span { color:#f4f0e9; font-size:17px; }
+      .myu-footer-links button:last-child { color:#9a8f82; }
+      .myu-home a:focus-visible,.myu-home button:focus-visible,.myu-home input:focus-visible { outline:2px solid #8e6d42; outline-offset:3px; }
+      @media(max-width:760px) {
+        .myu-proof,.myu-smp,.myu-artist { grid-template-columns:1fr; gap:26px; padding:52px 2%; }
+        .myu-smp-media img,.myu-artist-media img { max-height:380px; }
+        .myu-vip { padding:52px 6%; margin:0 -18px; }
+        .myu-smp { margin:0 -18px; padding-left:calc(2% + 18px); padding-right:calc(2% + 18px); }
+        .myu-services,.myu-account-banner { margin-left:-18px; margin-right:-18px; padding-left:calc(2% + 18px); padding-right:calc(2% + 18px); }
+        .myu-contact-card { min-width:0; width:100%; }
+        .myu-contact { padding:48px 2% 30px; }
+      }
+      .missu-step:not(.myu-home) { max-width:720px; margin:0 auto; padding-top:22px; }
+      .myu-shell { padding:0 30px 50px; }
+      @media(max-width:760px) { .myu-shell { padding:0 18px 40px; } }
 
       .missu-focusable:focus-visible {
         outline: 2px solid ${C.roseGoldDeep};
@@ -780,41 +829,50 @@ function StepHeader({ onBack, title, subtitle }) {
 }
 
 function HomeStep({ onStart, onOpenPrivacy, majorConfirmed, onToggleMajor, onAdminClick, onAccountClick }) {
+  const [ageHint, setAgeHint] = useState(false);
+  const startPanelRef = useRef(null);
+  // Le pré-diagnostic n'est accessible qu'après la certification de majorité.
+  const goStart = () => {
+    if (majorConfirmed) { onStart(); return; }
+    setAgeHint(true);
+    if (startPanelRef.current) startPanelRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+  };
   const homeServices = [
-    { name: "Lèvres", detail: "Candy Lips · Velvet Lips · Neutralisation", image: "https://images.unsplash.com/photo-1586495777744-4413f21062fa?auto=format&fit=crop&w=900&q=85" },
-    { name: "Regard", detail: "Eyeliner classique · Eyeliner poudré", image: "https://images.unsplash.com/photo-1512496015851-a90fb38ba796?auto=format&fit=crop&w=900&q=85" },
-    { name: "Beauté de la peau", detail: "Soins et accompagnements personnalisés", image: "https://images.unsplash.com/photo-1616394584738-fc6e612e71b9?auto=format&fit=crop&w=900&q=85" },
+    { name: "Lèvres", detail: "Candy Lips · Velvet Lips · AquaLips · Neutralisation", image: "/assets/myu/catalogue/candy-lips.webp" },
+    { name: "Sourcils & regard", detail: "Powder Brows · Eyeliner classique · Eyeliner poudré", image: "/assets/myu/catalogue/eyeliner-poudre.webp" },
+    { name: "Soins de la peau", detail: "Soin visage Éclat · BB Glow · Freckles · LED", image: "/assets/myu/catalogue/microneedling.webp" },
   ];
   const steps = [
-    ["01", "Explorez", "Découvrez les prestations et leurs détails."],
-    ["02", "Préparez", "Complétez votre pré-diagnostic beauté."],
-    ["03", "Réservez", "Choisissez votre créneau et suivez les étapes de réservation."],
+    ["01", "Explorez", "Découvrez les prestations, leurs détails et leurs tarifs."],
+    ["02", "Préparez", "Complétez votre pré-diagnostic beauté, en quelques minutes."],
+    ["03", "Réservez", "Choisissez votre créneau et confirmez avec l'acompte sécurisé."],
   ];
   return (
     <div className="missu-step myu-home">
       <header className="myu-topbar">
         <div className="myu-wordmark"><span>MYU</span><small>BY MISS'U</small></div>
         <nav className="myu-nav">
-          <a href="#myu-univers">L'univers</a>
           <a href="#myu-prestations">Prestations</a>
+          <a href="#myu-vip">MYU VIP</a>
           <a href="#myu-parcours">Votre parcours</a>
+          <a href="#myu-artiste">L'artiste</a>
         </nav>
         <button type="button" className="myu-account-link" onClick={onAccountClick}><UserCircle2 size={16}/> Mon espace</button>
       </header>
 
       <section className="myu-hero">
         <div className="myu-hero-copy">
-          <div className="myu-eyebrow"><span></span> BEAUTÉ · PRÉCISION · CONFIANCE</div>
+          <div className="myu-eyebrow"><span></span> LE LAMENTIN · MARTINIQUE</div>
           <h1>Révélez votre beauté.<br/><em>À votre manière.</em></h1>
-          <p>Une approche personnalisée de la beauté durable, pensée pour sublimer vos traits et respecter votre singularité.</p>
+          <p>Maquillage permanent et soins du visage, pensés pour sublimer vos traits et respecter votre singularité.</p>
           <div className="myu-hero-actions">
-            <button type="button" className="myu-primary" onClick={onStart}>Commencer mon parcours <ChevronRight size={17}/></button>
-            <a href="#myu-prestations" className="myu-secondary">Découvrir les prestations <span>↗</span></a>
+            <button type="button" className="myu-primary" onClick={goStart}>Commencer mon parcours <ChevronRight size={17}/></button>
+            <a href="#myu-prestations" className="myu-secondary">Découvrir les prestations <span>↓</span></a>
           </div>
           <div className="myu-hero-note"><ShieldCheck size={15}/> Chaque projet commence par un échange et un pré-diagnostic.</div>
         </div>
         <div className="myu-hero-visual">
-          <img className="myu-portrait" src="https://images.unsplash.com/photo-1758613654538-5f353b10f93e?auto=format&fit=crop&w=1100&q=90" alt="Portrait beauté d'une femme à la peau métissée" />
+          <img className="myu-portrait" src="/assets/myu/catalogue/bb-glow.webp" alt="Peau lumineuse, illustration de l'univers MYU" />
           <div className="myu-image-caption"><span>THE ART OF GLOW</span><small>Une beauté qui vous ressemble.</small></div>
           <div className="myu-round-stamp"><span>MYU</span><small>BEAUTY<br/>STUDIO</small></div>
         </div>
@@ -822,8 +880,8 @@ function HomeStep({ onStart, onOpenPrivacy, majorConfirmed, onToggleMajor, onAdm
 
       <section className="myu-intro" id="myu-univers">
         <div className="myu-section-kicker">L'EXPÉRIENCE MYU</div>
-        <h2>Le beau, dans le détail.</h2>
-        <p>Des gestes précis, une écoute attentive et des choix adaptés à votre peau, votre visage et vos envies. Ici, votre beauté n'entre dans aucun moule.</p>
+        <h2>Chaque peau est unique.</h2>
+        <p>C'est pour cela que MYU ne propose pas un résultat standard : analyse du projet, choix de la technique et de la teinte, adaptation à la carnation, conseils de préparation et de cicatrisation.</p>
       </section>
 
       <section className="myu-services" id="myu-prestations">
@@ -833,11 +891,52 @@ function HomeStep({ onStart, onOpenPrivacy, majorConfirmed, onToggleMajor, onAdm
         </div>
         <div className="myu-service-grid">
           {homeServices.map((item, index) => (
-            <article className="myu-service-card" key={item.name}>
+            <a className="myu-service-card" href="/book.html" key={item.name}>
               <div className="myu-service-image"><img src={item.image} alt={item.name} loading="lazy"/><span>0{index + 1}</span></div>
               <div className="myu-service-text"><h3>{item.name}</h3><p>{item.detail}</p></div>
-            </article>
+            </a>
           ))}
+        </div>
+        <div className="myu-services-foot">
+          <a href="/book.html" className="myu-primary">Voir le catalogue et les tarifs <ChevronRight size={17}/></a>
+          <small>Visuels d'illustration des techniques — ce ne sont pas des résultats clientes.</small>
+        </div>
+      </section>
+
+      <section className="myu-proof">
+        <div className="myu-proof-media"><img src="/assets/myu/realisations/neutralisation-avant-apres.webp" alt="Neutralisation des lèvres : avant / après sur cliente MYU" loading="lazy"/></div>
+        <div className="myu-proof-text">
+          <div className="myu-section-kicker">RÉALISATION MYU</div>
+          <h2>Neutralisation des lèvres</h2>
+          <p>Avant / après sur cliente MYU. Pour les lèvres pigmentées, la stratégie est adaptée au cas présenté.</p>
+          <a href="/prestation.html?service=neutralisation" className="myu-secondary">Voir la fiche <span>→</span></a>
+          <a href="https://www.instagram.com/myu_theartofglow_bymissu/" target="_blank" rel="noopener noreferrer" className="myu-secondary">Toutes les réalisations sur Instagram <span>↗</span></a>
+        </div>
+      </section>
+
+      <section className="myu-vip" id="myu-vip">
+        <div className="myu-section-kicker">L'OFFRE PHARE</div>
+        <h2>MYU VIP <em>Private Experience</em></h2>
+        <p className="myu-vip-quote">« Votre temps est précieux. Le nôtre vous est consacré. »</p>
+        <p>En soirée, le dimanche ou les jours fériés, MYU s'adapte à votre rythme, sous réserve de disponibilité.</p>
+        <ul className="myu-vip-list">
+          <li><span>Signature</span><small>Début entre 18 h et 19 h 59</small><b>+ 60 €</b></li>
+          <li><span>Prestige</span><small>Début entre 20 h et 21 h 59</small><b>+ 100 €</b></li>
+          <li><span>Exclusive</span><small>Début à partir de 22 h</small><b>+ 150 €</b></li>
+          <li><span>Dimanche & jour férié</span><small>Selon les disponibilités</small><b>+ 120 €</b></li>
+          <li><span>Sur mesure</span><small>Horaires très matinaux ou demandes particulières</small><b>Sur devis</b></li>
+        </ul>
+        <p className="myu-vip-note">Le supplément s'ajoute au prix de la prestation. Chaque demande est étudiée personnellement ; aucun paiement avant accord.</p>
+        <a href="/vip.html" className="myu-outline-button">Demander mon rendez-vous privé <ChevronRight size={16}/></a>
+      </section>
+
+      <section className="myu-smp">
+        <div className="myu-smp-media"><img src="/assets/myu/catalogue/smp.webp" alt="Tricopigmentation, illustration" loading="lazy"/></div>
+        <div>
+          <div className="myu-section-kicker">POUR LES HOMMES · ET LES FEMMES</div>
+          <h2>Tricopigmentation (SMP)</h2>
+          <p>Effet rasé net ou illusion de densité. La SMP ne fait pas repousser les cheveux : elle redessine visuellement la densité. À partir de 150 €, après un diagnostic personnalisé sans engagement.</p>
+          <a href="/smp.html" className="myu-secondary">Découvrir la SMP <span>→</span></a>
         </div>
       </section>
 
@@ -848,7 +947,24 @@ function HomeStep({ onStart, onOpenPrivacy, majorConfirmed, onToggleMajor, onAdm
             <article className="myu-step-card" key={number}><span>{number}</span><h3>{title}</h3><p>{detail}</p></article>
           ))}
         </div>
-        <div className="myu-journey-cta"><p>Prête à imaginer votre prochain Glow ?</p><button type="button" className="myu-primary" onClick={onStart}>Accéder au pré-diagnostic <ChevronRight size={17}/></button></div>
+        <div className={`myu-start-panel${ageHint && !majorConfirmed ? " myu-start-panel--hint" : ""}`} ref={startPanelRef}>
+          <div className="myu-section-kicker">AVANT DE COMMENCER</div>
+          <label className="myu-age-check">
+            <input type="checkbox" checked={majorConfirmed} onChange={() => { setAgeHint(false); onToggleMajor(); }}/>
+            <span>Je certifie être majeure (18 ans ou plus). Le pré-diagnostic et les prestations proposées ne sont pas accessibles aux mineures.</span>
+          </label>
+          {ageHint && !majorConfirmed && <p className="myu-age-hint">Merci de cocher cette case pour accéder au pré-diagnostic.</p>}
+          <button type="button" className="myu-primary myu-start-button" onClick={goStart}>Commencer mon pré-diagnostic <ChevronRight size={17}/></button>
+        </div>
+      </section>
+
+      <section className="myu-artist" id="myu-artiste">
+        <div className="myu-artist-media"><img src="/assets/myu/artiste/astrid-portrait.webp" alt="Astrid, fondatrice de MYU by Miss'U" loading="lazy"/></div>
+        <div>
+          <div className="myu-section-kicker">L'ARTISTE</div>
+          <h2>Rencontrez Astrid</h2>
+          <p>Fondatrice de MYU by Miss'U, Astrid pratique le maquillage permanent au Lamentin avec une exigence de précision — tracé, régularité, saturation — pensée pour chaque carnation et chaque morphologie. Chez MYU, on ne vient pas seulement pour une prestation : on vient vivre un moment qui vous est consacré.</p>
+        </div>
       </section>
 
       <section className="myu-account-banner">
@@ -856,21 +972,26 @@ function HomeStep({ onStart, onOpenPrivacy, majorConfirmed, onToggleMajor, onAdm
         <button type="button" className="myu-outline-button" onClick={onAccountClick}>Ouvrir Mon Espace <ChevronRight size={16}/></button>
       </section>
 
+      <section className="myu-contact" aria-label="Contacter MYU">
+        <div className="myu-section-kicker">UNE QUESTION ?</div>
+        <h2>Parlons-en.</h2>
+        <p>Pour échanger avec MYU, privilégiez les messages écrits et vocaux sur WhatsApp.</p>
+        <div className="myu-contact-links">
+          <a href="https://wa.me/596696178587" target="_blank" rel="noopener noreferrer" className="myu-contact-card myu-contact-card--main"><small>WhatsApp · contact privilégié</small><span>+596 696 17 85 87</span></a>
+          <a href="mailto:missustudio.contact@gmail.com" className="myu-contact-card"><small>E-mail</small><span>missustudio.contact@gmail.com</span></a>
+        </div>
+      </section>
+
       <footer className="myu-footer">
         <div className="myu-footer-brand"><span>MYU</span><small>BY MISS'U · THE ART OF GLOW</small></div>
-        <p>Martinique · Beauté permanente & soins personnalisés</p>
-        <div className="myu-footer-links"><a href="https://wa.me/596696178587" target="_blank" rel="noopener noreferrer">WhatsApp</a><a href="https://www.instagram.com/" target="_blank" rel="noopener noreferrer">Instagram</a><button type="button" onClick={onOpenPrivacy}>Confidentialité</button></div>
+        <p>Le Lamentin · Martinique · Beauté permanente & soins personnalisés</p>
+        <div className="myu-footer-links">
+          <a href="https://wa.me/596696178587" target="_blank" rel="noopener noreferrer">WhatsApp</a>
+          <a href="https://www.instagram.com/myu_theartofglow_bymissu/" target="_blank" rel="noopener noreferrer">Instagram</a>
+          <button type="button" onClick={onOpenPrivacy}>Confidentialité</button>
+          <button type="button" onClick={onAdminClick}>Espace Miss'U</button>
+        </div>
       </footer>
-
-      <div className="myu-start-panel">
-        <div className="myu-section-kicker">AVANT DE COMMENCER</div>
-        <label className="myu-age-check">
-          <input type="checkbox" checked={majorConfirmed} onChange={onToggleMajor}/>
-          <span>Je certifie être majeure (18 ans ou plus). Le pré-diagnostic et les prestations proposées ne sont pas accessibles aux mineures.</span>
-        </label>
-        <button type="button" className="myu-primary myu-start-button" onClick={onStart} disabled={!majorConfirmed}>Commencer mon pré-diagnostic <ChevronRight size={17}/></button>
-        <button type="button" className="myu-admin-link" onClick={onAdminClick}>Espace Miss'U (administration)</button>
-      </div>
     </div>
   );
 }
@@ -916,7 +1037,7 @@ function OfferSlotBadge({ typePrestation }) {
     <div style={{ marginTop: 6 }} onClick={(e) => e.stopPropagation()}>
       <div style={{
         display: "inline-flex", alignItems: "center", gap: 5, padding: "3px 10px", borderRadius: 99,
-        background: complet ? "#1E1A14" : C.blush, border: `1px solid ${complet ? C.blushDeep : C.goldLine}`,
+        background: complet ? "#EAE4DA" : C.blush, border: `1px solid ${complet ? C.blushDeep : C.goldLine}`,
       }}>
         <span style={{
           fontFamily: FONT_BODY, fontSize: 10.5, fontWeight: 500, textTransform: "uppercase", letterSpacing: 0.3,
@@ -972,12 +1093,12 @@ function ServiceStep({ value, onChange, onNext, onBack }) {
           onClick={(e) => { e.stopPropagation(); toggle(s.key); }}
           style={{
             position: "absolute", top: 10, right: 10, width: 20, height: 20, borderRadius: "50%",
-            background: selected ? `linear-gradient(135deg, ${C.roseGold}, ${C.roseGoldDeep})` : "#1B1712",
+            background: selected ? `linear-gradient(135deg, ${C.roseGold}, ${C.roseGoldDeep})` : C.white,
             border: selected ? "none" : `1.4px solid ${C.blushDeep}`,
             display: "flex", alignItems: "center", justifyContent: "center", zIndex: 2,
           }}
         >
-          {selected && <Check size={11} color="#0D0B09" />}
+          {selected && <Check size={11} color="#FFFFFF" />}
         </div>
 
         {s.image && (
@@ -1678,8 +1799,8 @@ function PhotosStep({ photos, onUpload, onRemove, onNext, onBack }) {
 
       {errorMsg && (
         <div style={{
-          display: "flex", alignItems: "center", gap: 8, background: "#2A1A17",
-          border: "1px solid #7A3F36", borderRadius: 14, padding: "10px 12px", marginBottom: 4,
+          display: "flex", alignItems: "center", gap: 8, background: "#F8E8E4",
+          border: "1px solid #D9A79E", borderRadius: 14, padding: "10px 12px", marginBottom: 4,
         }}>
           <AlertCircle size={14} color={C.danger} />
           <span style={{ fontFamily: FONT_BODY, fontSize: 12, color: C.danger }}>{errorMsg}</span>
@@ -3089,8 +3210,8 @@ const VIP_FILTERS = [
   { key: "confirme", label: "Confirmées" },
 ];
 const VIP_STATUT_COLORS = {
-  en_attente: "#E3C38D", contre_proposition: "#C9A26B", accepte_attente_paiement: "#C9A26B",
-  confirme: "#9DB38A", refuse: "#E0877B", annule: "#B5A998", expire: "#B5A998",
+  en_attente: "#9B7A4C", contre_proposition: "#8E6D42", accepte_attente_paiement: "#8E6D42",
+  confirme: "#5E7A4A", refuse: "#B2463A", annule: "#8A7F72", expire: "#8A7F72",
 };
 const VIP_JOURS = [{ n: 1, l: "Lun" }, { n: 2, l: "Mar" }, { n: 3, l: "Mer" }, { n: 4, l: "Jeu" }, { n: 5, l: "Ven" }, { n: 6, l: "Sam" }, { n: 0, l: "Dim" }];
 const vipEur = (n) => `${Number(n || 0).toLocaleString("fr-FR", { maximumFractionDigits: 2 })} €`;
@@ -4012,7 +4133,7 @@ function SectionCard({ title, children, alert }) {
   return (
     <div style={{
       background: C.cream, borderRadius: 18,
-      border: `1.3px solid ${alert ? "#7A3F36" : C.blushDeep}`,
+      border: `1.3px solid ${alert ? "#D9A79E" : C.blushDeep}`,
       padding: "14px 16px", marginBottom: 12,
     }}>
       <div style={{
@@ -5386,6 +5507,8 @@ export default function App() {
 
   const openAdminAgenda = new URLSearchParams(window.location.search).get("gestion") === "prestations";
   const [space, setSpace] = useState(openAdminAgenda ? "admin-login" : "client"); // 'client' | 'admin-login' | 'admin' | 'account'
+  // Chaque nouvel écran s'ouvre en haut de page (l'accueil est long, la suite ne doit pas s'afficher en bas).
+  useEffect(() => { window.scrollTo(0, 0); }, [step, space]);
   const [adminToken, setAdminToken] = useState("");
   const [adminTab, setAdminTab] = useState(openAdminAgenda ? "agenda" : "demandes"); // 'demandes' | 'agenda' | 'vip' | 'myu'
   const [submissions, setSubmissions] = useState([]);
@@ -5682,9 +5805,9 @@ export default function App() {
   return (
     <div style={{ minHeight: "100vh", background: C.blush, display: "flex", justifyContent: "center" }}>
       <GlobalStyle />
-      <div style={{ width: "100%", maxWidth: 1180, minHeight: "100vh", background: "#F4F0E9", padding: "0 30px 50px", boxShadow: "0 0 60px rgba(33,27,21,0.05)" }}>
+      <div className="myu-shell" style={{ width: "100%", maxWidth: 1180, minHeight: "100vh", background: "#F4F0E9", boxShadow: "0 0 60px rgba(33,27,21,0.05)" }}>
         {content}
-        <section aria-label="Contacter MYU" style={{ marginTop: 28, paddingTop: 22, borderTop: `1px solid ${C.blushDeep}`, fontFamily: FONT_BODY }}>
+        {!(space === "client" && step === 0) && <section aria-label="Contacter MYU" style={{ marginTop: 28, paddingTop: 22, borderTop: `1px solid ${C.blushDeep}`, fontFamily: FONT_BODY }}>
           <h2 style={{ fontFamily: FONT_DISPLAY, fontWeight: 500, fontSize: 24, color: C.espresso, margin: "0 0 8px" }}>Une question ? Parlons-en.</h2>
           <p style={{ fontSize: 12, lineHeight: 1.6, color: C.espressoSoft, margin: "0 0 14px" }}>Pour échanger avec MYU, privilégiez les messages écrits et vocaux sur WhatsApp.</p>
           <a href="https://wa.me/596696178587" target="_blank" rel="noopener noreferrer" className="missu-focusable" style={{ display: "block", padding: "14px 16px", borderRadius: 16, background: `linear-gradient(135deg, ${C.roseGold}, ${C.roseGoldDeep})`, color: C.white, textDecoration: "none", lineHeight: 1.6 }}>
@@ -5696,7 +5819,7 @@ export default function App() {
             <strong style={{ display: "block", fontSize: 12 }}>Écrire par e-mail</strong>
             <span style={{ fontSize: 14 }}>missustudio.contact@gmail.com</span>
           </a>
-        </section>
+        </section>}
       </div>
       {showPrivacy && <PrivacyModal onClose={() => setShowPrivacy(false)} />}
     </div>
