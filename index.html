@@ -106,15 +106,15 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
 
 const C = {
   // Thème noir & doré MYU (les noms de clés sont conservés pour tout le code existant)
-  blush: "#1D1812",
-  blushDeep: "#3A2F20",
-  cream: "#14110D",
-  creamSoft: "#19150F",
-  roseGold: "#C9A26B",
-  roseGoldDeep: "#E3C38D",
-  goldLine: "#6B5532",
-  espresso: "#F6EFE4",
-  espressoSoft: "#B5A998",
+  blush: "#0B0A08",
+  blushDeep: "#332A1D",
+  cream: "#11100D",
+  creamSoft: "#17140F",
+  roseGold: "#B99A68",
+  roseGoldDeep: "#D8C29B",
+  goldLine: "#655238",
+  espresso: "#F2EDE4",
+  espressoSoft: "#B8B0A3",
   white: "#0F0C09",
   danger: "#E0877B",
   success: "#9DB38A",
@@ -207,48 +207,18 @@ function MarblePanel({ children, style = {} }) {
 }
 
 function Logo({ size = "md" }) {
-  const titleSize = size === "lg" ? 44 : size === "sm" ? 22 : 32;
+  const titleSize = size === "lg" ? 52 : size === "sm" ? 24 : 36;
   return (
-    <div style={{ textAlign: "center" }}>
-      <div
-        style={{
-          fontFamily: FONT_BODY,
-          fontWeight: 500,
-          fontSize: size === "lg" ? 11 : 9.5,
-          letterSpacing: 2,
-          color: C.espressoSoft,
-          textTransform: "uppercase",
-          marginBottom: 6,
-        }}
-      >
-        MYU by Miss'U
+    <div style={{ textAlign: "center", padding: size === "lg" ? "8px 0 4px" : "2px 0" }}>
+      <div style={{ fontFamily: FONT_DISPLAY, fontWeight: 500, fontSize: titleSize, lineHeight: 0.95, color: C.roseGoldDeep, letterSpacing: 4 }}>
+        MYU
       </div>
-      <div style={{ display: "flex", justifyContent: "center", marginBottom: 4 }}>
-        <Crown size={size === "lg" ? 34 : 24} />
+      <div style={{ width: size === "lg" ? 76 : 48, height: 1, background: C.roseGold, margin: "10px auto 8px" }} />
+      <div style={{ fontFamily: FONT_BODY, fontWeight: 500, fontSize: size === "lg" ? 12 : 10, letterSpacing: size === "lg" ? 4 : 3, color: C.espresso, textTransform: "uppercase" }}>
+        Beauty Studio
       </div>
-      <div
-        style={{
-          fontFamily: FONT_DISPLAY,
-          fontWeight: 600,
-          fontSize: titleSize,
-          color: C.espresso,
-          letterSpacing: 1,
-        }}
-      >
-        Miss'U
-      </div>
-      <div
-        style={{
-          fontFamily: FONT_BODY,
-          fontWeight: 400,
-          fontSize: size === "lg" ? 13 : 11,
-          letterSpacing: 3,
-          color: C.roseGoldDeep,
-          textTransform: "uppercase",
-          marginTop: 2,
-        }}
-      >
-        The Art of Glow
+      <div style={{ fontFamily: FONT_BODY, fontWeight: 400, fontSize: size === "lg" ? 9 : 8, letterSpacing: 2.2, color: C.roseGoldDeep, textTransform: "uppercase", marginTop: 7 }}>
+        by Miss'U · The Art of Glow
       </div>
     </div>
   );
@@ -683,131 +653,105 @@ function StepHeader({ onBack, title, subtitle }) {
 }
 
 function HomeStep({ onStart, onOpenPrivacy, majorConfirmed, onToggleMajor, onAdminClick, onAccountClick }) {
+  const linkStyle = {
+    width: "100%", minHeight: 58, display: "flex", alignItems: "center", gap: 14,
+    padding: "14px 16px", borderRadius: 4, border: `1px solid ${C.goldLine}`,
+    background: "rgba(255,255,255,0.018)", color: C.espresso, textAlign: "left",
+    cursor: "pointer", textDecoration: "none", boxSizing: "border-box",
+  };
+  const eyebrow = { fontFamily: FONT_BODY, fontSize: 9, letterSpacing: 2.2, textTransform: "uppercase", color: C.roseGoldDeep };
   return (
-    <div className="missu-step">
-      <MarblePanel style={{ borderRadius: 28, padding: "40px 26px 30px", marginBottom: 18 }}>
-        <Logo size="lg" />
-        <div style={{ height: 22 }} />
-        <div
-          style={{
-            borderRadius: 20,
-            overflow: "hidden",
-            height: 170,
-            border: `1.2px solid ${C.goldLine}`,
-            background: "linear-gradient(135deg, #17130D, #2A2216)",
-            position: "relative",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          {/* Point d'ancrage pour une future vidéo silencieuse en boucle :
-              remplacer ce bloc par une balise <video autoPlay muted loop playsInline>
-              une fois qu'un fichier vidéo réel sera disponible. Rien n'est inventé
-              ici en attendant — le fond dégradé + l'icône restent le rendu par défaut. */}
-          <div style={{ position: "absolute", inset: 0, opacity: 0.9 }}>
-            <svg width="100%" height="100%" viewBox="0 0 300 170" preserveAspectRatio="none">
-              <circle cx="40" cy="30" r="60" fill="#C9A26B" opacity="0.18" />
-              <circle cx="270" cy="150" r="80" fill="#C9A26B" opacity="0.14" />
-            </svg>
-          </div>
-          <Sparkles size={40} color={C.roseGoldDeep} style={{ opacity: 0.95 }} />
-        </div>
-      </MarblePanel>
-
-      <button
-        onClick={onAccountClick}
-        className="missu-focusable"
-        style={{
-          display: "flex", alignItems: "center", gap: 12, width: "100%", textAlign: "left",
-          padding: "16px 18px", borderRadius: 20, cursor: "pointer", marginBottom: 18,
-          border: `1.4px solid ${C.roseGoldDeep}`,
-          background: "linear-gradient(135deg, #1F1912, #2C2317)",
-          boxShadow: "0 14px 30px -18px rgba(0,0,0,0.8)",
-        }}
-      >
-        <div style={{
-          width: 42, height: 42, borderRadius: "50%", flexShrink: 0,
-          background: "rgba(201,162,107,0.16)", display: "flex", alignItems: "center", justifyContent: "center",
-        }}>
-          <UserCircle2 size={22} color={C.roseGoldDeep} />
-        </div>
-        <div style={{ flex: 1 }}>
-          <div style={{ fontFamily: FONT_DISPLAY, fontWeight: 600, fontSize: 17, color: C.espresso, letterSpacing: 0.3 }}>
-            Mon Espace MYU
-          </div>
-          <div style={{ fontFamily: FONT_BODY, fontSize: 11.5, color: C.espressoSoft, marginTop: 1 }}>
-            Parcours Glow, fidélité, rendez-vous & suivi personnalisé
-          </div>
-        </div>
-        <ChevronRight size={18} color={C.roseGoldDeep} />
-      </button>
-
-      <div
-        style={{
-          background: C.cream,
-          borderRadius: 24,
-          border: `1.4px solid ${C.goldLine}`,
-          padding: "26px 22px",
-          boxShadow: "0 18px 40px -24px rgba(0,0,0,0.55)",
-        }}
-      >
-        <p style={{
-          fontFamily: FONT_BODY, fontSize: 15, lineHeight: 1.65, color: C.espresso, margin: 0, textAlign: "center",
-        }}>
-          Bienvenue dans votre espace MYU by Miss'U.
-          <br /><br />
-          Révéler ce qui vous ressemble, sublimer avec précision, vous accompagner à chaque étape :
-          avant toute demande de rendez-vous, remplissez votre <strong>pré-diagnostic beauté</strong> afin
-          d'évaluer la faisabilité de votre prestation.
-        </p>
-        <div style={{ height: 18 }} />
-
-        <button
-          onClick={onToggleMajor}
-          className="missu-focusable"
-          style={{
-            display: "flex", alignItems: "flex-start", gap: 10, textAlign: "left", width: "100%",
-            padding: "12px 14px", borderRadius: 14, cursor: "pointer",
-            border: majorConfirmed ? `1.5px solid ${C.roseGoldDeep}` : `1.3px solid ${C.blushDeep}`,
-            background: majorConfirmed ? C.blush : C.white, marginBottom: 14,
-          }}
-        >
-          <div style={{
-            width: 18, height: 18, borderRadius: 6, flexShrink: 0, marginTop: 1,
-            border: `1.5px solid ${majorConfirmed ? C.roseGoldDeep : C.blushDeep}`,
-            background: majorConfirmed ? C.roseGoldDeep : "transparent",
-            display: "flex", alignItems: "center", justifyContent: "center",
-          }}>
-            {majorConfirmed && <Check size={12} color="#0D0B09" />}
-          </div>
-          <span style={{ fontFamily: FONT_BODY, fontSize: 12.5, color: C.espresso, lineHeight: 1.5 }}>
-            Je certifie être majeure (18 ans ou plus). Le pré-diagnostic et les prestations proposées ne
-            sont pas accessibles aux mineures.
-          </span>
+    <div className="missu-step" style={{ paddingTop: 8 }}>
+      <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", marginBottom: 18 }}>
+        <button onClick={onAccountClick} className="missu-focusable" style={{ border: `1px solid ${C.goldLine}`, background: "transparent", color: C.espresso, borderRadius: 99, padding: "8px 13px", fontFamily: FONT_BODY, fontSize: 11, letterSpacing: 0.5, cursor: "pointer" }}>
+          <UserCircle2 size={14} style={{ verticalAlign: "middle", marginRight: 6 }} /> Mon espace
         </button>
-
-        <PrimaryButton onClick={onStart} disabled={!majorConfirmed} icon={ChevronRight}>
-          Commencer mon pré-diagnostic
-        </PrimaryButton>
-
-        <div style={{ textAlign: "center", marginTop: 14 }}>
-          <GhostButton onClick={onOpenPrivacy} icon={ShieldCheck}>
-            Confidentialité & données personnelles
-          </GhostButton>
-        </div>
       </div>
 
-      <div style={{ textAlign: "center", marginTop: 28 }}>
-        <button
-          onClick={onAdminClick}
-          className="missu-focusable"
-          style={{
-            background: "none", border: "none", cursor: "pointer", color: C.espressoSoft,
-            fontFamily: FONT_BODY, fontSize: 11.5, opacity: 0.6, letterSpacing: 0.5,
-          }}
-        >
-          Espace Miss'U (admin)
+      <section style={{ textAlign: "center", padding: "30px 20px 28px", background: "radial-gradient(ellipse at 50% 0%, rgba(201,162,107,0.13), transparent 68%)", borderTop: `1px solid ${C.goldLine}`, borderBottom: `1px solid ${C.goldLine}` }}>
+        <Logo size="lg" />
+        <div style={{ height: 28 }} />
+        <p style={{ ...eyebrow, margin: "0 0 12px" }}>La beauté, dans toute sa singularité</p>
+        <h1 style={{ fontFamily: FONT_DISPLAY, fontWeight: 400, fontSize: "clamp(29px, 8vw, 39px)", lineHeight: 1.08, color: C.espresso, margin: "0 auto 12px", maxWidth: 340 }}>
+          Révéler. Réparer. <em style={{ color: C.roseGoldDeep }}>Sublimer.</em>
+        </h1>
+        <p style={{ fontFamily: FONT_BODY, fontWeight: 300, fontSize: 13, lineHeight: 1.8, color: C.espressoSoft, maxWidth: 330, margin: "0 auto" }}>
+          Beauté permanente · Dermopigmentation réparatrice · Camouflage
+        </p>
+        <div style={{ marginTop: 20, display: "flex", justifyContent: "center", gap: 8, flexWrap: "wrap" }}>
+          {["Martinique", "Studio privé sur rendez-vous"].map((item) => (
+            <span key={item} style={{ border: `1px solid ${C.goldLine}`, borderRadius: 99, padding: "6px 10px", color: C.espressoSoft, fontFamily: FONT_BODY, fontSize: 9, letterSpacing: 0.5 }}>{item}</span>
+          ))}
+        </div>
+      </section>
+
+      <section style={{ padding: "25px 0 8px" }}>
+        <p style={{ ...eyebrow, textAlign: "center", margin: "0 0 14px" }}>L'expérience MYU</p>
+        <button onClick={onStart} className="missu-focusable" style={{ ...linkStyle, justifyContent: "space-between", padding: "17px 18px", background: `linear-gradient(110deg, ${C.roseGold}, ${C.roseGoldDeep})`, border: "none", color: "#17120C", marginBottom: 10 }}>
+          <span style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <CalendarDays size={19} />
+            <span>
+              <strong style={{ display: "block", fontFamily: FONT_BODY, fontSize: 14, fontWeight: 600 }}>Prendre rendez-vous</strong>
+              <small style={{ display: "block", fontFamily: FONT_BODY, fontSize: 10, marginTop: 3, opacity: 0.78 }}>Commencer mon pré-diagnostic beauté</small>
+            </span>
+          </span>
+          <ChevronRight size={18} />
+        </button>
+
+        <button onClick={onStart} className="missu-focusable" style={{ ...linkStyle, justifyContent: "space-between", marginBottom: 10 }}>
+          <span style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <Sparkles size={18} color={C.roseGoldDeep} />
+            <span>
+              <strong style={{ display: "block", fontFamily: FONT_BODY, fontSize: 13, fontWeight: 500 }}>Découvrir les prestations</strong>
+              <small style={{ display: "block", fontFamily: FONT_BODY, fontSize: 10, color: C.espressoSoft, marginTop: 3 }}>Lèvres · Regard · Soins · Camouflage</small>
+            </span>
+          </span>
+          <ChevronRight size={17} color={C.roseGoldDeep} />
+        </button>
+
+        <button onClick={onAccountClick} className="missu-focusable" style={{ ...linkStyle, justifyContent: "space-between", marginBottom: 10 }}>
+          <span style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <UserCircle2 size={18} color={C.roseGoldDeep} />
+            <span>
+              <strong style={{ display: "block", fontFamily: FONT_BODY, fontSize: 13, fontWeight: 500 }}>Mon Espace MYU</strong>
+              <small style={{ display: "block", fontFamily: FONT_BODY, fontSize: 10, color: C.espressoSoft, marginTop: 3 }}>Rendez-vous · fidélité · suivi personnalisé</small>
+            </span>
+          </span>
+          <ChevronRight size={17} color={C.roseGoldDeep} />
+        </button>
+      </section>
+
+      <section style={{ padding: "22px 18px", margin: "16px 0", background: "linear-gradient(145deg, #17140F, #100E0B)", border: `1px solid ${C.goldLine}`, textAlign: "center" }}>
+        <p style={{ ...eyebrow, margin: "0 0 10px" }}>Une approche sur mesure</p>
+        <h2 style={{ fontFamily: FONT_DISPLAY, fontWeight: 400, fontSize: 25, color: C.espresso, margin: "0 0 9px" }}>Votre peau. Votre histoire. Votre éclat.</h2>
+        <p style={{ fontFamily: FONT_BODY, fontSize: 12, lineHeight: 1.8, color: C.espressoSoft, margin: 0 }}>
+          De la mise en beauté au camouflage esthétique, chaque projet commence par une écoute attentive et un pré-diagnostic pour étudier vos besoins et la faisabilité de la prestation.
+        </p>
+      </section>
+
+      <section style={{ padding: "12px 0 6px" }}>
+        <p style={{ ...eyebrow, textAlign: "center", margin: "0 0 13px" }}>Avant de commencer</p>
+        <button onClick={onToggleMajor} className="missu-focusable" style={{ display: "flex", alignItems: "flex-start", gap: 10, textAlign: "left", width: "100%", padding: "13px 14px", borderRadius: 4, cursor: "pointer", border: majorConfirmed ? `1px solid ${C.roseGoldDeep}` : `1px solid ${C.goldLine}`, background: "rgba(255,255,255,0.018)", marginBottom: 12 }}>
+          <span style={{ width: 18, height: 18, borderRadius: 3, flexShrink: 0, marginTop: 1, border: `1px solid ${majorConfirmed ? C.roseGoldDeep : C.goldLine}`, background: majorConfirmed ? C.roseGoldDeep : "transparent", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            {majorConfirmed && <Check size={12} color="#0D0B09" />}
+          </span>
+          <span style={{ fontFamily: FONT_BODY, fontSize: 11.5, color: C.espresso, lineHeight: 1.6 }}>
+            Je certifie être majeure (18 ans ou plus). Le pré-diagnostic et les prestations proposées ne sont pas accessibles aux mineures.
+          </span>
+        </button>
+        <button onClick={onStart} disabled={!majorConfirmed} className="missu-focusable" style={{ width: "100%", padding: "15px 18px", borderRadius: 4, border: `1px solid ${C.roseGoldDeep}`, background: majorConfirmed ? "transparent" : "rgba(255,255,255,0.03)", color: majorConfirmed ? C.roseGoldDeep : C.espressoSoft, fontFamily: FONT_BODY, fontSize: 12, letterSpacing: 1, textTransform: "uppercase", cursor: majorConfirmed ? "pointer" : "not-allowed", opacity: majorConfirmed ? 1 : 0.55 }}>
+          Commencer mon pré-diagnostic <ChevronRight size={15} style={{ verticalAlign: "middle", marginLeft: 7 }} />
+        </button>
+        <div style={{ textAlign: "center", marginTop: 12 }}>
+          <button onClick={onOpenPrivacy} className="missu-focusable" style={{ background: "none", border: "none", color: C.espressoSoft, fontFamily: FONT_BODY, fontSize: 10, cursor: "pointer" }}>
+            Confidentialité & données personnelles
+          </button>
+        </div>
+      </section>
+
+      <div style={{ textAlign: "center", marginTop: 22, paddingTop: 15, borderTop: `1px solid ${C.goldLine}` }}>
+        <button onClick={onAdminClick} className="missu-focusable" style={{ background: "none", border: "none", cursor: "pointer", color: C.espressoSoft, fontFamily: FONT_BODY, fontSize: 10, opacity: 0.55, letterSpacing: 1 }}>
+          Espace administration
         </button>
       </div>
     </div>
