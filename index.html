@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>MYU by Miss'U — The Art of Glow</title>
+<title>MYU Beauty Studio — The Art of Glow</title>
 <meta name="description" content="MYU by Miss'U — maquillage permanent en Martinique. Powder Brows, lèvres, eyeliner et soins experts. Découvrez les prestations et réservez votre rendez-vous." />
 <meta property="og:type" content="website" />
 <meta property="og:title" content="MYU by Miss'U — The Art of Glow" />
@@ -231,18 +231,74 @@ function GlobalStyle() {
         from { opacity: 0; transform: translateY(10px); }
         to { opacity: 1; transform: translateY(0); }
       }
-      @keyframes missuSpin {
-        to { transform: rotate(360deg); }
-      }
-      .missu-step { animation: missuFadeUp 0.45s ease both; }
+      @keyframes missuSpin { to { transform: rotate(360deg); } }
+      .missu-step { animation: missuFadeUp 0.42s ease both; }
       .missu-focusable:focus-visible {
         outline: 2px solid ${C.roseGoldDeep};
-        outline-offset: 2px;
+        outline-offset: 3px;
       }
-      input::placeholder, textarea::placeholder { color: ${C.espressoSoft}; opacity: 0.55; }
+      input::placeholder, textarea::placeholder { color: ${C.espressoSoft}; opacity: 0.68; }
+      input, textarea, select, button { -webkit-tap-highlight-color: transparent; }
+      input, textarea, select {
+        transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
+      }
+      input:focus, textarea:focus, select:focus {
+        border-color: ${C.roseGoldDeep} !important;
+        box-shadow: 0 0 0 3px rgba(216,194,155,.10);
+      }
+      button:not(:disabled) { transition: filter .18s ease, box-shadow .18s ease; }
+      button:not(:disabled):hover { filter: brightness(1.08); }
+      button:disabled { cursor: not-allowed !important; }
+      a { transition: opacity .18s ease; }
+      a:hover { opacity: .88; }
+      .missu-app-shell {
+        background:
+          radial-gradient(ellipse at 50% 0%, rgba(185,154,104,.10), transparent 42%),
+          linear-gradient(180deg, #100F0C 0%, #080807 100%);
+      }
+      .missu-app-panel {
+        position: relative;
+        isolation: isolate;
+        border-left: 1px solid rgba(185,154,104,.13);
+        border-right: 1px solid rgba(185,154,104,.13);
+        box-shadow: 0 0 70px rgba(0,0,0,.28);
+      }
+      .missu-brandbar {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 14px;
+        padding: 2px 0 18px;
+        margin-bottom: 20px;
+        border-bottom: 1px solid ${C.goldLine};
+      }
+      .missu-brandbar-copy {
+        font-family: ${FONT_BODY};
+        color: ${C.espressoSoft};
+        font-size: 8px;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        line-height: 1.7;
+      }
+      .missu-brandbar-copy strong {
+        display: block;
+        color: ${C.roseGoldDeep};
+        font-size: 10px;
+        font-weight: 500;
+        letter-spacing: 2.5px;
+      }
+      .missu-step h1, .missu-step h2 { text-wrap: balance; }
+      ::selection { background: ${C.roseGold}; color: #0B0A08; }
       * { box-sizing: border-box; }
+      @media (min-width: 700px) {
+        .missu-app-panel { max-width: 520px !important; padding-left: 26px !important; padding-right: 26px !important; }
+      }
+      @media (max-width: 380px) {
+        .missu-app-panel { padding-left: 14px !important; padding-right: 14px !important; }
+      }
       @media (prefers-reduced-motion: reduce) {
         .missu-step { animation: none; }
+        *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
       }
     `}</style>
   );
@@ -5563,9 +5619,18 @@ export default function App() {
   }
 
   return (
-    <div style={{ minHeight: "100vh", background: C.blush, display: "flex", justifyContent: "center" }}>
+    <div className="missu-app-shell" style={{ minHeight: "100vh", display: "flex", justifyContent: "center" }}>
       <GlobalStyle />
-      <div style={{ width: "100%", maxWidth: 460, minHeight: "100vh", background: C.blush, padding: "22px 18px 50px" }}>
+      <div className="missu-app-panel" style={{ width: "100%", maxWidth: 460, minHeight: "100vh", background: C.blush, padding: "24px 18px 50px" }}>
+        {(space !== "client" || step > 0) && (
+          <div className="missu-brandbar">
+            <Logo size="sm" />
+            <div className="missu-brandbar-copy">
+              <strong>THE ART OF GLOW</strong>
+              Beauté & dermopigmentation<br />Martinique · Sur rendez-vous
+            </div>
+          </div>
+        )}
         {content}
         <section aria-label="Contacter MYU" style={{ marginTop: 28, paddingTop: 22, borderTop: `1px solid ${C.blushDeep}`, fontFamily: FONT_BODY }}>
           <h2 style={{ fontFamily: FONT_DISPLAY, fontWeight: 500, fontSize: 24, color: C.espresso, margin: "0 0 8px" }}>Une question ? Parlons-en.</h2>
