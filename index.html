@@ -7,7 +7,7 @@
 <meta name="description" content="MYU by Miss'U — maquillage permanent en Martinique. Powder Brows, lèvres, eyeliner et soins experts. Découvrez les prestations et réservez votre rendez-vous." />
 <meta property="og:type" content="website" />
 <meta property="og:title" content="MYU by Miss'U — The Art of Glow" />
-<meta property="og:description" content="Maquillage permanent en Martinique : Powder Brows, lèvres, eyeliner et soins experts. Découvrez les prestations et réservez votre rendez-vous." />
+<meta property="og:description" content="Beauté permanente, dermopigmentation réparatrice et camouflage esthétique en Martinique. Découvrez MYU Beauty Studio." />
 <meta property="og:url" content="https://missu-two.vercel.app/" />
 <meta property="og:image" content="https://missu-two.vercel.app/myu-social-preview.png" />
 <meta property="og:image:width" content="1200" />
@@ -15,7 +15,7 @@
 <meta property="og:image:alt" content="MYU by Miss'U — The Art of Glow, maquillage permanent en Martinique" />
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="MYU by Miss'U — The Art of Glow" />
-<meta name="twitter:description" content="Maquillage permanent en Martinique. Découvrez les prestations MYU et réservez votre rendez-vous." />
+<meta name="twitter:description" content="Beauté permanente, dermopigmentation réparatrice et camouflage esthétique en Martinique." />
 <meta name="twitter:image" content="https://missu-two.vercel.app/myu-social-preview.png" />
 <meta name="theme-color" content="#0D0B09" />
 <meta name="color-scheme" content="dark" />
@@ -687,7 +687,7 @@ function HomeStep({ onStart, onOpenPrivacy, majorConfirmed, onToggleMajor, onAdm
 
       <section style={{ padding: "25px 0 8px" }}>
         <p style={{ ...eyebrow, textAlign: "center", margin: "0 0 14px" }}>L'expérience MYU</p>
-        <button onClick={onStart} className="missu-focusable" style={{ ...linkStyle, justifyContent: "space-between", padding: "17px 18px", background: `linear-gradient(110deg, ${C.roseGold}, ${C.roseGoldDeep})`, border: "none", color: "#17120C", marginBottom: 10 }}>
+        <button onClick={onStart} disabled={!majorConfirmed} className="missu-focusable" style={{ ...linkStyle, justifyContent: "space-between", padding: "17px 18px", background: `linear-gradient(110deg, ${C.roseGold}, ${C.roseGoldDeep})`, border: "none", color: "#17120C", marginBottom: 10, opacity: majorConfirmed ? 1 : 0.55, cursor: majorConfirmed ? "pointer" : "not-allowed" }}>
           <span style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <CalendarDays size={19} />
             <span>
@@ -698,7 +698,7 @@ function HomeStep({ onStart, onOpenPrivacy, majorConfirmed, onToggleMajor, onAdm
           <ChevronRight size={18} />
         </button>
 
-        <button onClick={onStart} className="missu-focusable" style={{ ...linkStyle, justifyContent: "space-between", marginBottom: 10 }}>
+        <button onClick={onStart} disabled={!majorConfirmed} className="missu-focusable" style={{ ...linkStyle, justifyContent: "space-between", marginBottom: 10, opacity: majorConfirmed ? 1 : 0.5, cursor: majorConfirmed ? "pointer" : "not-allowed" }}>
           <span style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <Sparkles size={18} color={C.roseGoldDeep} />
             <span>
