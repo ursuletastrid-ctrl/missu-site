@@ -741,6 +741,36 @@ function HomeStep({ onStart, onOpenPrivacy, majorConfirmed, onToggleMajor, onAdm
         </div>
       </section>
 
+      <section aria-label="L'univers MYU" style={{ margin: "18px 0 4px" }}>
+        <div style={{ position: "relative", overflow: "hidden", borderRadius: 4, border: `1px solid ${C.goldLine}`, background: "#15120E" }}>
+          <img
+            src="https://images.unsplash.com/photo-1758613654538-5f353b10f93e?auto=format&fit=crop&fm=jpg&q=85&w=1200"
+            alt="Portrait beauté d'une femme métissée aux cheveux bouclés"
+            loading="eager"
+            fetchPriority="high"
+            style={{ display: "block", width: "100%", height: 340, objectFit: "cover", objectPosition: "center 35%", opacity: 0.88 }}
+          />
+          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, transparent 35%, rgba(8,7,6,.88) 100%)" }} />
+          <div style={{ position: "absolute", left: 18, right: 18, bottom: 18 }}>
+            <p style={{ fontFamily: FONT_BODY, fontSize: 9, letterSpacing: 2.4, color: "#D8C29B", textTransform: "uppercase", margin: "0 0 7px" }}>La beauté plurielle</p>
+            <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: 27, lineHeight: 1.12, fontWeight: 400, color: "#F5EFE5", margin: 0 }}>Chaque peau a son éclat.</h2>
+          </div>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 9, marginTop: 9 }}>
+          <div style={{ position: "relative", overflow: "hidden", borderRadius: 4, background: "#17140F", minHeight: 142 }}>
+            <img src="https://images.pexels.com/photos/7479649/pexels-photo-7479649.jpeg?auto=compress&cs=tinysrgb&w=700" alt="Gros plan de lèvres sur différentes carnations" loading="lazy" style={{ width: "100%", height: 142, objectFit: "cover", display: "block" }} />
+            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, transparent 45%, rgba(8,7,6,.82))" }} />
+            <span style={{ position: "absolute", bottom: 10, left: 10, color: "#F5EFE5", fontFamily: FONT_BODY, fontSize: 9, letterSpacing: 1.2, textTransform: "uppercase" }}>Lèvres & glow</span>
+          </div>
+          <div style={{ position: "relative", overflow: "hidden", borderRadius: 4, background: "#17140F", minHeight: 142 }}>
+            <img src="https://images.pexels.com/photos/29196814/pexels-photo-29196814/free-photo-of-portrait-of-a-young-man-with-curly-hair-and-beard.jpeg?auto=compress&cs=tinysrgb&w=700" alt="Portrait masculin aux cheveux bouclés et barbe" loading="lazy" style={{ width: "100%", height: 142, objectFit: "cover", display: "block" }} />
+            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, transparent 45%, rgba(8,7,6,.82))" }} />
+            <span style={{ position: "absolute", bottom: 10, left: 10, color: "#F5EFE5", fontFamily: FONT_BODY, fontSize: 9, letterSpacing: 1.2, textTransform: "uppercase" }}>Hair & scalp</span>
+          </div>
+        </div>
+        <p style={{ fontFamily: FONT_BODY, fontSize: 8, color: C.espressoSoft, textAlign: "right", margin: "6px 2px 0", opacity: .7 }}>Visuels : Unsplash & Pexels</p>
+      </section>
+
       <section style={{ padding: "25px 0 8px" }}>
         <p style={{ ...eyebrow, textAlign: "center", margin: "0 0 14px" }}>L'expérience MYU</p>
         <button onClick={onStart} disabled={!majorConfirmed} className="missu-focusable" style={{ ...linkStyle, justifyContent: "space-between", padding: "17px 18px", background: `linear-gradient(110deg, ${C.roseGold}, ${C.roseGoldDeep})`, border: "none", color: "#17120C", marginBottom: 10, opacity: majorConfirmed ? 1 : 0.55, cursor: majorConfirmed ? "pointer" : "not-allowed" }}>
