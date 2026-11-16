@@ -1,6 +1,6 @@
 {
   "redirects": [
-    { "source": "/", "destination": "/landing.html", "permanent": false },
+    { "source": "/", "destination": "/index.html", "permanent": false },
     { "source": "/vip", "destination": "/vip.html", "permanent": false }
   ],
   "crons": [
