@@ -369,7 +369,9 @@ function GlobalStyle() {
       .myu-proof h2,.myu-smp h2,.myu-artist h2,.myu-vip h2,.myu-contact h2 { margin:12px 0; color:#211b15; font:400 clamp(30px,4vw,42px)/1.1 ${FONT_DISPLAY}; }
       .myu-proof p,.myu-smp p,.myu-artist p,.myu-vip p,.myu-contact p { color:#756b60; font:300 14px/1.85 ${FONT_BODY}; }
       .myu-proof-text { display:flex; flex-direction:column; align-items:flex-start; gap:14px; }
+      .myu-proof-media { margin:0; }
       .myu-proof-media img { width:100%; max-width:320px; display:block; margin:0 auto; border-radius:2px 2px 60px 2px; }
+      .myu-proof-media figcaption { max-width:320px; margin:10px auto 0; color:#7b7166; font:italic 11px/1.5 ${FONT_BODY}; text-align:center; }
       .myu-smp-media img,.myu-artist-media img { width:100%; aspect-ratio:4/5; object-fit:cover; display:block; border-radius:2px 2px 60px 2px; filter:saturate(.9); }
       .myu-smp { background:#eae4da; }
       .myu-vip { background:#211b15; color:#f4f0e9; padding:64px 5%; text-align:center; }
@@ -904,7 +906,7 @@ function HomeStep({ onStart, onOpenPrivacy, majorConfirmed, onToggleMajor, onAdm
       </section>
 
       <section className="myu-proof">
-        <div className="myu-proof-media"><img src="/assets/myu/realisations/neutralisation-avant-apres.webp" alt="Neutralisation des lèvres : avant / après sur cliente MYU" loading="lazy"/></div>
+        <figure className="myu-proof-media"><img src="/assets/myu/realisations/neutralisation-avant-apres.webp" alt="Neutralisation des lèvres : avant / après sur cliente MYU" loading="lazy"/><figcaption>Photos réelles de cliente — mise en page réalisée avec l'IA.</figcaption></figure>
         <div className="myu-proof-text">
           <div className="myu-section-kicker">RÉALISATION MYU</div>
           <h2>Neutralisation des lèvres</h2>
