@@ -97,7 +97,7 @@ textarea{min-height:84px;resize:vertical}
   <div class="eyebrow">MYU by Miss'U</div>
   <div class="badge">MYU VIP</div>
   <h1>Private<em>Experience</em></h1>
-  <p class="dispo" id="dispoVip">Rendez-vous privés en soirée à partir de 18&nbsp;h, ainsi que les dimanches et jours fériés, selon les disponibilités.</p>
+  <p class="dispo" id="dispoVip">Ouverture en février 2027. Rendez-vous privés en soirée à partir de 18&nbsp;h, ainsi que les dimanches et jours fériés, selon les disponibilités.</p>
   <p class="signature">« Votre temps est précieux. Le nôtre vous est consacré. »</p>
   <p class="lead">Une expérience beauté privée, personnalisée et volontairement limitée, pensée pour toutes les personnes dont l'agenda ne s'arrête pas aux horaires habituels.</p>
   <a class="cta" href="#reserver" id="ctaTop">RÉSERVER MON EXPÉRIENCE PRIVÉE</a>
@@ -259,6 +259,17 @@ async function load(){
   try{
     cat=await api('/api/vip?action=catalogue');
     renderFormules();lieuxEtDates();
+    const today=martiniqueDate(0);
+    if(cat.dateMin>today){
+      $('dispoVip').textContent='Ouverture le '+cat.dateMinLongue+'. Rendez-vous privés en soirée à partir de 18 h, ainsi que les dimanches et jours fériés, selon les disponibilités.';
+      const maxD=martiniqueDate(cat.horizonJours||60);
+      if(cat.dateMin>maxD){
+        const o=new Date(cat.dateMin+'T12:00:00Z');o.setUTCDate(o.getUTCDate()-(cat.horizonJours||60));
+        const ouvre=o.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',timeZone:'UTC'});
+        $('closed').textContent='MYU VIP ouvre le '+cat.dateMinLongue+'. Les demandes pourront être envoyées à partir du '+ouvre+'. D\'ici là, écrivez à Miss\'U sur WhatsApp ou Instagram.';
+        $('closed').style.display='block';$('submit').disabled=true;
+      }
+    }
     if(!cat.actif){$('closed').textContent='Les demandes d\'expériences privées sont momentanément suspendues. Merci de revenir très bientôt.';$('closed').style.display='block';$('submit').disabled=true}
     const pre=norm(attribution.presta).replace(/ /g,'_');
     if(pre){const p=cat.prestations.find(x=>x.type===pre);if(p){sel=p;$('serviceHint').textContent='Prestation choisie : '+p.label+' · durée '+fmtDur(p.dureeMinutes)+'.'}else{$('q').value=attribution.presta.replace(/_/g,' ')}}
