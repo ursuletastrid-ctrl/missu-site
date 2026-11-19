@@ -409,6 +409,47 @@ function GlobalStyle() {
         .myu-contact-card { min-width:0; width:100%; }
         .myu-contact { padding:48px 2% 30px; }
       }
+
+      /* MYU — Noël 2026 : bandeau offres + décor */
+      @keyframes myuSnow { 0% { transform: translateY(-20px) rotate(0deg); opacity:0; } 10% { opacity:.9; } 100% { transform: translateY(560px) rotate(180deg); opacity:0; } }
+      @keyframes myuShine { 0%,100% { opacity:.55; } 50% { opacity:1; } }
+      .myu-xmas-bar { position:relative; display:flex; align-items:center; justify-content:center; gap:14px; min-height:44px; margin:0 -30px; padding:10px 54px; background:linear-gradient(90deg,#3a0f14,#5b1820 50%,#3a0f14); color:#f4e7cf; text-align:center; overflow:hidden; }
+      .myu-xmas-bar:before,.myu-xmas-bar:after { content:"✦"; position:absolute; top:50%; transform:translateY(-50%); color:#d9b46a; font-size:12px; animation:myuShine 2.4s ease-in-out infinite; }
+      .myu-xmas-bar:before { left:22px; } .myu-xmas-bar:after { right:22px; animation-delay:1.2s; }
+      .myu-xmas-bar a { color:#f4e7cf; text-decoration:none; font:400 12px/1.4 ${FONT_BODY}; letter-spacing:.6px; }
+      .myu-xmas-bar a b { color:#e5c27d; font-weight:500; }
+      .myu-xmas-bar a span { margin-left:8px; color:#e5c27d; border-bottom:1px solid rgba(229,194,125,.6); }
+      .myu-xmas-dots { display:flex; gap:5px; margin-left:6px; }
+      .myu-xmas-dots i { width:5px; height:5px; border-radius:50%; background:rgba(229,194,125,.35); }
+      .myu-xmas-dots i.on { background:#e5c27d; }
+      .myu-hero { position:relative; overflow:hidden; }
+      .myu-snow { position:absolute; inset:0; pointer-events:none; z-index:0; }
+      .myu-snow i { position:absolute; top:0; color:#c9a45c; font-style:normal; animation:myuSnow linear infinite; }
+      .myu-hero-copy,.myu-hero-visual { position:relative; z-index:1; }
+      .myu-xmas-tag { display:inline-flex; align-items:center; gap:8px; margin-top:14px; padding:6px 14px; border:1px solid #c9a45c; border-radius:40px; color:#7a1f28; font:500 10px ${FONT_BODY}; letter-spacing:1.6px; text-transform:uppercase; background:rgba(255,255,255,.55); }
+      .myu-badges { display:flex; flex-wrap:wrap; justify-content:center; gap:8px; }
+      .myu-badge { display:inline-flex; align-items:center; gap:6px; padding:5px 12px; border:1px solid #c9a45c; border-radius:40px; color:#8e6d42; font:500 10px ${FONT_BODY}; letter-spacing:1.2px; text-transform:uppercase; background:#f4f0e9; }
+      .myu-ritual { margin:0 -30px; padding:70px 5%; background:radial-gradient(circle at 85% 10%,rgba(201,164,92,.18),transparent 45%),#211b15; color:#f4f0e9; }
+      .myu-ritual .myu-section-kicker { color:#d5b98a; }
+      .myu-ritual h2 { margin:12px 0 10px; color:#f4f0e9; font:400 clamp(32px,4vw,46px)/1.08 ${FONT_DISPLAY}; }
+      .myu-ritual h2 em { color:#d5b98a; }
+      .myu-ritual > p { max-width:560px; color:#c2b6a5; font:300 14px/1.85 ${FONT_BODY}; }
+      .myu-ritual-steps { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin:30px 0; }
+      .myu-ritual-steps article { padding:22px; border:1px solid rgba(213,185,138,.3); }
+      .myu-ritual-steps span { color:#d5b98a; font:400 26px ${FONT_DISPLAY}; }
+      .myu-ritual-steps h3 { margin:8px 0 6px; font:400 22px ${FONT_DISPLAY}; color:#f4f0e9; }
+      .myu-ritual-steps p { color:#c2b6a5; font:300 12.5px/1.7 ${FONT_BODY}; margin:0; }
+      .myu-ritual-price { display:flex; flex-wrap:wrap; align-items:center; gap:22px; }
+      .myu-ritual-price strong { font:400 44px ${FONT_DISPLAY}; color:#e5c27d; }
+      .myu-ritual-price s { color:#8f8476; font-size:15px; margin-left:8px; }
+      .myu-ritual-price small { display:block; color:#c2b6a5; font-size:11px; letter-spacing:.6px; }
+      .myu-ritual .myu-outline-button { border-color:#a98959; color:#f4f0e9; }
+      @media(max-width:760px) {
+        .myu-xmas-bar { margin:0 -18px; padding:10px 40px; }
+        .myu-ritual { margin:0 -18px; padding:52px calc(2% + 18px); }
+        .myu-ritual-steps { grid-template-columns:1fr; }
+      }
+      @media (prefers-reduced-motion: reduce) { .myu-snow { display:none; } }
       .missu-step:not(.myu-home) { max-width:720px; margin:0 auto; padding-top:22px; }
       .myu-shell { padding:0 30px 50px; }
       @media(max-width:760px) { .myu-shell { padding:0 18px 40px; } }
@@ -830,6 +871,44 @@ function StepHeader({ onBack, title, subtitle }) {
   );
 }
 
+
+const MYU_WA = "https://wa.me/596696178587?text=";
+const XMAS_OFFERS = [
+  { text: <><b>Cartes cadeaux MYU</b> · offrez du glow, jusqu'au 24 décembre</>, cta: "Commander", href: MYU_WA + encodeURIComponent("Bonjour MYU ✨ J'aimerais offrir une carte cadeau MYU pour Noël.") },
+  { text: <><b>BB Glow & Aqua Hydro</b> · votre peau prête pour les fêtes, à réserver avant le 15 décembre</>, cta: "Réserver", href: "/book.html" },
+  { text: <><b>Offre modèle à 160 €</b> · 2 places seulement en décembre</>, cta: "Je candidate", href: MYU_WA + encodeURIComponent("Bonjour MYU ✨ Je suis intéressée par une place modèle en décembre.") },
+];
+function XmasBar() {
+  const [i, setI] = useState(0);
+  useEffect(() => {
+    const now = new Date();
+    if (now > new Date("2026-12-31T23:59:59")) return;
+    const t = setInterval(() => setI(v => (v + 1) % XMAS_OFFERS.length), 5000);
+    return () => clearInterval(t);
+  }, []);
+  if (new Date() > new Date("2026-12-31T23:59:59")) return null;
+  const o = XMAS_OFFERS[i];
+  return (
+    <div className="myu-xmas-bar" role="region" aria-label="Offres de Noël MYU">
+      <a href={o.href} target={o.href.startsWith("http") ? "_blank" : undefined} rel="noopener noreferrer">{o.text}<span>{o.cta}</span></a>
+      <div className="myu-xmas-dots" aria-hidden="true">{XMAS_OFFERS.map((_, k) => <i key={k} className={k === i ? "on" : ""}/>)}</div>
+    </div>
+  );
+}
+function XmasSnow() {
+  const flakes = [
+    [6, 0, 11, 14], [17, 3, 9, 18], [29, 6, 13, 15], [41, 1.5, 8, 20], [55, 4.5, 12, 16],
+    [66, 8, 10, 19], [77, 2, 14, 17], [88, 5.5, 9, 21], [95, 9, 11, 15], [48, 11, 7, 22],
+  ];
+  return (
+    <div className="myu-snow" aria-hidden="true">
+      {flakes.map(([left, delay, size, dur], k) => (
+        <i key={k} style={{ left: left + "%", fontSize: size, animationDelay: delay + "s", animationDuration: dur + "s" }}>{k % 3 === 0 ? "✦" : "❄"}</i>
+      ))}
+    </div>
+  );
+}
+
 function HomeStep({ onStart, onOpenPrivacy, majorConfirmed, onToggleMajor, onAdminClick, onAccountClick }) {
   const [ageHint, setAgeHint] = useState(false);
   const startPanelRef = useRef(null);
@@ -851,6 +930,7 @@ function HomeStep({ onStart, onOpenPrivacy, majorConfirmed, onToggleMajor, onAdm
   ];
   return (
     <div className="missu-step myu-home">
+      <XmasBar />
       <header className="myu-topbar">
         <div className="myu-wordmark"><span>MYU</span><small>BY MISS'U</small></div>
         <nav className="myu-nav">
@@ -863,6 +943,7 @@ function HomeStep({ onStart, onOpenPrivacy, majorConfirmed, onToggleMajor, onAdm
       </header>
 
       <section className="myu-hero">
+        <XmasSnow />
         <div className="myu-hero-copy">
           <div className="myu-eyebrow"><span></span> LE LAMENTIN · MARTINIQUE</div>
           <h1>Révélez votre beauté.<br/><em>À votre manière.</em></h1>
@@ -872,6 +953,7 @@ function HomeStep({ onStart, onOpenPrivacy, majorConfirmed, onToggleMajor, onAdm
             <a href="#myu-prestations" className="myu-secondary">Découvrir les prestations <span>↓</span></a>
           </div>
           <div className="myu-hero-note"><ShieldCheck size={15}/> Chaque projet commence par un échange et un pré-diagnostic.</div>
+          <div className="myu-xmas-tag">✦ Noël chez MYU · cartes cadeaux disponibles</div>
         </div>
         <div className="myu-hero-visual">
           <img className="myu-portrait" src="/assets/myu/catalogue/bb-glow.webp" alt="Peau lumineuse, illustration de l'univers MYU" />
@@ -900,7 +982,9 @@ function HomeStep({ onStart, onOpenPrivacy, majorConfirmed, onToggleMajor, onAdm
           ))}
         </div>
         <div className="myu-services-foot">
+          <div className="myu-badges"><span className="myu-badge">✦ Diagnostic offert</span><span className="myu-badge">✦ Retouche incluse*</span><span className="myu-badge">✦ Conseil personnalisé offert</span></div>
           <a href="/book.html" className="myu-primary">Voir le catalogue et les tarifs <ChevronRight size={17}/></a>
+          <small>* Retouche incluse pour la neutralisation, le Candy Lips, les Powder Brows et l'eyeliner poudré.</small>
           <small>Visuels d'illustration des techniques — ce ne sont pas des résultats clientes.</small>
         </div>
       </section>
@@ -913,6 +997,21 @@ function HomeStep({ onStart, onOpenPrivacy, majorConfirmed, onToggleMajor, onAdm
           <p>Avant / après sur cliente MYU. Pour les lèvres pigmentées, la stratégie est adaptée au cas présenté.</p>
           <a href="/prestation.html?service=neutralisation" className="myu-secondary">Voir la fiche <span>→</span></a>
           <a href="https://www.instagram.com/myu_theartofglow_bymissu/" target="_blank" rel="noopener noreferrer" className="myu-secondary">Toutes les réalisations sur Instagram <span>↗</span></a>
+        </div>
+      </section>
+
+      <section className="myu-ritual" id="myu-levres-revelees">
+        <div className="myu-section-kicker">LE PARCOURS SIGNATURE</div>
+        <h2>Lèvres <em>révélées</em></h2>
+        <p>Pour les lèvres pigmentées : un parcours complet, pensé du premier rendez-vous au résultat final. Les lèvres sont d'abord unifiées, puis sublimées par un dégradé lumineux.</p>
+        <div className="myu-ritual-steps">
+          <article><span>01</span><h3>Neutralisation</h3><p>Atténue les tons foncés et unifie les lèvres. Diagnostic offert avant de commencer.</p></article>
+          <article><span>02</span><h3>Candy Lips</h3><p>Le dégradé qui donne du relief à votre sourire, posé sur des lèvres unifiées.</p></article>
+          <article><span>03</span><h3>Retouche</h3><p>Incluse, 6 à 8 semaines plus tard, pour parfaire le résultat.</p></article>
+        </div>
+        <div className="myu-ritual-price">
+          <div><strong>420 €</strong><s>450 €</s><small>Parcours réservé en entier · 30 € offerts</small></div>
+          <a href={MYU_WA + encodeURIComponent("Bonjour MYU ✨ Le parcours Lèvres révélées m'intéresse, j'aimerais un diagnostic.")} target="_blank" rel="noopener noreferrer" className="myu-outline-button">Demander mon diagnostic <ChevronRight size={16}/></a>
         </div>
       </section>
 
