@@ -467,6 +467,12 @@ function GlobalStyle() {
       .myu-xmas-greeting { margin-top:14px; color:#7a1f28; font:italic 400 22px ${FONT_DISPLAY}; }
       @media(max-width:760px) { .myu-baubles { right:2%; gap:16px; transform:scale(.75); transform-origin:top right; } .myu-holly { width:86px; left:-14px; } }
       @media (prefers-reduced-motion: reduce) { .myu-bauble,.myu-sparkles i { animation:none; } }
+
+      @keyframes myuShoot { 0% { transform:translate(0,0) rotate(-28deg); opacity:0; } 4% { opacity:1; } 14% { transform:translate(-520px,280px) rotate(-28deg); opacity:0; } 100% { transform:translate(-520px,280px) rotate(-28deg); opacity:0; } }
+      .myu-shooting { position:absolute; inset:0; pointer-events:none; z-index:2; overflow:hidden; }
+      .myu-shooting i { position:absolute; width:180px; height:2.5px; border-radius:2px; background:linear-gradient(90deg,#fffaf0,#f0d08a 18%,rgba(201,164,92,0)); filter:drop-shadow(0 0 6px rgba(229,194,125,.9)); opacity:0; animation:myuShoot 9s ease-out infinite; }
+      .myu-shooting i:before { content:""; position:absolute; left:-3px; top:-3px; width:8px; height:8px; border-radius:50%; background:#fff8e6; box-shadow:0 0 10px 3px rgba(229,194,125,.9); }
+      @media (prefers-reduced-motion: reduce) { .myu-shooting { display:none; } }
       .missu-step:not(.myu-home) { max-width:720px; margin:0 auto; padding-top:22px; }
       .myu-shell { padding:0 30px 50px; }
       @media(max-width:760px) { .myu-shell { padding:0 18px 40px; } }
@@ -967,6 +973,15 @@ function XmasSparkles({ n = 14 }) {
   );
 }
 
+function XmasShootingStars() {
+  const stars = [[78, 4, 0], [96, 18, 3.2], [60, 2, 6.1], [88, 40, 7.6]];
+  return (
+    <div className="myu-shooting" aria-hidden="true">
+      {stars.map(([x, y, d], k) => <i key={k} style={{ left: x + "%", top: y + "%", animationDelay: d + "s" }}/>)}
+    </div>
+  );
+}
+
 function HomeStep({ onStart, onOpenPrivacy, majorConfirmed, onToggleMajor, onAdminClick, onAccountClick }) {
   const [ageHint, setAgeHint] = useState(false);
   const startPanelRef = useRef(null);
@@ -1002,6 +1017,7 @@ function HomeStep({ onStart, onOpenPrivacy, majorConfirmed, onToggleMajor, onAdm
 
       <section className="myu-hero">
         <XmasSnow />
+        <XmasShootingStars />
         <XmasBaubles />
         <div className="myu-hero-copy">
           <div className="myu-eyebrow"><span></span> LE LAMENTIN · MARTINIQUE</div>
@@ -1062,6 +1078,7 @@ function HomeStep({ onStart, onOpenPrivacy, majorConfirmed, onToggleMajor, onAdm
 
       <section className="myu-ritual" id="myu-levres-revelees">
         <XmasSparkles />
+        <XmasShootingStars />
         <div className="myu-section-kicker">LE PARCOURS SIGNATURE</div>
         <h2>Lèvres <em>révélées</em></h2>
         <p>Pour les lèvres pigmentées : un parcours complet, pensé du premier rendez-vous au résultat final. Les lèvres sont d'abord unifiées, puis sublimées par un dégradé lumineux.</p>
