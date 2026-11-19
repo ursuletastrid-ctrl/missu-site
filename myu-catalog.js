@@ -14,7 +14,7 @@ window.MYU_CATALOG = [
   { key: "reconstruction_sourcils", label: "Reconstruction des sourcils", category: "regard", price: 350, desc: "Camouflage, détatouage ou restructuration d'un ancien maquillage permanent. 1 retouche comprise, retouches suivantes à 80 €." },
   { key: "velvet_lips", label: "Velvet Lips", category: "levres", price: 300, desc: "Blush lèvres uniforme, couleur homogène du contour au centre." },
   { key: "aqualips_blush", label: "AquaLips Blush", category: "levres", price: 180, desc: "Un blush très léger : la porte d'entrée idéale pour découvrir la couleur sur vos lèvres." },
-  { key: "neutralisation", label: "Neutralisation lèvres foncées", category: "levres", price: 250, desc: "Atténue les tons foncés et unifie vos lèvres : la première étape du parcours Lèvres révélées. Diagnostic 30 € déduit de la prestation, retouche incluse." },
+  { key: "neutralisation", label: "Neutralisation lèvres foncées", category: "levres", price: 250, desc: "Atténue les tons foncés et unifie vos lèvres : la première étape du parcours Lèvres révélées. Diagnostic 30 € compris dans l'acompte, retouche incluse." },
   { key: "eyeliner_classique", label: "Eyeliner classique", category: "regard", price: 200, desc: "Un trait fin et précis qui souligne le regard." },
   { key: "eyeliner_poudre", label: "Eyeliner poudré", category: "regard", price: 300, desc: "Un regard intense dès le réveil, effet doux et estompé. Retouche incluse." },
   { key: "taches_brunes_visage", label: "Correction taches brunes · visage", category: "soins", price: 150, desc: "Atténue les taches pigmentaires du visage." },
