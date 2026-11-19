@@ -47,7 +47,7 @@ const SERVICE_LABELS = {
   taches_brunes_corps: "Correction taches brunes · corps", vergetures: "Correction vergetures",
   conseil: "Conseil personnalisé", microneedling: "Microneedling", bb_glow: "BB Glow",
   soins_corps_infrarouge: "Soins corps infrarouge", tricopigmentation: "Tricopigmentation",
-  freckles: "Freckles", soins_led: "Lumière rouge LED (30 min)",
+  freckles: "Freckles", reconstruction_sourcils: "Reconstruction des sourcils", soins_led: "Lumière rouge LED (30 min)",
   consultation_camouflage: "Consultation camouflage (30 min)",
 };
 
