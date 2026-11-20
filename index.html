@@ -2871,9 +2871,22 @@ function exportCSV(submissions) {
   URL.revokeObjectURL(url);
 }
 
-function AdminDashboard({ submissions, loading, onOpen, onLogout, onRefresh }) {
+/* Demandes de test : masquées du tableau de bord (rien n'est supprimé dans le Google Sheet). */
+function isTestSubmission(s) {
+  const p = s.personal || {};
+  const fields = [p.firstName, p.lastName, p.email, p.city].map((v) => String(v || "").toLowerCase());
+  if (fields.some((v) => /(^|[^a-zà-ÿ])tests?([^a-zà-ÿ]|$)/i.test(v))) return true;
+  if (/^(test|essai)[^@]*@/i.test(String(p.email || ""))) return true;
+  if (/@(example|test)\./i.test(String(p.email || ""))) return true;
+  return false;
+}
+
+function AdminDashboard({ submissions: allSubmissions, loading, onOpen, onLogout, onRefresh }) {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [showTests, setShowTests] = useState(false);
+  const testCount = allSubmissions.filter(isTestSubmission).length;
+  const submissions = showTests ? allSubmissions : allSubmissions.filter((s) => !isTestSubmission(s));
 
   const filtered = submissions.filter((s) => {
     const matchSearch =
@@ -2895,6 +2908,14 @@ function AdminDashboard({ submissions, loading, onOpen, onLogout, onRefresh }) {
           </div>
           <p style={{ fontFamily: FONT_BODY, fontSize: 12, color: C.espressoSoft, margin: "2px 0 0" }}>
             {submissions.length} demande{submissions.length > 1 ? "s" : ""} reçue{submissions.length > 1 ? "s" : ""}
+            {testCount > 0 && (
+              <button onClick={() => setShowTests((v) => !v)} className="missu-focusable" style={{
+                background: "none", border: "none", padding: 0, marginLeft: 8, cursor: "pointer",
+                fontFamily: FONT_BODY, fontSize: 11, color: C.espressoSoft, textDecoration: "underline", opacity: 0.75,
+              }}>
+                {showTests ? "Masquer les tests" : `${testCount} test${testCount > 1 ? "s" : ""} masqué${testCount > 1 ? "s" : ""}`}
+              </button>
+            )}
           </p>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
