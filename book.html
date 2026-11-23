@@ -140,7 +140,10 @@ async function load(){
       $('service').add(option);
     });
     const wanted=qs.get('service');
-    if(wanted&&catalog.some(x=>x.type_prestation===wanted&&!(x.is_limited_offer&&Number(x.available_slots)<=0))){
+    if(wanted==='tricopigmentation'){
+      $('msg').innerHTML='La tricopigmentation (SMP) commence par un diagnostic personnalisé. <a href="/smp.html" style="color:inherit;font-weight:600">Demander mon diagnostic SMP →</a>';
+      $('msg').style.display='block';
+    }else if(wanted&&catalog.some(x=>x.type_prestation===wanted&&!(x.is_limited_offer&&Number(x.available_slots)<=0))){
       $('service').value=wanted;
       onServiceChange();
     }else{
