@@ -11,7 +11,7 @@
 window.MYU_CATALOG = [
   { key: "candy_lips", label: "Candy Lips", category: "levres", price: 200, desc: "Le dégradé qui donne du relief à votre sourire. Retouche incluse." },
   { key: "powder_brows", label: "Powder Brows", category: "regard", price: 300, desc: "Des sourcils dessinés pour vous, et des matins sans crayon. Retouche incluse." },
-  { key: "reconstruction_sourcils", label: "Reconstruction des sourcils", category: "regard", price: 350, desc: "Camouflage, détatouage ou restructuration d'un ancien maquillage permanent. 1 retouche comprise, retouches suivantes à 80 €." },
+  { key: "reconstruction_sourcils", label: "Reconstruction des sourcils", category: "regard", price: 350, desc: "Camouflage ou restructuration d'un ancien maquillage permanent. 1 retouche comprise, retouches suivantes à 80 €." },
   { key: "velvet_lips", label: "Velvet Lips", category: "levres", price: 300, desc: "Blush lèvres uniforme, couleur homogène du contour au centre." },
   { key: "aqualips_blush", label: "AquaLips Blush", category: "levres", price: 180, desc: "Un blush très léger : la porte d'entrée idéale pour découvrir la couleur sur vos lèvres." },
   { key: "neutralisation", label: "Neutralisation lèvres foncées", category: "levres", price: 250, desc: "Atténue les tons foncés et unifie vos lèvres : la première étape du parcours Lèvres révélées. Diagnostic 30 € compris dans l'acompte, retouche incluse." },
