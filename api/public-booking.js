@@ -29,7 +29,10 @@ module.exports = async function handler(req, res) {
       const { data, error } = await admin.from("prestations_reservation")
         .select("type_prestation,deposit_amount,is_limited_offer,available_slots,active,duree_minutes").eq("active", true);
       if (error) throw error;
-      return res.status(200).json({ success: true, data: data || [], lieux: settings.lieux });
+      // La SMP suit un parcours diagnostic-first distinct : elle ne doit pas
+      // apparaître dans la réservation immédiate ni ouvrir un acompte en ligne.
+      const publicCatalog = (data || []).filter(x => x.type_prestation !== "tricopigmentation");
+      return res.status(200).json({ success: true, data: publicCatalog, lieux: settings.lieux });
     } catch (e) {
       console.error("[public-booking] lecture catalogue :", e.message);
       return res.status(500).json({ error: "Réservations momentanément indisponibles." });
@@ -49,6 +52,14 @@ module.exports = async function handler(req, res) {
     dateRdv: B.clean(body.dateRdv, 10),
     heureRdv: B.clean(body.heureRdv, 5),
   };
+
+  // Défense côté serveur : même si un client contourne l'interface, la SMP
+  // doit passer par le diagnostic personnalisé de /smp.html avant réservation.
+  if (input.typePrestation === "tricopigmentation") {
+    return res.status(400).json({
+      error: "La tricopigmentation (SMP) commence par un diagnostic personnalisé. Utilisez la page /smp.html ; aucun paiement n'est demandé pour cette première demande."
+    });
+  }
 
   if (!firstName || !phone) return res.status(400).json({ error: "Prénom et téléphone sont requis." });
   if (!/^[+\d][\d\s.-]{5,}$/.test(phone)) return res.status(400).json({ error: "Numéro de téléphone invalide." });
