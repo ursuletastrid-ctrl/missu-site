@@ -410,6 +410,40 @@ function GlobalStyle() {
         .myu-contact { padding:48px 2% 30px; }
       }
 
+      /* MYU — Black Friday 2026 : −20 % du 27 au 30 novembre */
+      @keyframes myuBfSlide { 0% { background-position:0 0; } 100% { background-position:200px 0; } }
+      .myu-bf-bar { position:relative; display:flex; align-items:center; justify-content:center; gap:14px; min-height:46px; margin:0 -30px; padding:10px 54px; background:#0d0d0d; color:#f3efe7; text-align:center; overflow:hidden; border-bottom:1px solid #c9a45c; }
+      .myu-bf-bar:before { content:""; position:absolute; inset:auto 0 0 0; height:2px; background:repeating-linear-gradient(90deg,#c9a45c 0 18px,transparent 18px 30px); animation:myuBfSlide 6s linear infinite; opacity:.7; }
+      .myu-bf-bar a { color:#f3efe7; text-decoration:none; font:400 12px/1.4 ${FONT_BODY}; letter-spacing:.6px; }
+      .myu-bf-bar a b { color:#e5c27d; font-weight:600; letter-spacing:1.4px; }
+      .myu-bf-bar a s { color:#8f8476; margin:0 4px; }
+      .myu-bf-bar a strong { color:#e5c27d; font-weight:600; }
+      .myu-bf-bar a span { margin-left:8px; color:#e5c27d; border-bottom:1px solid rgba(229,194,125,.6); }
+      .myu-bf-corner { position:absolute; top:0; left:0; width:180px; height:180px; overflow:hidden; z-index:4; pointer-events:none; }
+      .myu-bf-ribbon { position:absolute; top:44px; left:-58px; z-index:4; width:250px; padding:7px 0; transform:rotate(-38deg); background:#0d0d0d; color:#e5c27d; border-top:1px solid #c9a45c; border-bottom:1px solid #c9a45c; text-align:center; font:600 11px ${FONT_BODY}; letter-spacing:2px; box-shadow:0 8px 18px rgba(0,0,0,.25); pointer-events:none; }
+      .myu-bf-tag { display:inline-flex; align-items:center; gap:8px; margin-top:14px; margin-right:8px; padding:6px 14px; border-radius:40px; color:#e5c27d; background:#0d0d0d; border:1px solid #c9a45c; font:600 10px ${FONT_BODY}; letter-spacing:1.6px; text-transform:uppercase; }
+      .myu-bf { margin:0 -30px; padding:60px 5%; background:radial-gradient(circle at 12% 0%,rgba(201,164,92,.22),transparent 45%),#0d0d0d; color:#f3efe7; }
+      .myu-bf .myu-section-kicker { color:#d5b98a; }
+      .myu-bf h2 { margin:12px 0 8px; color:#f3efe7; font:400 clamp(32px,4.4vw,50px)/1.05 ${FONT_DISPLAY}; }
+      .myu-bf h2 em { color:#e5c27d; }
+      .myu-bf > p { max-width:620px; color:#c2b6a5; font:300 14px/1.8 ${FONT_BODY}; }
+      .myu-bf-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin:28px 0 18px; }
+      .myu-bf-grid article { padding:18px 20px; border:1px solid rgba(213,185,138,.3); display:flex; justify-content:space-between; align-items:baseline; gap:10px; }
+      .myu-bf-grid h3 { margin:0; font:400 19px ${FONT_DISPLAY}; color:#f3efe7; }
+      .myu-bf-grid div { white-space:nowrap; }
+      .myu-bf-grid s { color:#8f8476; font:300 13px ${FONT_BODY}; margin-right:8px; }
+      .myu-bf-grid strong { color:#e5c27d; font:400 26px ${FONT_DISPLAY}; }
+      .myu-bf small { display:block; color:#9a9080; font:300 11.5px/1.7 ${FONT_BODY}; margin-bottom:18px; }
+      .myu-bf .myu-outline-button { border-color:#a98959; color:#f3efe7; }
+      @media(max-width:760px) {
+        .myu-bf-bar { margin:0 -18px; padding:10px 22px; }
+        .myu-bf { margin:0 -18px; padding:48px calc(2% + 18px); }
+        .myu-bf-grid { grid-template-columns:1fr; }
+        .myu-bf-corner { width:150px; height:150px; } .myu-bf-ribbon { top:36px; left:-66px; font-size:10px; }
+        .myu-bf-bar a { font-size:11px; }
+      }
+      @media (prefers-reduced-motion: reduce) { .myu-bf-bar:before { animation:none; } }
+
       /* MYU — Noël 2026 : bandeau offres + décor */
       @keyframes myuSnow { 0% { transform: translateY(-20px) rotate(0deg); opacity:0; } 10% { opacity:.9; } 100% { transform: translateY(560px) rotate(180deg); opacity:0; } }
       @keyframes myuShine { 0%,100% { opacity:.55; } 50% { opacity:1; } }
@@ -907,6 +941,52 @@ const XMAS_OFFERS = [
   { text: <><b>BB Glow & Aqua Hydro</b> · votre peau prête pour les fêtes, à réserver avant le 15 décembre</>, cta: "Réserver", href: "/book.html" },
   { text: <><b>Offre modèle à 160 €</b> · 2 places seulement en décembre</>, cta: "Je candidate", href: MYU_WA + encodeURIComponent("Bonjour MYU ✨ Je suis intéressée par une place modèle en décembre.") },
 ];
+// Black Friday 2026 : −20 % sur toutes les prestations, du 27 au 30 novembre (affichage jusqu'au 30/11 inclus)
+const BF_END = new Date("2026-12-01T00:00:00-04:00");
+const isBlackFriday = () => new Date() < BF_END;
+const BF_EXAMPLES = [
+  ["Powder Brows", 300], ["Candy Lips", 200], ["Velvet Lips", 300],
+  ["Neutralisation lèvres", 250], ["Eyeliner poudré", 300], ["Reconstruction des sourcils", 350],
+  ["Tricopigmentation (zone 5 cm)", 150], ["BB Glow", 200], ["Freckles", 160],
+];
+const bfPrice = (p) => Math.round(p * 0.8);
+const BF_WA = MYU_WA + encodeURIComponent("Bonjour MYU ✨ Je souhaite profiter du Black Friday (−20 %).");
+function BlackFridayBar() {
+  const msgs = [
+    <><b>BLACK FRIDAY</b> · −20 % sur toutes les prestations, du 27 au 30 novembre</>,
+    <>Powder Brows <s>300 €</s><strong>240 €</strong> · Candy Lips <s>200 €</s><strong>160 €</strong></>,
+    <>Neutralisation <s>250 €</s><strong>200 €</strong> · Tricopigmentation <s>150 €</s><strong>120 €</strong></>,
+  ];
+  const [i, setI] = useState(0);
+  useEffect(() => {
+    if (!isBlackFriday()) return;
+    const t = setInterval(() => setI(v => (v + 1) % msgs.length), 4500);
+    return () => clearInterval(t);
+  }, []);
+  if (!isBlackFriday()) return null;
+  return (
+    <div className="myu-bf-bar" role="region" aria-label="Offre Black Friday MYU">
+      <a href="#myu-black-friday">{msgs[i]}<span>Voir l'offre</span></a>
+    </div>
+  );
+}
+function BlackFridaySection() {
+  if (!isBlackFriday()) return null;
+  return (
+    <section className="myu-bf" id="myu-black-friday">
+      <div className="myu-section-kicker">BLACK FRIDAY · DU 27 AU 30 NOVEMBRE</div>
+      <h2>−20 % sur <em>toutes les prestations</em></h2>
+      <p>Pendant 4 jours, toutes les prestations MYU sont à −20 %. C'est le moment de vous offrir le glow que vous repoussez depuis des mois.</p>
+      <div className="myu-bf-grid">
+        {BF_EXAMPLES.map(([name, p]) => (
+          <article key={name}><h3>{name}</h3><div><s>{p} €</s><strong>{bfPrice(p)} €</strong></div></article>
+        ))}
+      </div>
+      <small>Offre valable pour toute réservation faite du 27 au 30 novembre 2026, sur toutes les prestations (hors offre modèle et cartes cadeaux). La remise est déduite du solde le jour du rendez-vous. Diagnostic 30 € compris dans l'acompte.</small>
+      <a className="myu-outline-button" href={BF_WA} target="_blank" rel="noopener noreferrer">J'en profite</a>
+    </section>
+  );
+}
 function XmasBar() {
   const [i, setI] = useState(0);
   useEffect(() => {
@@ -1009,6 +1089,7 @@ function HomeStep({ onStart, onOpenPrivacy, majorConfirmed, onToggleMajor, onAdm
   ];
   return (
     <div className="missu-step myu-home">
+      <BlackFridayBar />
       <XmasBar />
       <header className="myu-topbar">
         <div className="myu-wordmark"><span>MYU</span><small>BY MISS'U</small></div>
@@ -1034,15 +1115,19 @@ function HomeStep({ onStart, onOpenPrivacy, majorConfirmed, onToggleMajor, onAdm
             <a href="#myu-prestations" className="myu-secondary">Découvrir les prestations <span>↓</span></a>
           </div>
           <div className="myu-hero-note"><ShieldCheck size={15}/> Chaque projet commence par un échange et un pré-diagnostic.</div>
+          {isBlackFriday() && <a href="#myu-black-friday" className="myu-bf-tag">✦ Black Friday · −20 % du 27 au 30/11</a>}
           <div className="myu-xmas-tag">✦ Noël chez MYU · cartes cadeaux disponibles</div>
         </div>
         <div className="myu-hero-visual">
+          {isBlackFriday() && <div className="myu-bf-corner" aria-hidden="true"><div className="myu-bf-ribbon">BLACK FRIDAY −20%</div></div>}
           <img className="myu-portrait" src="/assets/myu/catalogue/bb-glow.webp" alt="Peau lumineuse, illustration de l'univers MYU" />
           <div className="myu-image-caption"><span>THE ART OF GLOW</span><small>Une beauté qui vous ressemble.</small></div>
           <XmasHolly />
           <div className="myu-round-stamp"><span>MYU</span><small>BEAUTY<br/>STUDIO</small></div>
         </div>
       </section>
+
+      <BlackFridaySection />
 
       <section className="myu-intro" id="myu-univers">
         <div className="myu-section-kicker">L'EXPÉRIENCE MYU</div>
