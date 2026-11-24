@@ -1,9 +1,25 @@
 {
   "redirects": [
-    { "source": "/", "destination": "/index.html", "permanent": false },
-    { "source": "/vip", "destination": "/vip.html", "permanent": false }
+    {
+      "source": "/",
+      "destination": "/index.html",
+      "permanent": false
+    },
+    {
+      "source": "/vip",
+      "destination": "/vip.html",
+      "permanent": false
+    },
+    {
+      "source": "/consentement",
+      "destination": "/consentement.html",
+      "permanent": false
+    }
   ],
   "crons": [
-    { "path": "/api/booking", "schedule": "17 12 * * *" }
+    {
+      "path": "/api/booking",
+      "schedule": "17 12 * * *"
+    }
   ]
 }

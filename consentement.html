@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Formulaire de consentement · MYU by Miss'U</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="myu-catalog.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<!--
+  Formulaire de consentement à remplir EN SÉANCE avec la cliente (téléphone/tablette).
+  Séparé du pré-diagnostic en ligne. Rien n'est envoyé sur internet : le PDF signé
+  est généré et téléchargé sur l'appareil utilisé. Si un texte de consentement change,
+  incrémenter CONSENT_VERSION (imprimée sur chaque PDF).
+-->
+<style>
+  :root {
+    --noir: #0D0B09; --espresso: #211b15; --or: #c9a45c; --or-clair: #e5c27d;
+    --creme: #f4f0e9; --gris: #a8a095; --ligne: rgba(201,164,92,.28); --alerte: #e0a35a;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--noir); color: var(--creme); font-family: 'Jost', sans-serif; font-weight: 300; }
+  body { padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom); }
+  .wrap { max-width: 680px; margin: 0 auto; padding: 24px 18px 60px; }
+  header { text-align: center; padding: 16px 0 24px; border-bottom: 1px solid var(--ligne); margin-bottom: 24px; }
+  .marque { font-family: 'Cormorant Garamond', serif; font-size: 30px; letter-spacing: .12em; color: var(--or-clair); }
+  .sous { font-size: 11px; letter-spacing: .3em; text-transform: uppercase; color: var(--gris); margin-top: 4px; }
+  h1 { font-family: 'Cormorant Garamond', serif; font-weight: 500; font-size: 26px; margin: 18px 0 4px; }
+  .intro { font-size: 14px; color: var(--gris); line-height: 1.5; }
+  section { background: var(--espresso); border: 1px solid var(--ligne); border-radius: 14px; padding: 18px 16px; margin-bottom: 18px; }
+  h2 { font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 21px; color: var(--or-clair); margin: 0 0 14px; }
+  h2 span { font-family: 'Jost', sans-serif; font-size: 12px; color: var(--or); margin-right: 6px; letter-spacing: .1em; }
+  h3 { font-size: 13px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--or); margin: 18px 0 8px; }
+  label.champ { display: block; font-size: 13px; color: var(--gris); margin: 12px 0 5px; }
+  input[type=text], input[type=tel], input[type=email], input[type=date], select, textarea {
+    width: 100%; background: var(--noir); color: var(--creme); border: 1px solid var(--ligne); border-radius: 10px;
+    padding: 12px; font: 400 16px 'Jost', sans-serif; -webkit-appearance: none; appearance: none;
+  }
+  textarea { min-height: 70px; resize: vertical; }
+  input[type=date] { color-scheme: dark; }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--or); }
+  .duo { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; }
+  @media (max-width: 480px) { .duo { grid-template-columns: 1fr; } }
+  .q { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,.06); font-size: 14px; line-height: 1.4; }
+  .q:last-child { border-bottom: 0; }
+  .ouinon { display: flex; gap: 6px; flex-shrink: 0; }
+  .ouinon button { border: 1px solid var(--ligne); background: transparent; color: var(--creme); border-radius: 18px; padding: 7px 14px; font: 500 13px 'Jost', sans-serif; }
+  .ouinon button.on-non { background: var(--or); color: var(--noir); border-color: var(--or); }
+  .ouinon button.on-oui { background: var(--alerte); color: var(--noir); border-color: var(--alerte); }
+  .coche { display: flex; gap: 12px; align-items: flex-start; padding: 9px 0; font-size: 14px; line-height: 1.45; cursor: pointer; }
+  .coche input { width: 22px; height: 22px; accent-color: var(--or); flex-shrink: 0; margin-top: 1px; }
+  .radio { display: flex; gap: 12px; align-items: flex-start; padding: 9px 0; font-size: 14px; line-height: 1.45; cursor: pointer; }
+  .radio input { width: 20px; height: 20px; accent-color: var(--or); flex-shrink: 0; margin-top: 1px; }
+  .note { font-size: 12.5px; color: var(--gris); line-height: 1.5; margin-top: 8px; }
+  .alerte { display: none; margin-top: 12px; padding: 12px; border-radius: 10px; border: 1px solid var(--alerte); color: var(--alerte); font-size: 13.5px; line-height: 1.45; }
+  .sig-bloc { margin-top: 14px; }
+  .sig-titre { display: flex; justify-content: space-between; align-items: baseline; font-size: 13px; color: var(--gris); margin-bottom: 6px; }
+  .sig-titre button { background: none; border: 0; color: var(--or); font: 500 13px 'Jost', sans-serif; text-decoration: underline; }
+  canvas.sig { width: 100%; height: 170px; background: var(--creme); border-radius: 10px; touch-action: none; display: block; }
+  .btn { display: block; width: 100%; border: 0; border-radius: 30px; padding: 16px; font: 500 15px 'Jost', sans-serif; letter-spacing: .08em; text-transform: uppercase; margin-top: 12px; }
+  .btn-or { background: linear-gradient(135deg, var(--or-clair), var(--or)); color: var(--noir); }
+  .btn-ligne { background: transparent; color: var(--or-clair); border: 1px solid var(--or); }
+  .erreur { display: none; color: #ff9f8a; font-size: 14px; margin-top: 12px; line-height: 1.45; }
+  .ok { display: none; color: var(--or-clair); font-size: 14px; margin-top: 12px; line-height: 1.45; }
+  .manque { outline: 2px solid #ff9f8a; outline-offset: 3px; border-radius: 8px; }
+  footer { text-align: center; font-size: 12px; color: var(--gris); line-height: 1.6; margin-top: 26px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="marque">MYU</div>
+    <div class="sous">The Art of Glow · by Miss'U</div>
+    <h1>Formulaire de consentement</h1>
+    <p class="intro">À remplir ensemble, avant la séance. Prenez le temps de lire chaque point&nbsp;: n'hésitez pas à poser vos questions.</p>
+  </header>
+
+  <form id="f" novalidate>
+    <!-- 1. Cliente -->
+    <section>
+      <h2><span>01</span>La cliente</h2>
+      <div class="duo">
+        <div><label class="champ" for="nom">Nom *</label><input type="text" id="nom" autocomplete="off" required></div>
+        <div><label class="champ" for="prenom">Prénom *</label><input type="text" id="prenom" autocomplete="off" required></div>
+        <div><label class="champ" for="naissance">Date de naissance *</label><input type="date" id="naissance" required></div>
+        <div><label class="champ" for="tel">Téléphone *</label><input type="tel" id="tel" autocomplete="off" required></div>
+      </div>
+      <label class="champ" for="email">E-mail (facultatif)</label><input type="email" id="email" autocomplete="off">
+    </section>
+
+    <!-- 2. Séance -->
+    <section>
+      <h2><span>02</span>La séance</h2>
+      <label class="champ" for="prestation">Prestation *</label>
+      <select id="prestation" required><option value="">Choisir…</option></select>
+      <div id="autreWrap" style="display:none"><label class="champ" for="prestationAutre">Préciser la prestation *</label><input type="text" id="prestationAutre"></div>
+      <div class="duo">
+        <div><label class="champ" for="dateSeance">Date de la séance *</label><input type="date" id="dateSeance" required></div>
+        <div><label class="champ" for="lieu">Lieu *</label>
+          <select id="lieu" required>
+            <option value="">Choisir…</option><option>Le Lamentin</option><option>Ducos</option><option>Tartane</option><option>Autre</option>
+          </select>
+        </div>
+      </div>
+      <label class="champ" for="zone">Zone traitée / précisions (teinte, forme…)</label>
+      <textarea id="zone"></textarea>
+    </section>
+
+    <!-- 3. Santé -->
+    <section>
+      <h2><span>03</span>Questionnaire santé</h2>
+      <p class="note" style="margin-top:0">Êtes-vous concernée par l'une de ces situations&nbsp;? Répondez à chaque ligne.</p>
+      <div id="questions"></div>
+      <label class="champ" for="santeAutre">Autre information utile (allergie, traitement en cours, antécédent…)</label>
+      <textarea id="santeAutre"></textarea>
+      <div class="alerte" id="alerteSante">Au moins une réponse est « Oui ». À évaluer avec la cliente avant de commencer&nbsp;; en cas de doute, la séance est reportée et un avis médical est demandé.</div>
+      <label class="coche" style="margin-top:14px"><input type="checkbox" id="majeure"><span>Je certifie être majeure (18 ans ou plus). *</span></label>
+    </section>
+
+    <!-- 4. Consentements -->
+    <section>
+      <h2><span>04</span>Mes consentements</h2>
+      <div id="consentements"></div>
+    </section>
+
+    <!-- 5. Image -->
+    <section>
+      <h2><span>05</span>Photos et droit à l'image</h2>
+      <p class="note" style="margin-top:0">Ce choix est indépendant de la prestation&nbsp;: refuser ne change rien à votre séance. Vous pouvez le modifier à tout moment sur simple demande.</p>
+      <div id="images"></div>
+    </section>
+
+    <!-- 6. Signatures -->
+    <section>
+      <h2><span>06</span>Signatures</h2>
+      <label class="coche"><input type="checkbox" id="luApprouve"><span>J'ai lu et compris l'ensemble de ce document, j'ai pu poser mes questions et je donne mon accord en connaissance de cause. *</span></label>
+      <div class="sig-bloc" id="blocSigCliente">
+        <div class="sig-titre"><span>Signature de la cliente *</span><button type="button" data-clear="sigCliente">Effacer</button></div>
+        <canvas class="sig" id="sigCliente"></canvas>
+      </div>
+      <div class="sig-bloc" id="blocSigPro">
+        <div class="sig-titre"><span>Signature de la praticienne · Astrid URSULET *</span><button type="button" data-clear="sigPro">Effacer</button></div>
+        <canvas class="sig" id="sigPro"></canvas>
+      </div>
+    </section>
+
+    <div class="erreur" id="erreur"></div>
+    <div class="ok" id="ok"></div>
+    <button type="submit" class="btn btn-or">Générer le PDF signé</button>
+    <button type="button" class="btn btn-ligne" id="nouvelle">Nouvelle cliente</button>
+  </form>
+
+  <footer>
+    MYU by Miss'U · Astrid URSULET · SIRET 805 123 171 00037<br>
+    Aucune donnée n'est envoyée en ligne&nbsp;: le PDF est créé et enregistré sur cet appareil.
+  </footer>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var CONSENT_VERSION = "2026-11-24 v1";
+  var PRO = { nom: "Astrid URSULET", marque: "MYU by Miss'U", siret: "805 123 171 00037" };
+
+  var CONTRE_INDICATIONS = [
+    "Grossesse ou allaitement",
+    "Diabète non équilibré",
+    "Traitement anticoagulant (fluidifiants sanguins)",
+    "Traitement par isotrétinoïne (Roaccutane) dans les 6 derniers mois",
+    "Herpès labial actif ou récidivant fréquent",
+    "Maladie de peau active sur la zone (eczéma, psoriasis...)",
+    "Tendance aux cicatrices chéloïdes",
+    "Allergie connue aux pigments ou à la lidocaïne",
+    "Trouble de la coagulation",
+    "Traitement immunosuppresseur ou chimiothérapie en cours",
+    "Intervention esthétique récente sur la zone (moins de 4 semaines)"
+  ];
+
+  // Repris des consentements du site (index.html), adaptés à la séance en présentiel.
+  var GROUPES = [
+    { titre: "Compréhension de la prestation", items: [
+      "Je comprends la nature de la prestation choisie, sa durée approximative et le fait qu'il s'agit d'une pigmentation semi-permanente nécessitant un entretien dans le temps.",
+      "Je comprends que le résultat final dépend de ma peau, de ma carnation et de ma cicatrisation, et peut différer des photos de référence ou d'exemples présentés.",
+      "Je comprends que l'aspect juste après la séance n'est pas le résultat final : il évolue pendant la cicatrisation.",
+      "Je comprends qu'une ou plusieurs séances de retouche peuvent être nécessaires, et qu'aucun résultat précis ne m'est garanti.",
+      "J'ai validé avec Miss'U le dessin, la forme et la teinte avant le début de la séance."
+    ]},
+    { titre: "Avant la séance", items: [
+      "Je confirme ne pas avoir consommé d'alcool dans les 24 h précédant la séance.",
+      "Je confirme ne pas avoir pris d'aspirine ou d'anti-inflammatoire dans les 48 h précédant la séance, sauf avis médical contraire.",
+      "Je confirme l'absence d'exposition solaire récente ou de bronzage artificiel sur la zone à traiter.",
+      "Je certifie que les informations données dans ce questionnaire, y compris sur mon état de santé, sont exactes et complètes."
+    ]},
+    { titre: "Suivi et cicatrisation", items: [
+      "J'ai conscience que la zone traitée peut présenter rougeurs, gonflement ou desquamation pendant la cicatrisation, ce qui est normal et temporaire.",
+      "Je m'engage à respecter les consignes de soin remises par Miss'U après la séance.",
+      "Je comprends que le non-respect des consignes de soin peut affecter le résultat final et engage ma seule responsabilité."
+    ]},
+    { titre: "Confidentialité", items: [
+      "J'accepte que ce document et mes informations soient conservés de façon confidentielle par MYU by Miss'U pour le suivi de ma prestation (RGPD). Je peux en demander la consultation ou la suppression à tout moment."
+    ]}
+  ];
+
+  var IMAGES = [
+    "Je refuse toute photo, même pour le suivi.",
+    "J'accepte les photos pour le suivi de ma cicatrisation uniquement (jamais publiées).",
+    "J'accepte la publication sur les réseaux et le site de MYU, visage non reconnaissable (zone traitée seule).",
+    "J'accepte la publication sur les réseaux et le site de MYU, visage visible."
+  ];
+
+  var $ = function (id) { return document.getElementById(id); };
+  var reponses = {};
+
+  // --- Prestations (catalogue du site) ---
+  var sel = $("prestation");
+  (window.MYU_CATALOG || []).forEach(function (s) {
+    if (s.key === "conseil") return;
+    var o = document.createElement("option"); o.value = s.label; o.textContent = s.label; sel.appendChild(o);
+  });
+  var oAutre = document.createElement("option"); oAutre.value = "__autre"; oAutre.textContent = "Autre…"; sel.appendChild(oAutre);
+  sel.addEventListener("change", function () { $("autreWrap").style.display = sel.value === "__autre" ? "block" : "none"; });
+
+  // --- Questionnaire santé ---
+  CONTRE_INDICATIONS.forEach(function (q, i) {
+    var row = document.createElement("div"); row.className = "q"; row.id = "q" + i;
+    row.innerHTML = "<span></span><div class='ouinon'><button type='button' data-v='Non'>Non</button><button type='button' data-v='Oui'>Oui</button></div>";
+    row.querySelector("span").textContent = q;
+    row.querySelectorAll("button").forEach(function (b) {
+      b.addEventListener("click", function () {
+        reponses[i] = b.dataset.v;
+        row.querySelectorAll("button").forEach(function (x) { x.className = ""; });
+        b.className = b.dataset.v === "Oui" ? "on-oui" : "on-non";
+        row.classList.remove("manque");
+        $("alerteSante").style.display = Object.keys(reponses).some(function (k) { return reponses[k] === "Oui"; }) ? "block" : "none";
+      });
+    });
+    $("questions").appendChild(row);
+  });
+
+  // --- Consentements ---
+  var n = 0;
+  GROUPES.forEach(function (g) {
+    var h = document.createElement("h3"); h.textContent = g.titre; $("consentements").appendChild(h);
+    g.items.forEach(function (txt) {
+      var l = document.createElement("label"); l.className = "coche";
+      l.innerHTML = "<input type='checkbox' class='cst' data-i='" + (n++) + "'><span></span>";
+      l.querySelector("span").textContent = txt;
+      $("consentements").appendChild(l);
+    });
+  });
+
+  IMAGES.forEach(function (txt, i) {
+    var l = document.createElement("label"); l.className = "radio";
+    l.innerHTML = "<input type='radio' name='image' value='" + i + "'><span></span>";
+    l.querySelector("span").textContent = txt;
+    $("images").appendChild(l);
+  });
+
+  $("dateSeance").value = new Date().toLocaleDateString("sv-SE");
+
+  // --- Signatures ---
+  function pad(canvas) {
+    var ctx = canvas.getContext("2d"), vide = true, dessin = false, last = null;
+    function taille() {
+      var r = canvas.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+      var old = vide ? null : canvas.toDataURL();
+      canvas.width = r.width * dpr; canvas.height = r.height * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.lineWidth = 2.2; ctx.lineCap = "round"; ctx.lineJoin = "round"; ctx.strokeStyle = "#0D0B09";
+      if (old) { var img = new Image(); img.onload = function () { ctx.drawImage(img, 0, 0, r.width, r.height); }; img.src = old; }
+    }
+    function pt(e) { var r = canvas.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; }
+    canvas.addEventListener("pointerdown", function (e) { dessin = true; last = pt(e); canvas.setPointerCapture(e.pointerId); e.preventDefault(); });
+    canvas.addEventListener("pointermove", function (e) {
+      if (!dessin) return; var p = pt(e);
+      ctx.beginPath(); ctx.moveTo(last.x, last.y); ctx.lineTo(p.x, p.y); ctx.stroke();
+      last = p; vide = false; canvas.parentNode.classList.remove("manque"); e.preventDefault();
+    });
+    ["pointerup", "pointercancel", "pointerleave"].forEach(function (t) { canvas.addEventListener(t, function () { dessin = false; }); });
+    window.addEventListener("resize", taille);
+    taille();
+    return {
+      vide: function () { return vide; },
+      effacer: function () { ctx.clearRect(0, 0, canvas.width, canvas.height); vide = true; },
+      image: function () { return canvas.toDataURL("image/png"); },
+      ratio: function () { return canvas.height / canvas.width; }
+    };
+  }
+  var sigs = { sigCliente: pad($("sigCliente")), sigPro: pad($("sigPro")) };
+  document.querySelectorAll("[data-clear]").forEach(function (b) {
+    b.addEventListener("click", function () { sigs[b.dataset.clear].effacer(); });
+  });
+
+  // --- Validation ---
+  function val(id) { return ($(id).value || "").trim(); }
+  function verifier() {
+    var manques = [];
+    document.querySelectorAll(".manque").forEach(function (el) { el.classList.remove("manque"); });
+    function marque(el, msg) { el.classList.add("manque"); if (manques.indexOf(msg) < 0) manques.push(msg); }
+    ["nom", "prenom", "naissance", "tel", "dateSeance", "lieu", "prestation"].forEach(function (id) { if (!val(id)) marque($(id), "les informations de la cliente et de la séance"); });
+    if (sel.value === "__autre" && !val("prestationAutre")) marque($("prestationAutre"), "la prestation");
+    CONTRE_INDICATIONS.forEach(function (q, i) { if (!reponses[i]) marque($("q" + i), "toutes les questions santé"); });
+    if (!$("majeure").checked) marque($("majeure").parentNode, "la case « majeure »");
+    document.querySelectorAll(".cst").forEach(function (c) { if (!c.checked) marque(c.parentNode, "tous les consentements"); });
+    if (!document.querySelector("input[name=image]:checked")) marque($("images"), "le choix pour les photos");
+    if (!$("luApprouve").checked) marque($("luApprouve").parentNode, "la case « lu et compris »");
+    if (sigs.sigCliente.vide()) marque($("blocSigCliente"), "la signature de la cliente");
+    if (sigs.sigPro.vide()) marque($("blocSigPro"), "ta signature");
+    return manques;
+  }
+
+  function fr(d) { if (!d) return ""; var p = d.split("-"); return p[2] + "/" + p[1] + "/" + p[0]; }
+  function slug(s) { return s.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^A-Za-z0-9]+/g, "-").replace(/^-|-$/g, ""); }
+
+  // --- PDF ---
+  function genererPDF() {
+    var jsPDF = window.jspdf.jsPDF;
+    var doc = new jsPDF({ unit: "mm", format: "a4" });
+    var M = 16, L = 210 - 2 * M, y = 18, maintenant = new Date();
+    function saut(h) { if (y + h > 282) { doc.addPage(); y = 18; } }
+    function texte(t, opt) {
+      opt = opt || {};
+      doc.setFont("helvetica", opt.gras ? "bold" : "normal"); doc.setFontSize(opt.taille || 10);
+      doc.setTextColor.apply(doc, opt.couleur || [33, 27, 21]);
+      var lignes = doc.splitTextToSize(t, opt.largeur || L - (opt.x || 0));
+      lignes.forEach(function (l) { saut(5); doc.text(l, M + (opt.x || 0), y); y += (opt.taille || 10) * 0.45; });
+      y += opt.apres || 1.5;
+    }
+    function titre(t) { saut(14); y += 3; texte(t.toUpperCase(), { gras: true, taille: 10.5, couleur: [161, 125, 77], apres: 1 }); doc.setDrawColor(201, 164, 92); doc.line(M, y - 1, M + L, y - 1); y += 3; }
+
+    texte("MYU by Miss'U · The Art of Glow", { gras: true, taille: 15, couleur: [161, 125, 77], apres: 0 });
+    texte("FORMULAIRE DE CONSENTEMENT ÉCLAIRÉ", { gras: true, taille: 12, apres: 0 });
+    texte(PRO.nom + " · SIRET " + PRO.siret + " · Version " + CONSENT_VERSION, { taille: 8.5, couleur: [110, 100, 90], apres: 2 });
+
+    var prestation = sel.value === "__autre" ? val("prestationAutre") : sel.value;
+    titre("1. La cliente");
+    texte("Nom : " + val("nom").toUpperCase() + "     Prénom : " + val("prenom"));
+    texte("Date de naissance : " + fr(val("naissance")) + "     Téléphone : " + val("tel") + (val("email") ? "     E-mail : " + val("email") : ""));
+    titre("2. La séance");
+    texte("Prestation : " + prestation);
+    texte("Date : " + fr(val("dateSeance")) + "     Lieu : " + val("lieu"));
+    if (val("zone")) texte("Zone / précisions : " + val("zone"));
+
+    titre("3. Questionnaire santé");
+    CONTRE_INDICATIONS.forEach(function (q, i) {
+      var oui = reponses[i] === "Oui";
+      texte((oui ? "OUI  " : "Non  ") + " " + q, { gras: oui, couleur: oui ? [170, 90, 20] : [33, 27, 21], apres: 0.5 });
+    });
+    if (val("santeAutre")) texte("Autre information : " + val("santeAutre"), { apres: 1 });
+    texte("[x] Je certifie être majeure (18 ans ou plus).");
+
+    titre("4. Consentements");
+    GROUPES.forEach(function (g) {
+      texte(g.titre, { gras: true, apres: 0.5 });
+      g.items.forEach(function (t) { texte("[x]  " + t, { x: 2, apres: 0.8 }); });
+    });
+
+    titre("5. Photos et droit à l'image");
+    var img = +document.querySelector("input[name=image]:checked").value;
+    texte("Choix de la cliente : " + IMAGES[img], { gras: true });
+    texte("Ce choix peut être modifié à tout moment sur simple demande.", { taille: 8.5, couleur: [110, 100, 90] });
+
+    titre("6. Signatures");
+    texte("[x] J'ai lu et compris l'ensemble de ce document, j'ai pu poser mes questions et je donne mon accord en connaissance de cause.");
+    texte("Fait à " + val("lieu") + ", le " + maintenant.toLocaleDateString("fr-FR") + " à " + maintenant.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }) + ".");
+    var w = (L - 8) / 2, h = Math.min(32, w * sigs.sigCliente.ratio());
+    saut(h + 14);
+    doc.setFont("helvetica", "normal"); doc.setFontSize(9); doc.setTextColor(110, 100, 90);
+    doc.text("La cliente · " + val("prenom") + " " + val("nom").toUpperCase(), M, y);
+    doc.text("La praticienne · " + PRO.nom, M + w + 8, y);
+    y += 2;
+    doc.addImage(sigs.sigCliente.image(), "PNG", M, y, w, h);
+    doc.addImage(sigs.sigPro.image(), "PNG", M + w + 8, y, w, h);
+    doc.setDrawColor(201, 164, 92); doc.rect(M, y, w, h); doc.rect(M + w + 8, y, w, h);
+
+    var nb = doc.getNumberOfPages();
+    for (var p = 1; p <= nb; p++) {
+      doc.setPage(p); doc.setFontSize(7.5); doc.setTextColor(140, 130, 120);
+      doc.text("MYU by Miss'U · Document confidentiel · " + val("prenom") + " " + val("nom").toUpperCase() + " · page " + p + "/" + nb, M, 290);
+    }
+    var nom = "MYU_consentement_" + slug(val("nom")) + "_" + slug(val("prenom")) + "_" + val("dateSeance") + ".pdf";
+    doc.save(nom);
+    return nom;
+  }
+
+  $("f").addEventListener("submit", function (e) {
+    e.preventDefault();
+    $("erreur").style.display = "none"; $("ok").style.display = "none";
+    var manques = verifier();
+    if (manques.length) {
+      $("erreur").textContent = "Il manque : " + manques.join(", ") + ".";
+      $("erreur").style.display = "block";
+      var premier = document.querySelector(".manque"); if (premier) premier.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
+    if (!window.jspdf) { $("erreur").textContent = "Le générateur PDF n'a pas pu se charger : vérifie la connexion internet puis recharge la page."; $("erreur").style.display = "block"; return; }
+    try {
+      var nom = genererPDF();
+      $("ok").textContent = "PDF enregistré : " + nom + ". Pense à le ranger dans le dossier de la cliente.";
+      $("ok").style.display = "block";
+    } catch (err) {
+      $("erreur").textContent = "Erreur pendant la création du PDF : " + err.message;
+      $("erreur").style.display = "block";
+    }
+  });
+
+  $("nouvelle").addEventListener("click", function () {
+    if (!confirm("Effacer ce formulaire pour une nouvelle cliente ?")) return;
+    window.location.reload();
+  });
+})();
+</script>
+</body>
+</html>
