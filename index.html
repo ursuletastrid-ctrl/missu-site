@@ -3232,7 +3232,9 @@ function AdminAgenda({ adminToken }) {
     return copy;
   };
 
-  const [weekStart, setWeekStart] = useState(toIsoDate(monday));
+  // Vue sur 31 jours à partir d'aujourd'hui (seuls les jours avec RDV sont affichés).
+  const PERIODE_JOURS = 31;
+  const [weekStart, setWeekStart] = useState(toIsoDate(new Date()));
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showAdd, setShowAdd] = useState(false);
@@ -3269,8 +3271,8 @@ function AdminAgenda({ adminToken }) {
     }
   };
 
-  const endDate = toIsoDate(addDays(new Date(weekStart + "T12:00:00"), 6));
-  const weekDays = Array.from({ length: 7 }, (_, n) => {
+  const endDate = toIsoDate(addDays(new Date(weekStart + "T12:00:00"), PERIODE_JOURS - 1));
+  const weekDays = Array.from({ length: PERIODE_JOURS }, (_, n) => {
     const date = addDays(new Date(weekStart + "T12:00:00"), n);
     return { iso: toIsoDate(date), date };
   });
@@ -3286,7 +3288,7 @@ function AdminAgenda({ adminToken }) {
   useEffect(() => { loadAgenda(); }, [loadAgenda]);
 
   const moveWeek = (n) => {
-    setWeekStart(toIsoDate(addDays(new Date(weekStart + "T12:00:00"), n * 7)));
+    setWeekStart(toIsoDate(addDays(new Date(weekStart + "T12:00:00"), n * PERIODE_JOURS)));
   };
 
   const searchClients = async () => {
@@ -3430,12 +3432,16 @@ function AdminAgenda({ adminToken }) {
 
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", margin: "12px 0" }}>
         <GhostButton onClick={() => moveWeek(-1)} icon={ChevronLeft}>Avant</GhostButton>
-        <div style={{ fontFamily: FONT_BODY, fontSize: 12, color: C.espresso, textAlign: "center" }}>{weekStart} → {endDate}</div>
+        <div style={{ fontFamily: FONT_BODY, fontSize: 12, color: C.espresso, textAlign: "center" }}>{new Date(weekStart + "T12:00:00").toLocaleDateString("fr-FR", { day: "numeric", month: "short" })} → {new Date(endDate + "T12:00:00").toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" })}<br /><span onClick={() => setWeekStart(toIsoDate(new Date()))} style={{ cursor: "pointer", textDecoration: "underline", color: C.roseGoldDeep, fontSize: 11 }}>Aujourd'hui</span></div>
         <GhostButton onClick={() => moveWeek(1)}>Après <ChevronRight size={14} /></GhostButton>
       </div>
 
+      {!loading && !weekDays.some(({ iso }) => bookings.some((b) => b.date_rdv === iso && b.statut !== "annule")) && (
+        <div style={{ padding: "12px", borderRadius: 12, border: `1px dashed ${C.blushDeep}`, fontFamily: FONT_BODY, fontSize: 12, color: C.espressoSoft, textAlign: "center" }}>Aucun rendez-vous sur cette période.</div>
+      )}
       {loading ? <p style={{ fontFamily: FONT_BODY, color: C.espressoSoft }}>Chargement du planning…</p> : weekDays.map(({ iso, date }) => {
         const dayBookings = bookings.filter((b) => b.date_rdv === iso && (b.statut !== "annule" || (b.affichage?.agenda && !syncOk(b.affichage.agenda.statut))));
+        if (dayBookings.length === 0) return null;
         return (
           <div key={iso} style={{ marginBottom: 12 }}>
             <div style={{ fontFamily: FONT_BODY, fontWeight: 600, fontSize: 12, color: C.roseGoldDeep, textTransform: "uppercase", marginBottom: 5 }}>
