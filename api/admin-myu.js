@@ -751,7 +751,42 @@ async function vipSaveFormule(admin, p = {}) {
   return vipConfig(admin);
 }
 
+// ------------------------------------------------------------
+// Création rapide d'une fiche cliente depuis l'admin (RDV pris par
+// Instagram, WhatsApp, téléphone…). Même principe que la réservation publique :
+// un compte technique sans connexion possible, juste pour rattacher la fiche.
+// ------------------------------------------------------------
+function referralCode(firstName) {
+  const base = B.clean(firstName, 10).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().replace(/[^A-Z]/g, "") || "MYU";
+  return `MYU-${base}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
+}
+
+async function createClient(admin, { firstName, lastName, phone, note }) {
+  const prenom = B.clean(firstName, 60);
+  const nom = B.clean(lastName, 60);
+  const tel = B.clean(phone, 30);
+  if (!prenom) throw Object.assign(new Error("Le prénom (ou le pseudo Instagram) est requis."), { status: 400 });
+  if (tel && !/^[+\d][\d\s.-]{5,}$/.test(tel)) throw Object.assign(new Error("Numéro de téléphone invalide."), { status: 400 });
+
+  const guestEmail = `admin-${Date.now()}-${Math.random().toString(36).slice(2, 9)}@guest.myu.local`;
+  const password = `${crypto.randomBytes(18).toString("base64url")}A!9`;
+  const { data: authData, error: authErr } = await admin.auth.admin.createUser({
+    email: guestEmail, password, email_confirm: true,
+    user_metadata: { first_name: prenom, last_name: nom, phone: tel, source: "admin_manuel", note: B.clean(note, 200) },
+  });
+  if (authErr || !authData?.user) throw authErr || new Error("Création de la fiche impossible.");
+  const id = authData.user.id;
+  const profile = { id, first_name: prenom, last_name: nom, phone: tel, city: "", referral_code: referralCode(prenom) };
+  const { data, error } = await admin.from("profiles").upsert(profile, { onConflict: "id" }).select("id, first_name, last_name, phone, city, referral_code").single();
+  if (error) {
+    await admin.auth.admin.deleteUser(id).catch(() => {});
+    throw error;
+  }
+  return data;
+}
+
 const ACTIONS = {
+  createClient,
   searchClients, getClient, addTampon, resetTampons, validateParrainage, markAvantageUsed,
   listConsignes, upsertConsigne, addNoteInterne, createPrestation, updatePrestationStatus, upsertEtapeParcours, updateRendezVous,
   listPrestationsReservation, upsertPrestationReservation, releaseModeleSlot, listModeleBookings,
