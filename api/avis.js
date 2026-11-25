@@ -43,5 +43,8 @@ module.exports = async function handler(req, res) {
     prenom, prestation, note, commentaire, contact: contact || null, publication_ok: body.publicationOk === true,
   });
   if (error) { console.error("[avis] POST :", error.message); return res.status(500).json({ error: "Envoi impossible pour le moment." }); }
+  // Trace lisible dans les logs Vercel (sans coordonnées) : permet de repérer
+  // un nouvel avis et de préparer sa publication Instagram.
+  console.log("[avis] nouveau " + JSON.stringify({ prenom, prestation, note, publicationOk: body.publicationOk === true, commentaire }));
   return res.status(200).json({ success: true });
 };
