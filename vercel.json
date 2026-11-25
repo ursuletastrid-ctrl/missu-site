@@ -14,6 +14,11 @@
       "source": "/consentement",
       "destination": "/consentement.html",
       "permanent": false
+    },
+    {
+      "source": "/avis",
+      "destination": "/avis.html",
+      "permanent": false
     }
   ],
   "crons": [

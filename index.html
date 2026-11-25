@@ -369,6 +369,15 @@ function GlobalStyle() {
       .myu-proof,.myu-smp,.myu-artist { display:grid; grid-template-columns:minmax(0,.8fr) 1fr; gap:6%; align-items:center; padding:72px 5%; }
       .myu-proof h2,.myu-smp h2,.myu-artist h2,.myu-vip h2,.myu-contact h2 { margin:12px 0; color:#211b15; font:400 clamp(30px,4vw,42px)/1.1 ${FONT_DISPLAY}; }
       .myu-proof p,.myu-smp p,.myu-artist p,.myu-vip p,.myu-contact p { color:#756b60; font:300 14px/1.85 ${FONT_BODY}; }
+      .myu-avis { padding:72px 5%; text-align:center; }
+      .myu-avis h2 { margin:12px 0; color:#211b15; font:400 clamp(30px,4vw,42px)/1.1 ${FONT_DISPLAY}; }
+      .myu-avis > p { color:#756b60; font:300 14px/1.85 ${FONT_BODY}; margin:0 0 22px; }
+      .myu-avis-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:14px; margin:0 auto 24px; max-width:980px; text-align:left; }
+      .myu-avis-card { margin:0; padding:20px; border:1px solid rgba(201,162,107,.35); background:#fffdf9; border-radius:2px 2px 28px 2px; }
+      .myu-avis-stars { color:#b98f57; letter-spacing:3px; font-size:14px; }
+      .myu-avis-card blockquote { margin:10px 0; color:#3d332b; font:300 14px/1.7 ${FONT_BODY}; white-space:pre-line; }
+      .myu-avis-card figcaption { color:#8a7e71; font:400 11px/1.4 ${FONT_BODY}; letter-spacing:.5px; }
+      .myu-avis .myu-secondary { display:inline-flex; }
       .myu-proof-text { display:flex; flex-direction:column; align-items:flex-start; gap:14px; }
       .myu-proof-media { margin:0; }
       .myu-proof-media img { width:100%; max-width:320px; display:block; margin:0 auto; border-radius:2px 2px 60px 2px; }
@@ -1051,6 +1060,32 @@ function XmasHolly() {
     </svg>
   );
 }
+function AvisClientes() {
+  const [avis, setAvis] = useState([]);
+  useEffect(() => {
+    fetch("/api/avis").then(r => r.json()).then(j => setAvis((j && j.data) || [])).catch(() => {});
+  }, []);
+  const n = avis.length;
+  const avg = n ? (avis.reduce((a, b) => a + b.note, 0) / n).toFixed(1).replace(".", ",") : null;
+  return (
+    <section className="myu-avis" id="myu-avis">
+      <div className="myu-section-kicker">AVIS CLIENTES</div>
+      <h2>Elles et ils <em>en parlent</em></h2>
+      <p>{n ? `${avg} / 5 · ${n} avis vérifié${n > 1 ? "s" : ""} par MYU` : "Les premiers avis MYU arrivent. Vous êtes venue ? Racontez votre moment."}</p>
+      {n > 0 && <div className="myu-avis-grid">
+        {avis.slice(0, 6).map((a, i) => (
+          <figure key={i} className="myu-avis-card">
+            <div className="myu-avis-stars">{"★★★★★".slice(0, a.note)}</div>
+            <blockquote>{a.commentaire}</blockquote>
+            <figcaption>{a.prenom} · {a.prestation}</figcaption>
+          </figure>
+        ))}
+      </div>}
+      <a href="/avis" className="myu-secondary">Laisser un avis <span>→</span></a>
+    </section>
+  );
+}
+
 function XmasSparkles({ n = 14 }) {
   const pts = Array.from({ length: n }, (_, k) => [((k * 37) % 97) + 1, ((k * 53) % 89) + 4, 8 + (k % 4) * 3, (k * 0.7) % 3]);
   return (
@@ -1167,6 +1202,8 @@ function HomeStep({ onStart, onOpenPrivacy, majorConfirmed, onToggleMajor, onAdm
           <a href="https://www.instagram.com/myu_theartofglow_bymissu/" target="_blank" rel="noopener noreferrer" className="myu-secondary">Toutes les réalisations sur Instagram <span>↗</span></a>
         </div>
       </section>
+
+      <AvisClientes />
 
       <section className="myu-ritual" id="myu-levres-revelees">
         <XmasSparkles />

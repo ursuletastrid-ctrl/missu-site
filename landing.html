@@ -54,6 +54,13 @@ h1,h2,.serif{font-family:'Cormorant Garamond',Georgia,serif}
 .tech{background-image:linear-gradient(150deg,rgba(43,23,17,.93) 0%,rgba(92,51,39,.9) 100%),url(/assets/myu/studio/studio_salle_soin_fenetre.webp);background-size:cover;background-position:center;color:#fff;border:none}
 .tech h2{color:#fff}.tech .eyebrow-sm{color:var(--blush)}.tech .lead{color:#e8d2c6}
 .techbox{border:1px solid rgba(255,255,255,.2);padding:15px 16px;border-radius:18px;font-size:12.5px;line-height:1.6;color:#f2dfd5}
+.avis{background:linear-gradient(160deg,var(--cream),var(--blush))}
+.avis-list{display:grid;gap:10px;margin:0 0 16px}
+.avis-card{background:var(--cream);border:1px solid var(--blush-deep);border-radius:18px;padding:15px 16px}
+.avis-card .st{color:var(--rose-gold-deep);letter-spacing:2px;font-size:14px}
+.avis-card p{margin:8px 0;font-size:13.5px;line-height:1.6;color:var(--espresso)}
+.avis-card small{font-size:11px;color:var(--espresso-soft)}
+.avis-more{display:block;text-align:center;margin-top:12px;color:var(--rose-gold-deep);font-size:12.5px}
 .note{font-size:10.5px;line-height:1.55;color:var(--espresso-soft);margin-top:12px;opacity:.85}
 .account{text-align:center;margin:22px 0 6px;font-size:11.5px;color:var(--espresso-soft)}
 .account a{color:var(--rose-gold-deep);font-weight:600;text-decoration:none}
@@ -334,6 +341,22 @@ h1,h2,.serif{font-family:'Cormorant Garamond',Georgia,serif}
 <p class="lead" style="margin:0">Envie de voir de vraies réalisations clientes ? <a class="ig-link" href="https://www.instagram.com/myu_theartofglow_bymissu/" target="_blank" rel="noopener noreferrer">Voir les réalisations MYU sur Instagram →</a></p>
 <p class="note">Les visuels ci-dessus illustrent le travail de précision MYU sur support d'entraînement synthétique — ce ne sont pas des résultats clients. Les réalisations réelles sont partagées sur Instagram. Les visuels immédiatement après prestation peuvent paraître plus intenses que le résultat cicatrisé : la couleur et le rendu évoluent pendant la cicatrisation.</p>
 </section>
+
+<section class="section avis" id="avis" aria-labelledby="avis-title">
+<p class="eyebrow-sm">Avis clientes</p>
+<h2 id="avis-title">Elles et ils en parlent</h2>
+<p class="lead" id="avisLead">Les premiers avis MYU arrivent. Vous êtes venue ? Racontez votre moment.</p>
+<div class="avis-list" id="avisList"></div>
+<a class="cta" href="/avis">LAISSER UN AVIS ✨</a>
+</section>
+<script>
+fetch('/api/avis').then(function(r){return r.json()}).then(function(j){var d=(j&&j.data)||[];if(!d.length)return;
+function e(s){return String(s).replace(/[&<>]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;'}[c]})}
+var n=d.length,avg=d.reduce(function(a,b){return a+b.note},0)/n;
+document.getElementById('avisLead').textContent=avg.toFixed(1).replace('.',',')+' / 5 · '+n+' avis vérifié'+(n>1?'s':'')+' par MYU';
+document.getElementById('avisList').innerHTML=d.slice(0,6).map(function(a){return '<div class="avis-card"><div class="st">'+'★★★★★'.slice(0,a.note)+'</div><p>'+e(a.commentaire)+'</p><small>'+e(a.prenom)+' · '+e(a.prestation)+'</small></div>'}).join('');
+}).catch(function(){});
+</script>
 
 <section class="section" id="reservation">
 <p class="eyebrow-sm">Réservation classique</p>

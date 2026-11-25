@@ -785,6 +785,23 @@ async function createClient(admin, { firstName, lastName, phone, note }) {
   return data;
 }
 
+// ---- Avis clientes (page /avis-gestion.html) ----
+async function avisList(admin) {
+  const { data, error } = await admin.from("avis").select("*").order("created_at", { ascending: false }).limit(200);
+  if (error) throw error;
+  return data || [];
+}
+async function avisModerate(admin, { id, statut }) {
+  if (!["en_attente", "publie", "masque"].includes(statut)) throw Object.assign(new Error("Statut invalide."), { status: 400 });
+  const { data: cur, error: e1 } = await admin.from("avis").select("publication_ok").eq("id", id).maybeSingle();
+  if (e1) throw e1;
+  if (!cur) throw Object.assign(new Error("Avis introuvable."), { status: 404 });
+  if (statut === "publie" && !cur.publication_ok) throw Object.assign(new Error("La cliente n'a pas accepté la publication de cet avis."), { status: 400 });
+  const { data, error } = await admin.from("avis").update({ statut }).eq("id", id).select("*").single();
+  if (error) throw error;
+  return data;
+}
+
 const ACTIONS = {
   createClient,
   searchClients, getClient, addTampon, resetTampons, validateParrainage, markAvantageUsed,
@@ -792,6 +809,7 @@ const ACTIONS = {
   listPrestationsReservation, upsertPrestationReservation, releaseModeleSlot, listModeleBookings,
   listAgenda, createManualRendezVous, retryBookingSync, getBookingSettings, updateBookingSettings,
   vipList, vipConfig, vipAccept, vipCounter, vipRefuse, vipCancel, vipSaveNote, vipSaveParams, vipSaveFormule,
+  avisList, avisModerate,
 };
 
 module.exports = async function handler(req, res) {

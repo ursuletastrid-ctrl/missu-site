@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Gestion des avis | MYU</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@500&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--black:#0B0A09;--gold:#C9A26B;--gold-light:#E3C38D;--ivory:#F6EFE4;--line:#6B5532;--card:#15120F}
+*{box-sizing:border-box}body{margin:0;background:var(--black);color:var(--ivory);font-family:'Poppins',sans-serif}
+.wrap{max-width:620px;margin:auto;padding:22px 16px 60px}
+h1{font-family:'Lora',serif;font-weight:500;color:var(--gold-light);text-align:center;margin:6px 0 18px}
+input{width:100%;padding:13px;border-radius:12px;border:1px solid var(--line);background:#0f0d0b;color:var(--ivory);font:15px 'Poppins'}
+button{border:0;border-radius:999px;padding:11px 16px;font:600 13px 'Poppins';cursor:pointer}
+.gold{background:linear-gradient(135deg,var(--gold-light),var(--gold));color:#0d0b09}
+.ghost{background:transparent;color:var(--ivory);border:1px solid var(--line)}
+.tabs{display:flex;gap:8px;margin:16px 0}.tabs button{flex:1}
+.tabs .on{background:var(--gold);color:#0d0b09}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin:12px 0}
+.top{display:flex;justify-content:space-between;gap:10px;font-size:13px;color:#cbbda8}
+.st{color:var(--gold-light);font-size:17px;letter-spacing:2px}
+.txt{white-space:pre-wrap;line-height:1.6;font-size:14.5px;margin:10px 0}
+.act{display:flex;gap:8px;flex-wrap:wrap}
+.warn{font-size:12px;color:#f0a48f;margin:6px 0}
+.msg{text-align:center;color:#cbbda8;font-size:14px;margin:18px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Avis MYU</h1>
+  <div id="login">
+    <input id="code" type="password" placeholder="Code admin MYU" autocomplete="current-password">
+    <p></p><button class="gold" style="width:100%" id="go">Ouvrir</button>
+  </div>
+  <div id="app" hidden>
+    <div class="tabs"><button data-s="en_attente" class="ghost on">À valider</button><button data-s="publie" class="ghost">Publiés</button><button data-s="masque" class="ghost">Masqués</button></div>
+    <div id="list"></div>
+  </div>
+  <p class="msg" id="msg"></p>
+</div>
+<script>
+var token='',all=[],cur='en_attente';
+try{token=sessionStorage.getItem('myuAdmin')||''}catch(e){}
+function api(action,payload){return fetch('/api/admin-myu',{method:'POST',headers:{'Content-Type':'application/json','x-myu-admin-token':token},body:JSON.stringify({action:action,payload:payload||{}})}).then(function(r){return r.json().then(function(j){if(!r.ok)throw new Error(j.error||'Erreur');return j.data})})}
+function esc(s){return String(s||'').replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+function load(){document.getElementById('msg').textContent='Chargement…';api('avisList').then(function(d){all=d;try{sessionStorage.setItem('myuAdmin',token)}catch(e){}document.getElementById('login').hidden=true;document.getElementById('app').hidden=false;render()}).catch(function(e){document.getElementById('msg').textContent=e.message})}
+function render(){
+  var items=all.filter(function(a){return a.statut===cur});
+  document.getElementById('msg').textContent=items.length?'':'Aucun avis ici pour le moment.';
+  document.getElementById('list').innerHTML=items.map(function(a){
+    var btns=(a.statut!=='publie'&&a.publication_ok?'<button class="gold" data-id="'+a.id+'" data-to="publie">Publier</button>':'')+
+      (a.statut!=='masque'?'<button class="ghost" data-id="'+a.id+'" data-to="masque">Masquer</button>':'')+
+      (a.statut!=='en_attente'?'<button class="ghost" data-id="'+a.id+'" data-to="en_attente">Remettre à valider</button>':'');
+    return '<div class="card"><div class="top"><b style="color:var(--ivory)">'+esc(a.prenom)+' · '+esc(a.prestation)+'</b><span>'+new Date(a.created_at).toLocaleDateString('fr-FR')+'</span></div>'+
+      '<div class="st">'+'★★★★★'.slice(0,a.note)+'<span style="color:#3a3128">'+'★★★★★'.slice(a.note)+'</span></div>'+
+      '<div class="txt">'+esc(a.commentaire)+'</div>'+(a.publication_ok?'':'<p class="warn">La cliente n\'a pas accepté la publication : avis privé.</p>')+
+      '<div class="act">'+btns+'</div></div>'}).join('');
+}
+document.getElementById('go').onclick=function(){token=document.getElementById('code').value.trim();if(token)load()};
+document.querySelector('.tabs').onclick=function(e){var b=e.target.closest('button');if(!b)return;cur=b.dataset.s;[].forEach.call(this.children,function(x){x.classList.toggle('on',x===b)});render()};
+document.getElementById('list').onclick=function(e){var b=e.target.closest('button[data-id]');if(!b)return;b.disabled=true;
+  api('avisModerate',{id:b.dataset.id,statut:b.dataset.to}).then(function(u){all=all.map(function(a){return a.id===u.id?u:a});render()}).catch(function(err){alert(err.message);b.disabled=false})};
+if(token)load();
+</script>
+</body>
+</html>
